@@ -9,7 +9,6 @@
 import SwiftUI
 import Awesome
 import Utilities
-import Kingfisher
 import SharedModels
 import ViewComponents
 import DownloaderClient
@@ -17,6 +16,19 @@ import ComposableArchitecture
 
 public struct AnimeDetailView: View {
     let store: StoreOf<AnimeDetailReducer>
+
+    @State private var averageImageColor: Color = .black
+
+    private var fontColor: Color {
+        let color = PlatformColor(averageImageColor)
+        var red: CGFloat = 0.0
+        var green: CGFloat = 0.0
+        var blue: CGFloat = 0.0
+        var alpha: CGFloat = 1.0
+        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+
+        return red * 0.299 + green * 0.578 + blue * 0.113 > 0.72 ? .black : .white
+    }
 
     public init(store: StoreOf<AnimeDetailReducer>) {
         self.store = store
@@ -39,6 +51,11 @@ public struct AnimeDetailView: View {
                             Spacer(minLength: 24)
                         }
                     }
+                    .background(
+                        BlurView()
+                            .edgesIgnoringSafeArea(.bottom)
+                            .opacity(0.65)
+                    )
                 } failedView: {
                     VStack(spacing: 16) {
                         Text("Failed to fetch anime content.")
@@ -84,7 +101,19 @@ public struct AnimeDetailView: View {
         .ignoresSafeArea(edges: .top)
         .statusBarHidden()
         #endif
-        .background(Color.black.ignoresSafeArea())
+        .background(
+            LinearGradient(
+                colors: [
+                    averageImageColor,
+                    .black
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(maxWidth: .infinity)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .ignoresSafeArea()
+        )
     }
 }
 
@@ -101,7 +130,7 @@ extension AnimeDetailView {
                 .font(.system(size: 14, weight: .black))
                 .foregroundColor(Color.white.opacity(0.9))
                 .padding(12)
-                .background(Color(white: 0.2))
+                .background(BlurView())
                 .clipShape(Circle())
                 .padding()
         }
@@ -252,6 +281,9 @@ extension AnimeDetailView {
                 FillAspectImage(
                     url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
                 )
+                .onAverageColor {
+                    averageImageColor = $0 ?? .black
+                }
                 .frame(
                     width: reader.size.width,
                     height: reader.size.height + (reader.frame(in: .global).minY > 0 ? reader.frame(in: .global).minY : 0),
@@ -333,7 +365,7 @@ extension AnimeDetailView {
                                 .font(.body.bold())
                                 .foregroundColor(.white)
                                 .padding()
-                                .background(Color(white: 0.15))
+                                .background(BlurView())
                                 .clipShape(Circle())
                         }
                         .buttonStyle(.plain)
@@ -351,7 +383,15 @@ extension AnimeDetailView {
                                 .font(.body.bold())
                                 .foregroundColor(.white)
                                 .padding()
-                                .background(isFavoriteViewStore.state ? Color.red : Color(white: 0.15))
+                                .background(
+                                    Group {
+                                        if isFavoriteViewStore.state {
+                                            Color.red
+                                        } else {
+                                            BlurView()
+                                        }
+                                    }
+                                )
                                 .clipShape(Circle())
                         }
                         .buttonStyle(.plain)
@@ -369,7 +409,7 @@ extension AnimeDetailView {
                             location: 0.0
                         ),
                         .init(
-                            color: .black.opacity(0.85),
+                            color: averageImageColor.opacity(0.5),
                             location: 1.0
                         )
                     ],
@@ -412,7 +452,6 @@ extension AnimeDetailView {
 
             Text(anime.description)
                 .font(.body)
-                .foregroundColor(.white.opacity(0.85))
                 .lineLimit(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -536,10 +575,14 @@ extension AnimeDetailView {
                     } label: {
                         HStack {
                             if let logo = viewState.providers.item?.logo {
-                                KFImage(.init(string: logo))
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 18, height: 18)
+                                CachedAsyncImage(url: .init(string: logo)) {
+                                    $0.resizable()
+                                } placeholder: {
+                                    EmptyView()
+                                }
+                                .scaledToFit()
+                                .frame(width: 18, height: 18)
+                                .clipShape(Circle())
                             }
 
                             Text(viewState.providers.item?.name ?? "Not Selected")
@@ -575,24 +618,14 @@ extension AnimeDetailView {
                             viewState.compact
                         )
                     } else {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .foregroundColor(.black)
-                            .overlay(
-                                Text("No episodes available from this provider.")
-                            )
-                            .frame(height: 100)
+                        Text("No episodes available from this provider.")
                             .padding()
+                            .frame(height: 100)
                     }
                 } failedView: {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .foregroundColor(.black)
-                        .overlay(
-                            Text(
-                                "There was an error retrieving episodes from this provider."
-                            )
-                        )
-                        .frame(height: 100)
+                    Text("There was an error retrieving episodes from this provider.")
                         .padding()
+                        .frame(height: 100)
                 } waitingView: {
                     generateEpisodesContainer(
                         Episode.placeholders(8),
@@ -604,6 +637,7 @@ extension AnimeDetailView {
                 .animation(.linear(duration: 0.12), value: viewState.episodes)
             }
             .frame(maxWidth: .infinity)
+            .foregroundColor(fontColor)
         }
     }
 }
@@ -819,3 +853,9 @@ extension Anime.Status {
         self == .current || self == .finished || self == .unreleased
     }
 }
+
+#if os(macOS)
+typealias PlatformColor = NSColor
+#else
+typealias PlatformColor = UIColor
+#endif

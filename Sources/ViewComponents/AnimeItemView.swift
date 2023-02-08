@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Kingfisher
 import SharedModels
 
 public struct AnimeItemView: View {

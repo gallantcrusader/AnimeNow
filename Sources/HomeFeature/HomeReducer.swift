@@ -28,6 +28,8 @@ public struct HomeReducer: ReducerProtocol {
         var resumeWatching: LoadableWatchAnimeEpisodes = .idle
         var lastWatchedAnime: Loadable<[AnyAnimeRepresentable]> = .idle
 
+        @BindableState var heroPosition = 0
+
         public init(
             topTrendingAnime: HomeReducer.LoadableAnime = .idle,
             recentlyUpdated: LoadableWatchAnimeEpisodes = .idle,
@@ -70,6 +72,7 @@ public struct HomeReducer: ReducerProtocol {
     public init() { }
 
     public var body: some ReducerProtocol<State, Action> {
+        BindingReducer()
         Reduce(self.core)
     }
 }

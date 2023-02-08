@@ -8,7 +8,6 @@
 import AVKit
 import Combine
 import SwiftUI
-import Kingfisher
 import Foundation
 import MediaPlayer
 import AVFoundation

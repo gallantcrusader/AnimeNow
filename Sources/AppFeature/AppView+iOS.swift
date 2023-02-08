@@ -8,10 +8,90 @@
 import SwiftUI
 import Utilities
 import ComposableArchitecture
+import ViewComponents
 
 extension AppView {
     @ViewBuilder
     var tabBar: some View {
+        if DeviceUtil.isPad {
+            iPadTabBar
+        } else {
+            iosTabBar
+        }
+    }
+
+    @ViewBuilder
+    private var iosTabBar: some View {
+        WithViewStore(
+            store,
+            observe: \.route
+        ) { viewStore in
+            HStack {
+                ForEach(
+                    AppReducer.Route.allCases,
+                    id: \.self
+                ) { item in
+                    VStack(spacing: 6) {
+                        Group {
+                            if item.isIconSystemImage {
+                                Image(systemName: "\(item == viewStore.state ? item.selectedIcon : item.icon)")
+                            } else {
+                                Image("\(item == viewStore.state ? item.selectedIcon : item.icon)")
+                            }
+                        }
+
+                        Text(item.title)
+                            .font(.system(size: 10))
+                    }
+                    .foregroundColor(
+                        item == viewStore.state ? Color.white : Color.gray
+                    )
+                    .font(.system(size: 18).weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(alignment: .center)
+                    .overlay(
+                            WithViewStore(
+                                store,
+                                observe: \.totalDownloadsCount
+                            ) {
+                                if item == .downloads, $0.state > 0 {
+                                    Text("\($0.state)")
+                                        .font(.footnote.bold())
+                                        .foregroundColor(.black)
+                                        .padding(4)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+                                        .frame(
+                                            maxWidth: .infinity,
+                                            maxHeight: .infinity,
+                                            alignment: .topTrailing
+                                        )
+                                        .padding(8)
+                                        .animation(.linear, value: $0.state)
+                                }
+                        }
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewStore.send(
+                            .set(\.$route, item),
+                            animation: .linear(duration: 0.15)
+                        )
+                    }
+                }
+            }
+            .padding([.horizontal, .top], 12)
+            .padding(.bottom, DeviceUtil.hasBottomIndicator ? 0 : 12)
+        }
+        .frame(maxWidth: .infinity)
+        .background(
+            BlurView(.systemThinMaterialDark)
+                .edgesIgnoringSafeArea(.bottom)
+        )
+    }
+
+    @ViewBuilder
+    private var iPadTabBar: some View {
         WithViewStore(
             store,
             observe: \.route

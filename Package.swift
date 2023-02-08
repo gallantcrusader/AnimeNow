@@ -48,7 +48,6 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "0.49.2"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay.git", exact: "0.8.1"),
         .package(url: "https://github.com/pointfreeco/swiftui-navigation", exact: "0.5.0"),
-        .package(url: "https://github.com/onevcat/Kingfisher.git", exact: "7.3.2"),
         .package(url: "https://github.com/thisIsTheFoxe/SwiftWebVTT.git", exact: "0.1.0"),
         .package(url: "https://github.com/NicholasBellucci/SociableWeaver.git", exact: "0.1.12"),
         .package(url: "https://github.com/apple/swift-collections.git", exact: "1.0.3"),
@@ -72,8 +71,7 @@ let package = Package(
                 "Utilities",
                 "ViewComponents",
                 .product(name: "Awesome", package: "Awesome"),
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                .product(name: "Kingfisher", package: "Kingfisher")
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
         .target(
@@ -88,7 +86,6 @@ let package = Package(
                 "VideoPlayerClient",
                 "ViewComponents",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                .product(name: "Kingfisher", package: "Kingfisher"),
                 .product(name: "SwiftWebVTT", package: "SwiftWebVTT")
             ]
         ),
@@ -112,6 +109,7 @@ let package = Package(
                 "UserDefaultsClient",
                 "Utilities",
                 "VideoPlayerClient",
+                "ViewComponents",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
@@ -167,7 +165,6 @@ let package = Package(
                 "ViewComponents",
                 "VideoPlayerClient",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                .product(name: "Kingfisher", package: "Kingfisher"),
                 .product(name: "SwiftUINavigation", package: "swiftui-navigation")
             ]
         ),
@@ -299,7 +296,6 @@ let package = Package(
                 "Utilities",
                 "Logger",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                .product(name: "Kingfisher", package: "Kingfisher"),
                 .product(name: "XMLCoder", package: "XMLCoder")
             ]
         ),
@@ -334,8 +330,7 @@ let package = Package(
             dependencies: [
                 "DownloaderClient",
                 "SharedModels",
-                "Utilities",
-                .product(name: "Kingfisher", package: "Kingfisher")
+                "Utilities"
             ]
         ),
         .target(name: "AnyPublisherStream"),

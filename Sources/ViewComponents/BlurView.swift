@@ -10,30 +10,35 @@ import SwiftUI
 #if os(iOS)
 import UIKit
 
-typealias BlurEffectView = UIVisualEffectView
-typealias BlurStyle = UIBlurEffect.Style
+public typealias BlurEffectView = UIVisualEffectView
+public typealias BlurStyle = UIBlurEffect.Style
 
-var `default` = BlurStyle.systemThinMaterialDark
+public var `default` = BlurStyle.systemThinMaterialDark
 
 #else
 import AppKit
 
-typealias BlurEffectView = NSVisualEffectView
-typealias BlurStyle = NSVisualEffectView.Material
+public typealias BlurEffectView = NSVisualEffectView
+public typealias BlurStyle = NSVisualEffectView.Material
 
-var `default` = BlurStyle.fullScreenUI
+public var `default` = BlurStyle.fullScreenUI
 
 #endif
 
 
-struct BlurView: PlatformAgnosticViewRepresentable {
+public struct BlurView: PlatformAgnosticViewRepresentable {
+
+    public init(_ style: BlurStyle = `default`) {
+        self.style = style
+    }
+
     var style: BlurStyle = `default`
 
-    func makePlatformView(context: Context) -> BlurEffectView {
+    public func makePlatformView(context: Context) -> BlurEffectView {
         BlurEffectView()
     }
 
-    func updatePlatformView(_ view: BlurEffectView, context: Context) {
+    public func updatePlatformView(_ view: BlurEffectView, context: Context) {
         #if os(iOS)
         view.effect = UIBlurEffect(style: style)
         #else
@@ -45,8 +50,8 @@ struct BlurView: PlatformAgnosticViewRepresentable {
 }
 
 
-struct BlurredButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
+public struct BlurredButtonStyle: ButtonStyle {
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundColor(.white)
             .aspectRatio(1, contentMode: .fill)

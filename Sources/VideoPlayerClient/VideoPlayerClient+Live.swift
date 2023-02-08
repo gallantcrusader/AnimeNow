@@ -10,7 +10,6 @@ import Logger
 import Combine
 import AVFAudio
 import Foundation
-import Kingfisher
 import MediaPlayer
 import AVFoundation
 import AnyPublisherStream
@@ -299,17 +298,7 @@ private class PlayerWrapper {
                 nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = metadata.videoAuthor
                 nowPlayingInfo[MPMediaItemPropertyAlbumArtist] = "Anime Now!"
                 if let imageURL = metadata.thumbnail {
-                    if let image = ImageCache.default.retrieveImageInMemoryCache(
-                        forKey: imageURL.absoluteString,
-                        options: .none
-                    ) {
-                        nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(
-                            boundsSize: image.size,
-                            requestHandler: { _ in image }
-                        )
-                    } else {
-                        nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
-                    }
+//                    nowPlayingInfo[MPMediaItemPropertyArtwork] = cachedImage.image
                 } else {
                     nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
                 }

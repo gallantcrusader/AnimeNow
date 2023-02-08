@@ -7,41 +7,43 @@
 //
 
 import SwiftUI
-import Kingfisher
 
 public struct FillAspectImage: View {
     let url: URL?
-
-    @State private var finishedLoading: Bool
+    var averageColor: ((Color?) -> Void)?
 
     public init(url: URL?) {
         self.url = url
-        self._finishedLoading = .init(initialValue: ImageCache.default.isCached(forKey: url?.absoluteString ?? ""))
     }
 
     public var body: some View {
         GeometryReader { proxy in
-            KFImage.url(url)
-                .onSuccess { image in
-                    finishedLoading = true
-                }
-                .onFailure { _ in
-                    finishedLoading = true
-                }
-                .resizable()
-                .transaction { $0.animation = nil }
-                .scaledToFill()
-                .transition(.opacity)
-                .opacity(finishedLoading ? 1.0 : 0.0)
-                .background(Color(white: 0.05))
-                .frame(
-                    width: proxy.size.width,
-                    height: proxy.size.height,
-                    alignment: .center
-                )
-                .contentShape(Rectangle())
-                .clipped()
-                .animation(.easeInOut(duration: 0.5), value: finishedLoading)
+            CachedAsyncImage(
+                url: url,
+                transaction: .init(animation: .easeInOut(duration: 0.4))
+            ) {
+                $0.resizable()
+            } placeholder: {
+                Color.gray.opacity(0.25)
+                    .placeholder(active: true)
+            }
+            .onAverageColor { color in
+                averageColor?(color)
+            }
+            .scaledToFill()
+            .frame(
+                width: proxy.size.width,
+                height: proxy.size.height,
+                alignment: .center
+            )
+            .contentShape(Rectangle())
+            .clipped()
         }
+    }
+
+    public func onAverageColor(_ callback: @escaping (Color?) -> Void) -> Self {
+        var copy = self
+        copy.averageColor = callback
+        return copy
     }
 }

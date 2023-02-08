@@ -27,50 +27,52 @@ public struct AppView: View {
 
         // MARK: Content View
 
-        WithViewStore(
-            store,
-            observe: \.route
-        ) { viewStore in
-            switch viewStore.state {
-            case .home:
-                HomeView(
-                    store: store.scope(
-                        state: \.home,
-                        action: AppReducer.Action.home
+        ZStack {
+            WithViewStore(
+                store,
+                observe: \.route
+            ) { viewStore in
+                switch viewStore.state {
+                case .home:
+                    HomeView(
+                        store: store.scope(
+                            state: \.home,
+                            action: AppReducer.Action.home
+                        )
                     )
-                )
 
-            case .search:
-                SearchView(
-                    store: store.scope(
-                        state: \.search,
-                        action: AppReducer.Action.search
+                case .search:
+                    SearchView(
+                        store: store.scope(
+                            state: \.search,
+                            action: AppReducer.Action.search
+                        )
                     )
-                )
 
-            case .collection:
-                CollectionsView(
-                    store: store.scope(
-                        state: \.collection,
-                        action: AppReducer.Action.collection
+                case .collection:
+                    CollectionsView(
+                        store: store.scope(
+                            state: \.collection,
+                            action: AppReducer.Action.collection
+                        )
                     )
-                )
 
-            case .downloads:
-                DownloadsView(
-                    store: store.scope(
-                        state: \.downloads,
-                        action: AppReducer.Action.downloads
+                case .downloads:
+                    DownloadsView(
+                        store: store.scope(
+                            state: \.downloads,
+                            action: AppReducer.Action.downloads
+                        )
                     )
-                )
 
-            case .settings:
-                SettingsView(
-                    store: store.scope(
-                        state: \.settings,
-                        action: AppReducer.Action.settings
+                case .settings:
+                    SettingsView(
+                        store: store.scope(
+                            state: \.settings,
+                            action: AppReducer.Action.settings
+                        )
                     )
-                )
+                }
             }
         }
         .frame(

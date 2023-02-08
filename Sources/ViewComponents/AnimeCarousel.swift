@@ -1,5 +1,5 @@
 //
-//  SnapCarousel.swift
+//  AnimeCarousel.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 10/17/22.
@@ -8,11 +8,14 @@
 
 import SwiftUI
 import Foundation
+import SharedModels
 import IdentifiedCollections
 
-public struct SnapCarousel<Content: View, T: Identifiable>: View {
+public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
 
     /// Properties....
+
+    @Binding var position: Int
 
     var spacing: CGFloat
 
@@ -20,10 +23,12 @@ public struct SnapCarousel<Content: View, T: Identifiable>: View {
     var content: (T) -> Content
 
     public init(
+        position: Binding<Int>,
         spacing: CGFloat = 0,
         items: [T],
         @ViewBuilder content: @escaping (T)->Content
     ) {
+        self._position = position
         self.list = items
         self.spacing = spacing
         self.content = content
@@ -31,31 +36,43 @@ public struct SnapCarousel<Content: View, T: Identifiable>: View {
 
     // Offset...
     @GestureState private var translation: CGFloat = 0
-    @State private var position: Int = 0
-
     public var body: some View {
-        #if os(iOS)
-        TabView {
-            ForEach(list) { item in
-                GeometryReader { proxy in
-                    content(item)
-                        .frame(width: proxy.size.width)
-                }
-            }
-        }
-        .tabViewStyle(.page(indexDisplayMode: .automatic))
-        #else
         ZStack(
             alignment: .bottom
         ) {
             scrollItems
-            indicator
+
+            VStack {
+                header
+                indicators
+            }
         }
-        #endif
     }
 }
 
-extension SnapCarousel {
+extension AnimeCarousel {
+    private var anime: (any AnimeRepresentable)? {
+        translation == .zero ? list[safe: position] : nil
+    }
+
+    @ViewBuilder
+    var header: some View {
+        ZStack {
+            if let anime {
+                Text(anime.title)
+                    .font(.title.weight(.bold))
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+            } else {
+                EmptyView()
+            }
+        }
+        .animation(.spring(), value: translation == .zero)
+    }
+}
+
+extension AnimeCarousel {
     @ViewBuilder
     var scrollItems: some View {
         GeometryReader { proxy in
@@ -71,7 +88,8 @@ extension SnapCarousel {
             .highPriorityGesture(
                 DragGesture()
                     .updating($translation, body: { value, out, _ in
-                        out = value.translation.width
+                        let shouldRestrict = position == 0 && value.translation.width > 0 || position == list.count - 1 && value.translation.width < 0
+                        out = value.translation.width / (shouldRestrict ? log10(abs(value.translation.width)) : 1)
                     })
                     .onEnded({ value in
                         let offset = -(value.translation.width / proxy.size.width)
@@ -87,13 +105,13 @@ extension SnapCarousel {
                     })
             )
         }
-//        .animation(.easeInOut, value: translation == 0)
+        .animation(.easeInOut, value: translation == 0)
     }
 }
 
-extension SnapCarousel {
+extension AnimeCarousel {
     @ViewBuilder
-    var indicator: some View {
+    var indicators: some View {
         HStack(spacing: 6) {
             ForEach(
                 indicatorStates

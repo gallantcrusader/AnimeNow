@@ -7,7 +7,6 @@
 //
 
 import SwiftUI
-import Kingfisher
 import Foundation
 
 #if os(macOS)
@@ -56,10 +55,13 @@ public struct ContextButton<Label: View>: View {
                     action?(item.name)
                 } label: {
                     Text(item.name)
-                    KFImage(item.image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: iconSize.width, height: iconSize.height)
+                    CachedAsyncImage(url: item.image) {
+                        $0.resizable()
+                    } placeholder: {
+                        EmptyView()
+                    }
+                    .scaledToFit()
+                    .frame(width: iconSize.width, height: iconSize.height)
                 }
             }
         }, label: label)
@@ -112,17 +114,12 @@ private class MenuObservable: NSObject, ObservableObject, NSMenuDelegate {
             let menuItem = NSMenuItem(title: item.name, action: #selector(handlePress), keyEquivalent: "")
             menuItem.representedObject = item
             menuItem.target = self
-            if let imageURL = item.image {
-                menuItem.image = ImageCache.default.retrieveImageInMemoryCache(forKey: imageURL.absoluteString)
-
-                if menuItem.image == nil {
-                    let imageView = KFCrossPlatformImageView()
-                    imageView.kf.setImage(with: imageURL)
-
-                    menuItem.image = imageView.image
-                }
-
-                menuItem.image = menuItem.image?.kf.resize(to: iconSize, for: .aspectFit)
+            if let _ = item.image {
+                // TODO: Work on seeing if I can retrieve caching image
+//                if let image = ImageCache.shared.get(forKey: imageURL.absoluteString) {
+//                    menuItem.image = image
+//                }
+                menuItem.image?.size = iconSize
             }
             menu.addItem(menuItem)
         }

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Kingfisher
 import SharedModels
 
 public struct ThumbnailItemCompactView: View {
@@ -142,7 +141,6 @@ public struct ThumbnailItemCompactView: View {
                 .animation(.linear, value: downloadStatus.state)
             }
         }
-        .background(Color.black)
         .frame(maxWidth: .infinity)
     }
 }

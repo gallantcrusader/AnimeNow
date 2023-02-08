@@ -8,7 +8,6 @@
 
 import SwiftUI
 import Utilities
-import Kingfisher
 import SharedModels
 import ViewComponents
 import SwiftUINavigation
@@ -64,12 +63,7 @@ public struct HomeView: View {
                         ExtraTopSafeAreaInset()
 
                         VStack(spacing: 24) {
-                            animeHeroItems(
-                                isLoading: viewStore.isLoading,
-                                store: store.scope(
-                                    state: \.topTrendingAnime
-                                )
-                            )
+                            animeHeroItems(isLoading: viewStore.isLoading)
 
                             listAnyEpisodes(
                                 title: "Resume Watching",
@@ -161,71 +155,47 @@ extension HomeView {
     }
 }
 
-extension HomeView {
-    @ViewBuilder
-    func animeHero(
-        _ anime: Anime
-    ) -> some View {
-        ZStack(
-            alignment: .bottomLeading
-        ) {
-            FillAspectImage(
-                url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
-            )
-            .overlay(
-                LinearGradient(
-                    stops: [
-                        .init(
-                            color: .clear,
-                            location: 0.4
-                        ),
-                        .init(
-                            color: .black.opacity(0.75),
-                            location: 1.0
-                        )
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(anime.title)
-                    .font(.title.weight(.bold))
-                    .lineLimit(2)
-            }
-            .foregroundColor(.white)
-            .multilineTextAlignment(.leading)
-            .padding()
-            .padding(.bottom, 24)
-        }
-    }
-}
-
 // MARK: Anime Hero Items
 
 extension HomeView {
+    private struct HeaderViewState: Equatable {
+        let animes: HomeReducer.LoadableAnime
+        let position: Int
+
+        init(state: HomeReducer.State) {
+            self.animes = state.topTrendingAnime
+            self.position = state.heroPosition
+        }
+    }
+
     @ViewBuilder
-    func animeHeroItems(
-        isLoading: Bool,
-        store: Store<HomeReducer.LoadableAnime, HomeReducer.Action>
-    ) -> some View {
+    func animeHeroItems(isLoading: Bool) -> some View {
         Group {
-            if isLoading {
-                animeHero(.placeholder)
-            } else {
-                WithViewStore(store) { viewStore in
-                    if let animes = viewStore.state.value,
-                       animes.count > 0 {
-                        SnapCarousel(
-                            items: animes
-                        ) { anime in
-                            animeHero(anime)
-                                .onTapGesture {
-                                    viewStore.send(.animeTapped(anime))
-                                }
+            WithViewStore(
+                store,
+                observe: HeaderViewState.init
+            ) { viewStore in
+                if let animes = isLoading ? [.placeholder] : viewStore.animes.value, animes.count > 0 {
+                    AnimeCarousel(
+                        position: viewStore.binding(\.$heroPosition, as: \.position),
+                        items: animes
+                    ) { anime in
+                        FillAspectImage(
+                            url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
+                        )
+                        .onTapGesture {
+                            viewStore.send(.animeTapped(anime))
                         }
                     }
+//                    #if os(macOS)
+//                    .arrowIndicators(
+//                        viewStore.binding(
+//                            \.$heroPosition,
+//                             as: \.position
+//                        ),
+//                        count: animes.count
+//                    )
+//                    #endif
                 }
             }
         }
