@@ -60,26 +60,30 @@ public struct AnimePlayerView: View {
             alignment: .center
         )
         .overlay(
-            HStack(spacing: 0) {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) {
-                        ViewStore(store.stateless).send(.backwardsTapped)
+            Group {
+                if !DeviceUtil.isMac {
+                    HStack(spacing: 0) {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                ViewStore(store.stateless).send(.backwardsTapped)
+                            }
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                ViewStore(store.stateless).send(.forwardsTapped)
+                            }
                     }
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) {
-                        ViewStore(store.stateless).send(.forwardsTapped)
+                    .onTapGesture {
+                        ViewStore(store.stateless).send(.playerTapped)
                     }
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .center
+                    )
+                }
             }
-            .onTapGesture {
-                ViewStore(store.stateless).send(.playerTapped)
-            }
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .center
-            )
         )
         .overlay(errorOverlay)
         .overlay(playerControlsOverlay)
@@ -648,6 +652,7 @@ extension AnimePlayerView {
                         }
                         .multiSelection(viewState.stream.availableProviders.items.count > 1)
                         .disabled(viewState.stream.availableProviders.items.count <= 1)
+                        .cornerRadius(12)
 
                         SettingsRowView(
                             name: "Audio",
@@ -659,6 +664,7 @@ extension AnimePlayerView {
                         .loading(viewState.stream.loadingLink)
                         .multiSelection(viewState.stream.links.items.count > 1)
                         .disabled(viewState.stream.links.items.count <= 1)
+                        .cornerRadius(12)
 
                         SettingsRowView(
                             name: "Quality",
@@ -674,6 +680,7 @@ extension AnimePlayerView {
                         )
                         .multiSelection(viewState.stream.sources.items.count > 1)
                         .disabled(viewState.stream.sources.items.count <= 1)
+                        .cornerRadius(12)
                     }
                 }
             }

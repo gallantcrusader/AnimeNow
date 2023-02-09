@@ -46,6 +46,7 @@ public struct ArrowIndicatorsModifier: ViewModifier {
             .disabled(rightDisabled)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal)
         .onHover { isHovering in
             withAnimation {
                 hovering = isHovering
@@ -69,15 +70,16 @@ public struct ArrowIndicatorsModifier: ViewModifier {
         }
         .buttonStyle(.plain)
         .opacity(hovering ? 1.0 : 0)
+        .foregroundColor(.init(white: 1.0))
     }
 
-    public func leftDisabled(_ disabled: Bool) -> ArrowIndicatorsModifier {
+    func leftDisabled(_ disabled: Bool) -> ArrowIndicatorsModifier {
         var copy = self
         copy.leftDisabled = disabled
         return copy
     }
 
-    public func rightDisabled(_ disabled: Bool) -> ArrowIndicatorsModifier {
+    func rightDisabled(_ disabled: Bool) -> ArrowIndicatorsModifier {
         var copy = self
         copy.rightDisabled = disabled
         return copy
@@ -102,18 +104,35 @@ public extension View {
         )
     }
 
-    // TODO: Make indicators work on collection with identifiable
-    func arrowIndicators<T: Identifiable, C: Collection>(
-        _ items: C
-    ) -> some View where C.Element == T {
+    func arrowIndicators<I>(
+        _ range: Binding<Range<I>>,
+        _ maxBounds: Range<I>,
+        shiftBy count: I
+    ) -> some View where I: AdditiveArithmetic {
         self.modifier(
-            ArrowIndicatorsModifier(
-                previous: {
-                }, next: {
-                }
-            )
-//            .leftEnabled(items.first != )
-//            .rightEnabled(items.last != )
+            ArrowIndicatorsModifier {
+                range.wrappedValue = range.wrappedValue.shiftLeft(by: count, maxBounds: maxBounds)
+            } next: {
+                range.wrappedValue = range.wrappedValue.shiftRight(by: count, maxBounds: maxBounds)
+            }
+            .leftDisabled(maxBounds.lowerBound >= range.wrappedValue.lowerBound)
+            .rightDisabled(maxBounds.upperBound <= range.wrappedValue.upperBound)
         )
+    }
+}
+
+extension Range where Bound: AdditiveArithmetic {
+    func shiftLeft(by count: Bound, maxBounds: Range<Bound>) -> Range<Bound> {
+        if lowerBound - count >= maxBounds.lowerBound {
+            return (lowerBound - count)..<(upperBound - count)
+        }
+        return self
+    }
+
+    func shiftRight(by count: Bound, maxBounds: Range<Bound>) -> Range<Bound> {
+        if upperBound + count <= maxBounds.upperBound {
+            return (lowerBound + count)..<(upperBound + count)
+        }
+        return self
     }
 }

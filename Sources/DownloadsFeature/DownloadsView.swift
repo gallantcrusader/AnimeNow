@@ -52,6 +52,9 @@ public struct DownloadsView: View {
         .onAppear {
             ViewStore(store).send(.onAppear)
         }
+        #if os(macOS)
+        .padding(.horizontal, 40)
+        #endif
     }
 }
 

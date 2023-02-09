@@ -32,6 +32,7 @@ let package = Package(
         .library(name: "DiscordClient", targets: ["DiscordClient"]),
         .library(name: "DownloaderClient", targets: ["DownloaderClient"]),
         .library(name: "FileClient", targets: ["FileClient"]),
+        .library(name: "ImageDatabaseCleint", targets: ["ImageDatabaseClient"]),
         .library(name: "VideoPlayerClient", targets: ["VideoPlayerClient"]),
         .library(name: "UserDefaultsClient", targets: ["UserDefaultsClient"]),
 
@@ -204,6 +205,7 @@ let package = Package(
                 "Build",
                 "DiscordClient",
                 "FileClient",
+                "ImageDatabaseClient",
                 "UserDefaultsClient",
                 "SharedModels",
                 "Utilities",
@@ -282,6 +284,9 @@ let package = Package(
             ]
         ),
         .target(
+            name: "ImageDatabaseClient"
+        ),
+        .target(
             name: "UserDefaultsClient",
             dependencies: [
                 "SharedModels",
@@ -295,6 +300,7 @@ let package = Package(
                 "SharedModels",
                 "Utilities",
                 "Logger",
+                "ImageDatabaseClient",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 .product(name: "XMLCoder", package: "XMLCoder")
             ]
@@ -330,7 +336,8 @@ let package = Package(
             dependencies: [
                 "DownloaderClient",
                 "SharedModels",
-                "Utilities"
+                "Utilities",
+                "ImageDatabaseClient"
             ]
         ),
         .target(name: "AnyPublisherStream"),

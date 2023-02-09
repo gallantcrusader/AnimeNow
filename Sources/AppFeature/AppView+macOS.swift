@@ -65,6 +65,7 @@ extension AppView {
                 }
             }
             .padding()
+            .padding(.horizontal, 40) // Required in order to consider arrow indicators 
             .frame(
                 maxWidth: .infinity,
                 alignment: .leading

@@ -36,16 +36,18 @@ public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
 
     // Offset...
     @GestureState private var translation: CGFloat = 0
+
     public var body: some View {
-        ZStack(
-            alignment: .bottom
-        ) {
+        ZStack(alignment: .bottom) {
             scrollItems
 
-            VStack {
+            VStack(spacing: 8) {
                 header
                 indicators
             }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(LinearGradient(colors: [.clear, .black.opacity(0.75)], startPoint: .top, endPoint: .bottom))
         }
     }
 }
@@ -63,7 +65,6 @@ extension AnimeCarousel {
                     .font(.title.weight(.bold))
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
             } else {
                 EmptyView()
             }
@@ -89,7 +90,8 @@ extension AnimeCarousel {
                 DragGesture()
                     .updating($translation, body: { value, out, _ in
                         let shouldRestrict = position == 0 && value.translation.width > 0 || position == list.count - 1 && value.translation.width < 0
-                        out = value.translation.width / (shouldRestrict ? log10(abs(value.translation.width)) : 1)
+//                        out = value.translation.width / (shouldRestrict ? log10(abs(value.translation.width)) : 1)
+                        out = shouldRestrict ? 0 : value.translation.width
                     })
                     .onEnded({ value in
                         let offset = -(value.translation.width / proxy.size.width)
@@ -125,7 +127,6 @@ extension AnimeCarousel {
             }
             .animation(.spring(), value: indicatorStates)
         }
-        .padding()
     }
 
     struct IndicatorState: Hashable, Identifiable {

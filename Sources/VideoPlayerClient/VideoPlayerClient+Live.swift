@@ -13,6 +13,7 @@ import Foundation
 import MediaPlayer
 import AVFoundation
 import AnyPublisherStream
+import ImageDatabaseClient
 
 extension VideoPlayerClient {
     public static let liveValue: Self = {
@@ -297,8 +298,19 @@ private class PlayerWrapper {
                 nowPlayingInfo[MPMediaItemPropertyTitle] = metadata.videoTitle
                 nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = metadata.videoAuthor
                 nowPlayingInfo[MPMediaItemPropertyAlbumArtist] = "Anime Now!"
-                if let imageURL = metadata.thumbnail {
-//                    nowPlayingInfo[MPMediaItemPropertyArtwork] = cachedImage.image
+                if let imageURL = metadata.thumbnail, let image = ImageDatabase.shared.cachedImage(imageURL) {
+                    let media =  MPMediaItemArtwork(
+                        boundsSize: image.size
+                    ) { size in
+                        #if os(macOS)
+                        let copy = image.copy() as! PlatformImage
+                        copy.size = size
+                        #elseif os(iOS)
+                        let copy = image.resizeImageTo(size: size) ?? .init()
+                        #endif
+                        return copy
+                    }
+                    nowPlayingInfo[MPMediaItemPropertyArtwork] = media
                 } else {
                     nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
                 }
@@ -421,3 +433,15 @@ extension VideoPlayerClient.Status {
         }
     }
 }
+
+#if os(iOS)
+extension UIImage {
+    func resizeImageTo(size: CGSize) -> UIImage? {
+        UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+        self.draw(in: CGRect(origin: CGPoint.zero, size: size))
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        return resizedImage
+    }
+}
+#endif

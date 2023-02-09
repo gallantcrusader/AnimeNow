@@ -277,23 +277,14 @@ extension AnimeDetailView {
     @ViewBuilder
     func topContainer(_ anime: Anime) -> some View {
         ZStack {
-            GeometryReader { reader in
-                FillAspectImage(
-                    url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
-                )
-                .onAverageColor {
-                    averageImageColor = $0 ?? .black
-                }
-                .frame(
-                    width: reader.size.width,
-                    height: reader.size.height + (reader.frame(in: .global).minY > 0 ? reader.frame(in: .global).minY : 0),
-                    alignment: .center
-                )
-                .contentShape(Rectangle())
-                .clipped()
-                .offset(y: reader.frame(in: .global).minY <= 0 ? 0 : -reader.frame(in: .global).minY)
+            FillAspectImage(
+                url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
+            )
+            .onAverageColor {
+                averageImageColor = $0 ?? .black
             }
-            
+            .overscrollExpandView()
+
             VStack(alignment: .leading, spacing: 8) {
                 VStack {
                     Text(anime.title)
@@ -401,6 +392,10 @@ extension AnimeDetailView {
             }
             .padding(.horizontal)
             .padding(.vertical)
+            #if os(macOS)
+            .padding(.horizontal, 40)
+            #endif
+
             .background(
                 LinearGradient(
                     stops: [
@@ -478,6 +473,9 @@ extension AnimeDetailView {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
+        #if os(macOS)
+        .padding(.horizontal, 40)
+        #endif
     }
 }
 
@@ -560,6 +558,9 @@ extension AnimeDetailView {
                     }
                 }
                 .padding(.horizontal)
+                #if os(macOS)
+                .padding(.horizontal, 40)
+                #endif
 
                 HStack {
                     ContextButton(
@@ -608,6 +609,9 @@ extension AnimeDetailView {
 
                 }
                 .padding(.horizontal)
+                #if os(macOS)
+                .padding(.horizontal, 40)
+                #endif
 
                 LoadableView(
                     loadable: viewState.episodes
@@ -660,25 +664,18 @@ extension AnimeDetailView {
             .padding(.horizontal)
         } else {
             ScrollViewReader { proxy in
-                ScrollView(
-                    .horizontal,
-                    showsIndicators: false
-                ) {
-                    LazyHStack {
-                        ForEach(episodes, id: \.id) { episode in
-                            generateEpisodeItem(
-                                episode,
-                                compact: false
-                            )
-                            .id(episode.id)
-                        }
-                    }
-                    .padding(.horizontal)
+                DynamicHStackScrollView(
+                    idealWidth: 350,
+                    items: episodes
+                ) { episode in
+                    generateEpisodeItem(
+                        episode,
+                        compact: false
+                    )
+                    .id(episode.id)
                 }
             }
-            .frame(height: 200)
         }
-
     }
 
     struct EpisodeDownloadingViewState: Equatable {

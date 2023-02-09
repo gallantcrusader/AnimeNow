@@ -13,6 +13,7 @@ import SharedModels
 import DiscordClient
 import ViewComponents
 import UserDefaultsClient
+import ImageDatabaseClient
 import ComposableArchitecture
 
 public struct SettingsReducer: ReducerProtocol {

@@ -16,9 +16,9 @@ import ComposableArchitecture
 public struct HomeView: View {
     let store: StoreOf<HomeReducer>
 
-    public init(
-        store: StoreOf<HomeReducer>
-    ) {
+    @State private var animeHeroColors = [Int: Color]()
+
+    public init(store: StoreOf<HomeReducer>) {
         self.store = store
     }
 
@@ -117,10 +117,7 @@ public struct HomeView: View {
                             active: viewStore.isLoading,
                             duration:  2.0
                         )
-                        .animation(
-                            .easeInOut(duration: 0.5),
-                            value: viewStore.state
-                        )
+
                         ExtraBottomSafeAreaInset()
                         Spacer(minLength: 32)
                     }
@@ -128,7 +125,7 @@ public struct HomeView: View {
             }
             .animation(
                 .easeInOut(duration: 0.5),
-                value: viewStore.state
+                value: viewStore.isLoading
             )
             .disabled(viewStore.isLoading)
             .onAppear {
@@ -142,6 +139,34 @@ public struct HomeView: View {
         #if os(iOS)
         .ignoresSafeArea(.container, edges: DeviceUtil.isPhone ? .top : [])
         #endif
+        .background(backgroundView)
+    }
+}
+
+extension HomeView {
+    @ViewBuilder
+    var backgroundView: some View {
+        WithViewStore(
+            store,
+            observe: \.heroPosition
+        ) { viewStore in
+            LinearGradient(
+                stops: [
+                    .init(
+                        color: animeHeroColors[viewStore.state] ?? .clear,
+//                        location: DeviceUtil.isPhone ? 5/7 : 0.0
+                        location: 0.0
+                    ),
+                    .init(color: .clear, location: 1.0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            .transition(.opacity)
+            .animation(.easeInOut, value: viewStore.state)
+        }
+        .overlay(BlurView().opacity(0.5).ignoresSafeArea())
     }
 }
 
@@ -170,41 +195,43 @@ extension HomeView {
 
     @ViewBuilder
     func animeHeroItems(isLoading: Bool) -> some View {
-        Group {
-            WithViewStore(
-                store,
-                observe: HeaderViewState.init
-            ) { viewStore in
-                if let animes = isLoading ? [.placeholder] : viewStore.animes.value, animes.count > 0 {
-                    AnimeCarousel(
-                        position: viewStore.binding(\.$heroPosition, as: \.position),
-                        items: animes
-                    ) { anime in
-                        FillAspectImage(
-                            url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
-                        )
-                        .onTapGesture {
-                            viewStore.send(.animeTapped(anime))
+        WithViewStore(
+            store,
+            observe: HeaderViewState.init
+        ) { viewStore in
+            if let animes = isLoading ? [.placeholder] : viewStore.animes.value, animes.count > 0 {
+                AnimeCarousel(
+                    position: viewStore.binding(\.$heroPosition, as: \.position),
+                    items: animes
+                ) { anime in
+                    FillAspectImage(
+                        url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
+                    )
+                    .onAverageColor { color in
+                        if let index = animes.firstIndex(of: anime) {
+                            animeHeroColors[index] = color
                         }
                     }
-//                    #if os(macOS)
-//                    .arrowIndicators(
-//                        viewStore.binding(
-//                            \.$heroPosition,
-//                             as: \.position
-//                        ),
-//                        count: animes.count
-//                    )
-//                    #endif
+                    .onTapGesture {
+                        viewStore.send(.animeTapped(anime))
+                    }
                 }
+                .cornerRadius(DeviceUtil.isPhone ? 0 : 32)
+                .overscrollExpandView(DeviceUtil.isPhone)
+                .aspectRatio(DeviceUtil.isPhone ? 5/7 : 6/2, contentMode: .fill)
+                .frame(maxWidth: .infinity)
+                #if os(macOS)
+                .arrowIndicators(
+                    viewStore.binding(
+                        \.$heroPosition,
+                         as: \.position
+                    ),
+                    count: animes.count
+                )
+                #endif
             }
         }
-        .frame(maxWidth: .infinity)
-        .aspectRatio(DeviceUtil.isPhone ? 5/7 : 6/2, contentMode: .fill)
-        .cornerRadius(DeviceUtil.isPhone ? 0 : 32)
-        #if os(macOS)
-        .padding(.horizontal)
-        #endif
+        .padding(DeviceUtil.isPad ? .all : [])
     }
 }
 
@@ -222,24 +249,19 @@ extension HomeView {
             observe: { $0 }
         ) { viewStore in
             if let items = isLoading ? Anime.placeholders(5) : viewStore.value, items.count > 0 {
-                VStack(alignment: .leading) {
-                    headerText(title)
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(alignment: .center, spacing: 12) {
-                            ForEach(items) { anime in
-                                AnimeItemView(
-                                    anime: anime
-                                )
-                                .onTapGesture {
-                                    viewStore.send(.animeTapped(anime))
-                                }
-                                .disabled(isLoading)
-                            }
-                        }
-                        .padding(.horizontal)
+                DynamicHStackScrollView(
+                    idealWidth: DeviceUtil.isPhone ? 140 : 190,
+                    items: items
+                ) { anime in
+                    AnimeItemView(
+                        anime: anime
+                    )
+                    .onTapGesture {
+                        viewStore.send(.animeTapped(anime))
                     }
-                    .frame(height: DeviceUtil.isPhone ? 200 : 275)
+                    .disabled(isLoading)
+                } label: {
+                    headerText(title)
                 }
             }
         }
@@ -256,24 +278,19 @@ extension HomeView {
             observe: { $0 }
         ) { viewStore in
             if let items = isLoading ? Anime.placeholders(5).map { $0.eraseAsRepresentable() } : viewStore.value, items.count > 0 {
-                VStack(alignment: .leading) {
-                    headerText(title)
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(alignment: .center, spacing: 12) {
-                            ForEach(items) { anime in
-                                AnimeItemView(
-                                    anime: anime
-                                )
-                                .onTapGesture {
-                                    viewStore.send(.anyAnimeTapped(id: anime.id))
-                                }
-                                .disabled(isLoading)
-                            }
-                        }
-                        .padding(.horizontal)
+                DynamicHStackScrollView(
+                    idealWidth: DeviceUtil.isPhone ? 140 : 190,
+                    items: items
+                ) { anime in
+                    AnimeItemView(
+                        anime: anime
+                    )
+                    .onTapGesture {
+                        viewStore.send(.anyAnimeTapped(id: anime.id))
                     }
-                    .frame(height: DeviceUtil.isPhone ? 200 : 275)
+                    .disabled(isLoading)
+                } label: {
+                    headerText(title)
                 }
             }
         }
@@ -305,44 +322,39 @@ extension HomeView {
             loadable: store
         ) { viewStore in
             if viewStore.count > 0 && !isLoading {
-                VStack(alignment: .leading) {
-                    headerText(title)
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(alignment: .center) {
-                            ForEach(viewStore.state, id: \.id) { item in
-                                ThumbnailItemBigView(
-                                    episode: item.episode,
-                                    animeTitle: item.anime.title,
-                                    progress: item.episodeStore?.progress,
-                                    progressSize: 6
+                DynamicHStackScrollView(
+                    idealWidth: DeviceUtil.isPhone ? 260 : 400,
+                    items: viewStore.state
+                ) { item in
+                    ThumbnailItemBigView(
+                        episode: item.episode,
+                        animeTitle: item.anime.title,
+                        progress: item.episodeStore?.progress,
+                        progressSize: 6
+                    )
+                    .onTapGesture {
+                        viewStore.send(.watchEpisodeTapped(item))
+                    }
+                    .contextMenu {
+                        if item.episodeStore != nil {
+                            Button {
+                                viewStore.send(.markAsWatched(item))
+                            } label: {
+                                Label(
+                                    "Mark as Watched",
+                                    systemImage: "eye.fill"
                                 )
-                                .frame(height: DeviceUtil.isPhone ? 150 : 225)
-                                .onTapGesture {
-                                    viewStore.send(.watchEpisodeTapped(item))
-                                }
-                                .contextMenu {
-                                    if item.episodeStore != nil {
-                                        Button {
-                                            viewStore.send(.markAsWatched(item))
-                                        } label: {
-                                            Label(
-                                                "Mark as Watched",
-                                                systemImage: "eye.fill"
-                                            )
-                                        }
-                                    }
-
-                                    Button {
-                                        viewStore.send(.anyAnimeTapped(id: item.anime.id))
-                                    } label: {
-                                        Text("More Details")
-                                    }
-                                }
                             }
                         }
-                        .padding(.horizontal)
+
+                        Button {
+                            viewStore.send(.anyAnimeTapped(id: item.anime.id))
+                        } label: {
+                            Text("More Details")
+                        }
                     }
+                } label: {
+                    headerText(title)
                 }
             }
         }
@@ -357,7 +369,6 @@ extension HomeView {
         Text(title)
             .font(DeviceUtil.isPhone ? .headline.bold() : .title2.bold())
             .foregroundColor(.white)
-            .padding(.horizontal)
             .opacity(0.9)
     }
 }

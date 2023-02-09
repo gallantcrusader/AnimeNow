@@ -69,6 +69,9 @@ public struct CollectionsView: View {
             maxWidth: .infinity,
             maxHeight: .infinity
         )
+        #if os(macOS)
+        .padding(.horizontal, 40)
+        #endif
     }
 }
 

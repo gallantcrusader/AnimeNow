@@ -77,6 +77,10 @@ public struct SearchView: View {
                 }
             }
         }
+        .padding(.top)
+        #if os(macOS)
+        .padding(.horizontal, 40)
+        #endif
     }
 }
 
