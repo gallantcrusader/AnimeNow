@@ -39,9 +39,9 @@ public struct SettingsRowView<Accessory: View>: View {
             }
         }
         .padding(.horizontal, height / 4)
-        .frame(height: height)
+        .frame(minHeight: height)
         .font(.callout)
-        .foregroundColor(loading ? .gray : .white)
+        .foregroundColor(loading ? .gray : nil)
         .background(Color(white: 0.2))
         .cornerRadius(cornerRadius)
         .contentShape(Rectangle())
@@ -115,6 +115,17 @@ extension SettingsRowView {
         ) {
             SettingsSwitch(on: active)
         }
+    }
+
+    public static func views<V: View>(
+        name: String,
+        @ViewBuilder views: @escaping () -> V
+    ) -> some View where Accessory == EmptyView {
+        VStack(spacing: 0) {
+            SettingsRowView(name: name, accessory: nil)
+            views()
+        }
+        .background(Color(white: 0.2).frame(maxWidth: .infinity, maxHeight: .infinity))
     }
 }
 

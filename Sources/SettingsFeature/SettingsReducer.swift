@@ -11,6 +11,7 @@ import Utilities
 import FileClient
 import SharedModels
 import DiscordClient
+import ViewComponents
 import UserDefaultsClient
 import ComposableArchitecture
 
@@ -30,6 +31,11 @@ public struct SettingsReducer: ReducerProtocol {
 
         public var buildVersion = "Unknown"
 
+        // MARK: Storage Settings
+
+        public var imageCacheUsage = 0
+        public var imageCacheCapacity = 0
+
         // MARK: User Settings
 
         @BindableState public var userSettings = UserSettings()
@@ -39,6 +45,8 @@ public struct SettingsReducer: ReducerProtocol {
 
     public enum Action: BindableAction {
         case onAppear
+        case refetchImageCache
+        case resetImageCache
         case discordStatus(DiscordClient.Status)
         case binding(BindingAction<State>)
     }
@@ -82,11 +90,21 @@ extension SettingsReducer {
         case .onAppear:
             state.buildVersion = "\(build.version()) (\(build.gitSha()))"
             return .merge(
-                self.setupDiscord(&state)
+                self.setupDiscord(&state),
+                self.setupCache(&state)
             )
 
         case .discordStatus(let status):
             state.discordStatus = status
+
+        case .resetImageCache:
+            return .run { send in
+                await ImageDatabase.shared.reset()
+                await send(.refetchImageCache)
+            }
+
+        case .refetchImageCache:
+            return setupCache(&state)
 
         case .binding(\.$userSettings.discordEnabled):
             let enabled = state.userSettings.discordEnabled
@@ -117,6 +135,12 @@ extension SettingsReducer {
         } else {
             return .none
         }
+    }
+
+    private func setupCache(_ state: inout State) -> EffectTask<Action> {
+        state.imageCacheUsage = ImageDatabase.shared.diskUsage()
+        state.imageCacheCapacity = ImageDatabase.shared.maxDiskCapacity()
+        return .none
     }
 }
 

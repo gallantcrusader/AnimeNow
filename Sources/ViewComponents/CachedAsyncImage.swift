@@ -55,7 +55,7 @@ public struct CachedAsyncImage<Content: View>: View {
             }
     }
 
-    public func onAverageColor(_ callback: @escaping (Color?) -> Void) -> Self {
+    public func onAverageColor(_ callback: ((Color?) -> Void)?) -> Self {
         var copy = self
         copy.onAverageColorChanged = callback
         return copy
@@ -71,30 +71,28 @@ public struct CachedAsyncImage<Content: View>: View {
             return
         }
 
+        if let cachedImage = ImageDatabase.shared.cachedImage(url) {
+            print("Fetching image from memory.")
+            phase = .success(.init(cachedImage))
+            onAverageColorChanged?(cachedImage.averageColor)
+            return
+        }
+
         Task.detached {
             guard !Task.isCancelled else { return }
-            if let platform = await ImageCache.shared.get(forKey: url.absoluteString) {
-                phase = Image(platform).flatMap({ .success($0) }) ?? .empty
-                onAverageColorChanged?(platform.averageColor)
-            } else {
-                do {
-                    let (data, _) = try await URLSession.shared.data(from: url)
-                    let platformImage = ImagePlatform(data: data)
-                    if let platformImage {
-                        await ImageCache.shared.set(forKey: url.absoluteString, image: platformImage)
-                    }
 
-                    let image = Image(platformImage)
-                    withTransaction(transaction) {
-                        phase = image.flatMap { .success($0) } ?? .empty
-                    }
-                    onAverageColorChanged?(platformImage?.averageColor)
-                } catch {
-                    withTransaction(transaction) {
-                        phase = .failed(error)
-                    }
-                    onAverageColorChanged?(nil)
+            do {
+                let image = try await ImageDatabase.shared.image(url)
+
+                withTransaction(transaction) {
+                    phase = .success(.init(image))
                 }
+                onAverageColorChanged?(image.averageColor)
+            } catch {
+                withTransaction(transaction) {
+                    phase = .failed(error)
+                }
+                onAverageColorChanged?(nil)
             }
         }
     }
@@ -118,53 +116,111 @@ extension CachedAsyncImage {
 }
 
 #if canImport(AppKit)
-typealias ImagePlatform = NSImage
+public typealias PlatformImage = NSImage
 #else
-typealias ImagePlatform = UIImage
+public typealias PlatformImage = UIImage
 #endif
 
 fileprivate extension Image {
-    init?(_ platform: ImagePlatform?) {
-        guard let platform else { return nil }
-        #if canImport(UIKit)
+    init(_ platform: PlatformImage) {
+#if canImport(UIKit)
         self.init(uiImage: platform)
-        #else
+#else
         self.init(nsImage: platform)
-        #endif
+#endif
     }
 }
 
-@globalActor public actor ImageCache {
-    public static var shared = ImageCache()
+@globalActor public actor ImageDatabase {
+    public static var shared = ImageDatabase()
 
-    var cache = NSCache<NSString, ImagePlatform>()
+    private let cache: URLCache = {
+        let cachesURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        let diskCacheURL = cachesURL.appendingPathComponent("ImageCaches", conformingTo: .directory)
+        return .init(
+            memoryCapacity: 0,
+            diskCapacity: 1024 * 1024 * 1024,
+            directory: diskCacheURL
+        )
+    }()
 
-    func get(forKey: String) -> ImagePlatform? {
-        return cache.object(forKey: NSString(string: forKey))
+    private lazy var session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.urlCache = cache
+        return .init(configuration: config)
+    }()
+
+    private let cachedImages = NSCache<NSString, PlatformImage>()
+
+    public func image(_ url: URL) async throws -> PlatformImage {
+        try await image(.init(url: url))
     }
 
-    func set(forKey: String, image: ImagePlatform) {
-        cache.setObject(image, forKey: NSString(string: forKey))
+    public func image(_ request: URLRequest) async throws -> PlatformImage {
+
+        // Check an image is already in memory
+
+        if let cached = cachedImages.object(forKey: request.id as NSString) {
+            print("Fetching from cache memory.")
+            return cached
+        }
+
+        // Check if it's in disk
+
+        if let response = cache.cachedResponse(for: request) {
+            print("Fetching from cache disk.")
+            if let image = PlatformImage(data: response.data) {
+                cachedImages.setObject(image, forKey: request.id as NSString)
+                return image
+            } else {
+                throw "Malformed image data response for: \(request.url?.absoluteString ?? "Unknown") "
+            }
+        }
+
+        // Download image
+
+        print("Downloading image")
+
+        let (data, response) = try await session.data(for: request)
+        guard let image = PlatformImage(data: data) else {
+            throw "Image data invalid for \(request.url?.absoluteString ?? "Unknown")"
+        }
+        cache.storeCachedResponse(.init(response: response, data: data), for: request)
+        cachedImages.setObject(image, forKey: request.id as NSString)
+        return image
     }
 
-    private static func key(from url: URL) -> String {
-        return url.absoluteString
+    nonisolated public func cachedImage(_ request: URLRequest) -> PlatformImage? {
+        cachedImages.object(forKey: request.id as NSString)
     }
 
-    private static func key(from request: URLRequest) -> String {
-        return request.url?.description ?? ""
+    nonisolated public func cachedImage(_ url: URL) -> PlatformImage? {
+        cachedImage(.init(url: url))
     }
 
-    public func getImage(for url: URL) {
-        
+    nonisolated public func diskUsage() -> Int {
+        cache.currentDiskUsage
     }
 
-    subscript(url: URL) -> Image? {
-        return nil
+    nonisolated public func maxDiskCapacity() -> Int {
+        cache.diskCapacity
+    }
+
+    public func reset() {
+        cache.removeAllCachedResponses()
+        cachedImages.removeAllObjects()
     }
 }
 
-extension ImagePlatform {
+extension NSCache: @unchecked Sendable {}
+
+extension URLRequest: Identifiable {
+    public var id: String { "\(hashValue)" }
+}
+
+extension String: Error {}
+ 
+extension PlatformImage {
     var averageColor: Color? {
         #if os(macOS)
         var rect = NSRect(origin: .zero, size: self.size)

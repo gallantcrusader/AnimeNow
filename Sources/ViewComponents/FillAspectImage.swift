@@ -27,9 +27,7 @@ public struct FillAspectImage: View {
                 Color.gray.opacity(0.25)
                     .placeholder(active: true)
             }
-            .onAverageColor { color in
-                averageColor?(color)
-            }
+            .onAverageColor(averageColor)
             .scaledToFill()
             .frame(
                 width: proxy.size.width,
