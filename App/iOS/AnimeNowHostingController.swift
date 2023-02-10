@@ -5,6 +5,7 @@
 //  Created by ErrorErrorError on 10/9/22.
 //
 
+#if os(iOS)
 import SwiftUI
 import Foundation
 import ViewComponents
@@ -69,3 +70,4 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
 private class Box {
     weak var delegate: AnimeNowHostingController?
 }
+#endif

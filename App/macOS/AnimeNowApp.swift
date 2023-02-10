@@ -5,6 +5,7 @@
 //  Created by ErrorErrorError on 9/2/22.
 //
 
+#if os(macOS)
 import SwiftUI
 import AppFeature
 import SettingsFeature
@@ -44,3 +45,4 @@ struct AnimeNowApp: App {
         }
     }
 }
+#endif

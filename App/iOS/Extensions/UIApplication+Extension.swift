@@ -5,6 +5,7 @@
 //  
 //
 
+#if os(iOS)
 import SwiftUI
 import Foundation
 
@@ -16,3 +17,4 @@ extension UIApplication {
             .endEditing(force)
     }
 }
+#endif

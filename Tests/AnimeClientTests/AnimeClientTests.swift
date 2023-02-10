@@ -4,13 +4,10 @@ import XCTest
 
 final class AnimeClientTests: XCTestCase {
     func testFetchingAllEpisodeProviders() async throws {
-        let animeClient = AnimeClient.liveValue
+        let animeClient = AnimeClient.testValue
 
         let providers = try await animeClient.getAnimeProviders()
 
-        for provider in providers {
-            let episodes = await animeClient.getEpisodes(127230, provider)
-            print(episodes.name)
-        }
+        XCTAssertEqual(providers.count, 3)
     }
 }

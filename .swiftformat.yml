@@ -1,0 +1,38 @@
+# file options
+
+--symlinks ignore
+
+# format options
+
+--allman false
+--binarygrouping 4,8
+--closingparen balanced
+--commas always
+--comments indent
+--decimalgrouping 3,3
+--elseposition same-line
+--empty void
+--exponentcase lowercase
+--exponentgrouping disabled
+--extensionacl on-declarations
+--fractiongrouping disabled
+--hexgrouping 4,8
+--hexliteralcase uppercase
+--ifdef indent
+--indent 2
+--indentcase false
+--importgrouping testable-bottom
+--linebreaks lf
+--octalgrouping 4,8
+--operatorfunc spaced
+--patternlet hoist
+--ranges spaced
+--self remove
+--semicolons inline
+--stripunusedargs always
+--trimwhitespace always
+--maxwidth 130
+--wraparguments before-first
+--wrapcollections before-first
+--wrapconditions after-first
+--wrapparameters before-first

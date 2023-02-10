@@ -64,7 +64,7 @@ extension URLRequest {
         let executable = info?[kCFBundleNameKey as String] ?? "Anime Now!"
         let bundle = info?[kCFBundleIdentifierKey as String] ?? "Unknown"
         let appVersion = info?["CFBundleShortVersionString"] ?? "Unknown"
-        let appCommit = info?["Commit Version"] ?? "Unknown"
+        let appCommit = info?["GitSha"] ?? "Unknown"
         let osVersion = {
             let version = ProcessInfo.processInfo.operatingSystemVersion
             return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"

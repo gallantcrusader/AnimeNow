@@ -20,6 +20,7 @@ jobs:
       git_sha: ${{ steps.info.outputs.git_sha }}
       semantic_version: ${{ steps.info.outputs.semantic_version }}
       message_tag: ${{ steps.info.outputs.message_tag }}
+      release_notes: ${{ steps.release-notes.outputs.release_notes_body }}
 
     steps:
       - name: Checkout
@@ -42,6 +43,13 @@ jobs:
           echo "git_sha=$git_sha" >> $GITHUB_OUTPUT
           echo "semantic_version=$semantic_version" >> $GITHUB_OUTPUT
           echo "message_tag=$message_tag" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release-notes
+        run: |
+          start_rev=$(git describe --tags --abbrev=0)
+          release_notes=$(cz changelog --dry-run --start-rev $start_rev --unreleased-version 'Changes')
+          echo "release_notes_body=\"${{ inputs.message_body }}\n\n$release_notes\"" >> $GITHUB_OUTPUT
 
   build:
     needs: [setup]
@@ -67,7 +75,7 @@ jobs:
           pushd App
           xcodebuild archive \
             -destination "generic/platform=${{ matrix.platform }}" \
-            -scheme "Anime Now! (${{ matrix.platform }})" \
+            -scheme "Anime Now!" \
             -archivePath "./Anime Now! (${{ matrix.platform }}).xcarchive" \
             -xcconfig "./MainConfig.xcconfig" \
             CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
@@ -117,9 +125,6 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
 
-      - name: Display structure of downloaded files
-        run: ls -R
-
       - name: Release to GitHub
         id: release
         uses: softprops/action-gh-release@v1
@@ -128,8 +133,8 @@ jobs:
           files: |
             */*
           token: ${{ secrets.GITHUB_TOKEN }}
-          generate_release_notes: true
+          generate_release_notes: false
           prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
-          body: ${{ inputs.message_body }}
+          body: ${{ needs.setup.outputs.release_notes }}
           name: v${{ needs.setup.outputs.message_tag }}
           tag_name: ${{ needs.setup.outputs.message_tag }}

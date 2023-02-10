@@ -5,6 +5,7 @@
 //  Created by ErrorErrorError on 10/9/22.
 //
 
+#if os(iOS)
 import UIKit
 import AppFeature
 import ComposableArchitecture
@@ -41,3 +42,4 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         viewStore.send(.appDelegate(.appDidEnterBackground))
     }
 }
+#endif

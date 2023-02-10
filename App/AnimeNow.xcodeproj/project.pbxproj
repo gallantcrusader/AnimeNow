@@ -7,33 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1325FD6C2904F9BC00EA37D5 /* AppDelegate.swift */; };
+		132457A12995B89F00A185EA /* AnimeNowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */; };
 		136A08C629581714005375CF /* AppFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 136A08C529581714005375CF /* AppFeature */; };
 		13820F16291429BA00CE431F /* UIApplication+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13820F15291429BA00CE431F /* UIApplication+Extension.swift */; };
 		13BAE88828F3A0AC00662C0C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */; };
 		13BAE88A28F3A22F00662C0C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88928F3A22F00662C0C /* AppDelegate.swift */; };
 		13BAE88C28F3A66100662C0C /* AnimeNowHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */; };
-		13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */; };
-		13EF1C492959A2CE00DDE449 /* AppFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 13EF1C482959A2CE00DDE449 /* AppFeature */; };
 		13F83DBD2959AC5000B403F4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13F83DBC2959AC5000B403F4 /* Assets.xcassets */; };
-		13F83DBE2959AC5000B403F4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13F83DBC2959AC5000B403F4 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1325FD6C2904F9BC00EA37D5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1373A7702957D2C0005CFA32 /* AnimeNow-App */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "AnimeNow-App"; path = ..; sourceTree = "<group>"; };
 		13820F15291429BA00CE431F /* UIApplication+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+Extension.swift"; sourceTree = "<group>"; };
 		13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MainConfig.xcconfig; sourceTree = "<group>"; };
 		13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		13BAE88928F3A22F00662C0C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowHostingController.swift; sourceTree = "<group>"; };
-		13BB8DF2298323F7006E39BA /* iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iOS.entitlements; sourceTree = "<group>"; };
 		13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeNowApp.swift; sourceTree = "<group>"; };
 		13C3536228C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		13C3536828C308A000A54E7E /* Anime Now!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anime Now!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		13C3536A28C308A000A54E7E /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
-		13D235C328E16801004E51BB /* anime-now-ios-info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "anime-now-ios-info.plist"; sourceTree = "<group>"; };
-		13F05554294AFE4D004BB876 /* anime-now-macos-info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "anime-now-macos-info.plist"; sourceTree = "<group>"; };
+		13C3536A28C308A000A54E7E /* SharedEntitlements.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SharedEntitlements.entitlements; sourceTree = "<group>"; };
+		13DE8F572995C515003F9FA1 /* anime-now-info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "anime-now-info.plist"; sourceTree = "<group>"; };
 		13F83DBC2959AC5000B403F4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -43,14 +36,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				136A08C629581714005375CF /* AppFeature in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		13C3536528C308A000A54E7E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				13EF1C492959A2CE00DDE449 /* AppFeature in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,7 +66,10 @@
 		13C3535728C3089E00A54E7E /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				13DE8F572995C515003F9FA1 /* anime-now-info.plist */,
 				13F83DBC2959AC5000B403F4 /* Assets.xcassets */,
+				13C3536A28C308A000A54E7E /* SharedEntitlements.entitlements */,
+				13BAE88928F3A22F00662C0C /* AppDelegate.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -90,7 +78,6 @@
 			isa = PBXGroup;
 			children = (
 				13C3536228C308A000A54E7E /* Anime Now!.app */,
-				13C3536828C308A000A54E7E /* Anime Now!.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -98,10 +85,7 @@
 		13C3536928C308A000A54E7E /* macOS */ = {
 			isa = PBXGroup;
 			children = (
-				13F05554294AFE4D004BB876 /* anime-now-macos-info.plist */,
 				13C3535A28C3089E00A54E7E /* AnimeNowApp.swift */,
-				1325FD6C2904F9BC00EA37D5 /* AppDelegate.swift */,
-				13C3536A28C308A000A54E7E /* macOS.entitlements */,
 			);
 			path = macOS;
 			sourceTree = "<group>";
@@ -110,11 +94,8 @@
 			isa = PBXGroup;
 			children = (
 				13820F14291429A800CE431F /* Extensions */,
-				13D235C328E16801004E51BB /* anime-now-ios-info.plist */,
-				13BAE88928F3A22F00662C0C /* AppDelegate.swift */,
 				13BAE88728F3A0AC00662C0C /* SceneDelegate.swift */,
 				13BAE88B28F3A66100662C0C /* AnimeNowHostingController.swift */,
-				13BB8DF2298323F7006E39BA /* iOS.entitlements */,
 			);
 			path = iOS;
 			sourceTree = "<group>";
@@ -129,9 +110,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13C3536128C308A000A54E7E /* Anime Now! (iOS) */ = {
+		13C3536128C308A000A54E7E /* Anime Now! */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13C3537728C308A000A54E7E /* Build configuration list for PBXNativeTarget "Anime Now! (iOS)" */;
+			buildConfigurationList = 13C3537728C308A000A54E7E /* Build configuration list for PBXNativeTarget "Anime Now!" */;
 			buildPhases = (
 				13C3535E28C308A000A54E7E /* Sources */,
 				13C3535F28C308A000A54E7E /* Frameworks */,
@@ -141,32 +122,12 @@
 			);
 			dependencies = (
 			);
-			name = "Anime Now! (iOS)";
+			name = "Anime Now!";
 			packageProductDependencies = (
 				136A08C529581714005375CF /* AppFeature */,
 			);
 			productName = "Anime Now! (iOS)";
 			productReference = 13C3536228C308A000A54E7E /* Anime Now!.app */;
-			productType = "com.apple.product-type.application";
-		};
-		13C3536728C308A000A54E7E /* Anime Now! (macOS) */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 13C3537A28C308A000A54E7E /* Build configuration list for PBXNativeTarget "Anime Now! (macOS)" */;
-			buildPhases = (
-				13C3536428C308A000A54E7E /* Sources */,
-				13C3536528C308A000A54E7E /* Frameworks */,
-				13C3536628C308A000A54E7E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "Anime Now! (macOS)";
-			packageProductDependencies = (
-				13EF1C482959A2CE00DDE449 /* AppFeature */,
-			);
-			productName = "Anime Now! (macOS)";
-			productReference = 13C3536828C308A000A54E7E /* Anime Now!.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -180,9 +141,6 @@
 				LastUpgradeCheck = 1410;
 				TargetAttributes = {
 					13C3536128C308A000A54E7E = {
-						CreatedOnToolsVersion = 13.2.1;
-					};
-					13C3536728C308A000A54E7E = {
 						CreatedOnToolsVersion = 13.2.1;
 					};
 				};
@@ -202,8 +160,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13C3536128C308A000A54E7E /* Anime Now! (iOS) */,
-				13C3536728C308A000A54E7E /* Anime Now! (macOS) */,
+				13C3536128C308A000A54E7E /* Anime Now! */,
 			);
 		};
 /* End PBXProject section */
@@ -217,14 +174,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		13C3536628C308A000A54E7E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				13F83DBE2959AC5000B403F4 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -232,19 +181,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				132457A12995B89F00A185EA /* AnimeNowApp.swift in Sources */,
 				13820F16291429BA00CE431F /* UIApplication+Extension.swift in Sources */,
 				13BAE88A28F3A22F00662C0C /* AppDelegate.swift in Sources */,
 				13BAE88828F3A0AC00662C0C /* SceneDelegate.swift in Sources */,
 				13BAE88C28F3A66100662C0C /* AnimeNowHostingController.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		13C3536428C308A000A54E7E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1325FD6D2904F9BC00EA37D5 /* AppDelegate.swift in Sources */,
-				13C3536E28C308A000A54E7E /* AnimeNowApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -305,6 +246,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -362,6 +306,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -372,16 +319,17 @@
 		};
 		13C3537828C308A000A54E7E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = iOS/iOS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Shared/SharedEntitlements.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "iOS/anime-now-ios-info.plist";
+				INFOPLIST_FILE = "Shared/anime-now-info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "";
@@ -392,12 +340,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -408,16 +358,17 @@
 		};
 		13C3537928C308A000A54E7E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 13938BAB28E0CADD001C8784 /* MainConfig.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = iOS/iOS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Shared/SharedEntitlements.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = A6HC4Y86NJ;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "iOS/anime-now-ios-info.plist";
+				INFOPLIST_FILE = "Shared/anime-now-info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "";
@@ -428,75 +379,21 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.errorerrorerror.animenow;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.errorerrorerror.animenow;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "com.errorerrorerror.anime-now";
 				PRODUCT_MODULE_NAME = AnimeNow;
 				PRODUCT_NAME = "Anime Now!";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		13C3537B28C308A000A54E7E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = A6HC4Y86NJ;
-				ENABLE_HARDENED_RUNTIME = NO;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "macOS/anime-now-macos-info.plist";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
-				PRODUCT_MODULE_NAME = AnimeNow;
-				PRODUCT_NAME = "Anime Now!";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = macosx;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		13C3537C28C308A000A54E7E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = A6HC4Y86NJ;
-				ENABLE_HARDENED_RUNTIME = NO;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "macOS/anime-now-macos-info.plist";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.errorerrorerror.anime-now";
-				PRODUCT_MODULE_NAME = AnimeNow;
-				PRODUCT_NAME = "Anime Now!";
-				SDKROOT = macosx;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -512,7 +409,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		13C3537728C308A000A54E7E /* Build configuration list for PBXNativeTarget "Anime Now! (iOS)" */ = {
+		13C3537728C308A000A54E7E /* Build configuration list for PBXNativeTarget "Anime Now!" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13C3537828C308A000A54E7E /* Debug */,
@@ -521,23 +418,10 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		13C3537A28C308A000A54E7E /* Build configuration list for PBXNativeTarget "Anime Now! (macOS)" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				13C3537B28C308A000A54E7E /* Debug */,
-				13C3537C28C308A000A54E7E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		136A08C529581714005375CF /* AppFeature */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = AppFeature;
-		};
-		13EF1C482959A2CE00DDE449 /* AppFeature */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AppFeature;
 		};

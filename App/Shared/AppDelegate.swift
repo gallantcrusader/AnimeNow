@@ -5,9 +5,12 @@
 //  Created by ErrorErrorError on 10/9/22.
 //
 
-import UIKit
 import AppFeature
+import Foundation
 import ComposableArchitecture
+
+#if os(iOS)
+import UIKit
 
 let store = Store(
   initialState: AppReducer.State(),
@@ -48,3 +51,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return hostingController.supportedInterfaceOrientations
     }
 }
+#else
+import AppKit
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    let store = Store(
+      initialState: AppReducer.State(),
+      reducer: AppReducer()
+    )
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        ViewStore(store).send(.appDelegate(.appDidFinishLaunching))
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let viewStore = ViewStore(store)
+
+        if viewStore.hasPendingChanges {
+            viewStore.send(.appDelegate(.appWillTerminate))
+            return .terminateLater
+        }
+
+        return .terminateNow
+    }
+}
+#endif

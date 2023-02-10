@@ -3,7 +3,7 @@ import XCTest
 @testable import VideoPlayerClient
 
 final class VideoPlayerClientTests: XCTestCase {
-    let videoPlayer = VideoPlayerClient.liveValue
+    let videoPlayer = VideoPlayerClient.testValue
 
     func testHLSVideoPlayer() async throws {
         let loadExpectation = expectation(description: "Video can load.")
@@ -81,7 +81,7 @@ final class VideoPlayerClientTests: XCTestCase {
             }
         }
 
-        await waitForExpectations(timeout: 3 * 60)
+        await waitForExpectations(timeout: 30)
 
         observePlayerStatus.cancel()
     }

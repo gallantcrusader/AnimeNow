@@ -84,7 +84,6 @@ public struct AnimeDetailReducer: ReducerProtocol {
             AnimeStreamLogic()
         }
         Reduce(self.core)
-            ._printChanges(.actionLabels)
     }
 }
 

@@ -24,7 +24,7 @@ extension DependencyValues {
 extension Build: DependencyKey {
     public static let liveValue: Build = Self(
         version: { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown" },
-        gitSha: { Bundle.main.infoDictionary?["Commit Version"] as? String ?? "Unknown" }
+        gitSha: { Bundle.main.infoDictionary?["GitSha"] as? String ?? "Unknown" }
     )
 
     public static let previewValue = noop

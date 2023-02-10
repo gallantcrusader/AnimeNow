@@ -1,0 +1,49 @@
+name: Continous integration
+
+on:
+  push:
+    branches:
+      - 'dev'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  run-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache/restore@v3
+        with:
+          key: dependencies
+          path: .build/checkouts
+
+      - name: Build swift package
+        run: swift build -v
+
+      - name: Run tests
+        run: swift test -v
+
+      - name: Export coverage test
+        run: |
+          BUILD_PATH=$(swift build --show-bin-path)
+          xcrun llvm-cov report \
+            "$(find $(find $BUILD_PATH -name '*.xctest') -perm +111 -type f)" \
+            --instr-profile "$BUILD_PATH/codecov/default.profdata" \
+            --ignore-filename-regex='.*build/checkouts.*' \
+            --ignore-filename-regex='Tests/.*' > "$BUILD_PATH/codecov/lcov.info"
+          echo "# Coverage Job Summary \n\n```\n$(cat $BUILD_PATH/codecov/lcov.info)\n```" >> $GITHUB_STEP_SUMMARY
+
+      - name: PR comment with reactions
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+             ${{ env.GITHUB_STEP_SUMMARY }}
+
+      - name: Cache swift packages
+        uses: actions/cache/save@v3
+        with:
+          path: .build/checkouts
+          key: dependencies
