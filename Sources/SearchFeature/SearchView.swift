@@ -83,28 +83,28 @@ extension SearchView {
             store,
             observe: \.query
         ) { viewStore in
-                if #available(iOS 15.0, *) {
-                    FocusOnAppearTextField(
-                        title: "Search",
-                        text: viewStore.binding(
-                            get: { $0 },
-                            send: SearchReducer.Action.searchQueryChanged
-                        )
-                        .removeDuplicates()
+            if #available(iOS 15.0, macOS 12.0, *) {
+                FocusOnAppearTextField(
+                    title: "Search",
+                    text: viewStore.binding(
+                        get: { $0 },
+                        send: SearchReducer.Action.searchQueryChanged
                     )
-                    .textFieldStyle(.plain)
-                    .frame(maxHeight: .infinity)
-                } else {
-                    TextField(
-                        "Search",
-                        text: viewStore.binding(
-                            get: { $0 },
-                            send: SearchReducer.Action.searchQueryChanged
-                        )
+                    .removeDuplicates()
+                )
+                .textFieldStyle(.plain)
+                .frame(maxHeight: .infinity)
+            } else {
+                TextField(
+                    "Search",
+                    text: viewStore.binding(
+                        get: { $0 },
+                        send: SearchReducer.Action.searchQueryChanged
                     )
-                    .textFieldStyle(.plain)
-                    .frame(maxHeight: .infinity)
-                }
+                )
+                .textFieldStyle(.plain)
+                .frame(maxHeight: .infinity)
+            }
         }
     }
 
@@ -300,7 +300,7 @@ struct SearchView_Previews: PreviewProvider {
     }
 }
 
-@available(iOS 15.0, *)
+@available(iOS 15.0, macOS 12.0, *)
 struct FocusOnAppearTextField: View {
 
     let title: any StringProtocol
@@ -316,7 +316,5 @@ struct FocusOnAppearTextField: View {
                     self.focused = true
                 }
             }
-
     }
-
 }
