@@ -11,6 +11,7 @@ import Utilities
 import SharedModels
 import ViewComponents
 import ComposableArchitecture
+import SwiftUINavigation
 
 public struct SearchView: View {
     let store: StoreOf<SearchReducer>
@@ -31,16 +32,7 @@ public struct SearchView: View {
                 observe: { $0 }
             ) { viewStore in
                 HStack {
-                    TextField(
-                        "Search",
-                        text: viewStore.binding(
-                            get: \.query,
-                            send: SearchReducer.Action.searchQueryChanged
-                        )
-//                        .removeDuplicates()
-                    )
-                    .textFieldStyle(.plain)
-                    .frame(maxHeight: .infinity)
+                    searchBar
 
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 20))
@@ -85,6 +77,36 @@ public struct SearchView: View {
 }
 
 extension SearchView {
+    @ViewBuilder
+    var searchBar: some View {
+        WithViewStore(
+            store,
+            observe: \.query
+        ) { viewStore in
+                if #available(iOS 15.0, *) {
+                    FocusOnAppearTextField(
+                        title: "Search",
+                        text: viewStore.binding(
+                            get: { $0 },
+                            send: SearchReducer.Action.searchQueryChanged
+                        )
+                        .removeDuplicates()
+                    )
+                    .textFieldStyle(.plain)
+                    .frame(maxHeight: .infinity)
+                } else {
+                    TextField(
+                        "Search",
+                        text: viewStore.binding(
+                            get: { $0 },
+                            send: SearchReducer.Action.searchQueryChanged
+                        )
+                    )
+                    .textFieldStyle(.plain)
+                    .frame(maxHeight: .infinity)
+                }
+        }
+    }
 
     @ViewBuilder
     var searchHistory: some View {
@@ -132,20 +154,19 @@ extension SearchView {
 
     @ViewBuilder
     var waitingForTyping: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 24) {
             searchHistory
             Spacer()
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 70))
 
-            Text("Start typing to search for animes.")
-                .font(.headline)
+            Text("Start typing to search")
+                .font(.title2)
                 .multilineTextAlignment(.center)
             Spacer()
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     @ViewBuilder
@@ -249,16 +270,53 @@ extension SearchView {
 
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
-        SearchView(
-            store: .init(
-                initialState: .init(
-                    query: "Test",
-                    loadable: .success([]),
-                    searched: ["Testy", "Attack on Titans"]
-                ),
-                reducer: SearchReducer()
+        Group {
+            SearchView(
+                store: .init(
+                    initialState: .init(
+                        query: "Test",
+                        loadable: .success([]),
+                        searched: ["Testy", "Attack on Titans"]
+                    ),
+                    reducer: SearchReducer()
+                )
             )
-        )
-        .preferredColorScheme(.dark)
+            .preferredColorScheme(.dark)
+            .previewDisplayName("With history")
+
+            SearchView(
+                store: .init(
+                    initialState: .init(
+                        query: "",
+                        loadable: .idle,
+                        searched: []
+                    ),
+                    reducer: SearchReducer()
+                )
+            )
+            .preferredColorScheme(.dark)
+            .previewDisplayName("Empty")
+        }
     }
+}
+
+@available(iOS 15.0, *)
+struct FocusOnAppearTextField: View {
+
+    let title: any StringProtocol
+    let text: Binding<String>
+
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        TextField(title, text: text)
+            .focused($focused)
+            .onAppear {
+                DispatchQueue.main.async {
+                    self.focused = true
+                }
+            }
+
+    }
+
 }
