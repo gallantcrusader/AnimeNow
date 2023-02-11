@@ -1,25 +1,21 @@
-name: Build Release
+name: CD
 
 on:
-  workflow_dispatch:
-    inputs:
-      is_prerelease:
-        type: boolean
-        default: true
-        description: 'Is pre-release'
-        required: true
-      message_body:
-        description: 'Message body'
-        default: 'This is a beta build of the current repo. There might be some issues or error with it so I do not guarantee its usability.'
-        required: true
+  workflow_run:
+    workflows: 
+      - CI
+    types:
+      - completed
 
 jobs:
   setup:
     runs-on: macos-12
+    if: "${{ github.event.workflow_run.conclusion == 'success' && contains(github.event.head_commit.message, 'chore(version)') }}"
     outputs:
       git_sha: ${{ steps.info.outputs.git_sha }}
       semantic_version: ${{ steps.info.outputs.semantic_version }}
       message_tag: ${{ steps.info.outputs.message_tag }}
+      prerelease: ${{ steps.info.outputs.prerelease }}
       release_notes: ${{ steps.release-notes.outputs.release_notes_body }}
 
     steps:
@@ -30,26 +26,20 @@ jobs:
         id: info
         run: |
           git_sha=$(git log --format='%h' -n 1)
-          semantic_version=$(cat ./App/MainConfig.xcconfig | grep 'MARKETING_VERSION' | cut -f 3 -d ' ')
-          message_tag=$semantic_version
-
-          if [ ${{ github.event.inputs.is_prerelease }} == 'true' ]; then
-            # TODO: Get the next latest prerelease build and start it from zero after 1.0.0
-            # TODO: Increment to latest version after 1.0.0 release
-            semantic_version=$semantic_version-beta
-            message_tag=$semantic_version.$git_sha
-          fi
+          message_tag=$(git tag -l --sort -creatordate | head -1)
+          semantic_version=$($message_tag | cut -d. -f-3)
 
           echo "git_sha=$git_sha" >> $GITHUB_OUTPUT
           echo "semantic_version=$semantic_version" >> $GITHUB_OUTPUT
           echo "message_tag=$message_tag" >> $GITHUB_OUTPUT
+          echo "prerelease='${{ contains($message_tag, 'beta') }}'" >> $GITHUB_OUTPUT
 
       - name: Generate release notes
         id: release-notes
         run: |
-          start_rev=$(git describe --tags --abbrev=0)
-          release_notes=$(cz changelog --dry-run --start-rev $start_rev --unreleased-version 'Changes')
-          echo "release_notes_body=\"${{ inputs.message_body }}\n\n$release_notes\"" >> $GITHUB_OUTPUT
+          brew install cocogitto
+          latest_tag=$(git tag -l --sort -creatordate | head -1)
+          echo "release_notes=\"$(cog changelog -a $latest_tag)\"" >> $GITHUB_OUTPUT
 
   build:
     needs: [setup]
@@ -134,7 +124,7 @@ jobs:
             */*
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: false
-          prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
+          prerelease: ${{ needs.setup.outputs.prerelease == 'true' }}
           body: ${{ needs.setup.outputs.release_notes }}
           name: v${{ needs.setup.outputs.message_tag }}
           tag_name: ${{ needs.setup.outputs.message_tag }}

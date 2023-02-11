@@ -1,4 +1,4 @@
-name: Lint code
+name: Lint
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - '*'
 
 jobs:
-  swiftlint-and-tests:
+  run-swiftlint:
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3

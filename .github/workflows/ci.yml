@@ -1,4 +1,4 @@
-name: Continous integration
+name: CI
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         run: swift build -v
 
       - name: Run tests
-        run: swift test -v
+        run: swift test --enable-code-coverage -v
 
       - name: Export coverage test
         run: |
@@ -33,14 +33,18 @@ jobs:
             --instr-profile "$BUILD_PATH/codecov/default.profdata" \
             --ignore-filename-regex='.*build/checkouts.*' \
             --ignore-filename-regex='Tests/.*' > "$BUILD_PATH/codecov/lcov.info"
-          echo "# Coverage Job Summary \n\n```\n$(cat $BUILD_PATH/codecov/lcov.info)\n```" >> $GITHUB_STEP_SUMMARY
+          echo "# Coverage Job Summary" >> $GITHUB_STEP_SUMMARY
+          echo "\n" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "$(cat $BUILD_PATH/codecov/lcov.info)" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: PR comment with reactions
         if: github.event_name == 'pull_request'
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-             ${{ env.GITHUB_STEP_SUMMARY }}
+             "$(cat $GITHUB_STEP_SUMMARY)"
 
       - name: Cache swift packages
         uses: actions/cache/save@v3
