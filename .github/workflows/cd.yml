@@ -8,14 +8,31 @@ on:
       - completed
 
 jobs:
+  validation:
+    runs-on: macos-12
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: validate
+        id: validate
+        run: |
+          commit_message="$(git log -1 --pretty=%B)"
+
+          if [[ $commit_message != *"chore(version)"* ]]; then
+            exit -1
+          fi
+
   setup:
     runs-on: macos-12
-    if: "${{ github.event.workflow_run.conclusion == 'success' && contains(github.event.head_commit.message, 'chore(version)') }}"
+    needs: [validation]
     outputs:
       git_sha: ${{ steps.info.outputs.git_sha }}
       semantic_version: ${{ steps.info.outputs.semantic_version }}
       prerelease: ${{ steps.info.outputs.prerelease }}
-      release_notes: ${{ steps.release-notes.outputs.release_notes_body }}
+      release_notes: ${{ steps.release_notes.outputs.release_notes }}
 
     steps:
       - name: Checkout
@@ -24,16 +41,20 @@ jobs:
       - name: Get Build Info
         id: info
         run: |
-          echo "semantic_version=$(git tag -l --sort -creatordate | head -1)" >> $GITHUB_OUTPUT
-          echo "git_sha=$(git rev-list --abbrev-commit -n $semantic_version)" >> $GITHUB_OUTPUT
-          echo "prerelease='${{ contains($semantic_version, 'beta') }}'" >> $GITHUB_OUTPUT
+          semantic_version=$(git tag -l --sort -creatordate | head -1)
+          echo "semantic_version=$semantic_version" >> $GITHUB_OUTPUT
+          echo "git_sha=$(git rev-list --abbrev-commit -n 1 $semantic_version)" >> $GITHUB_OUTPUT
+          if [[ $semantic_version == *"beta"* ]]; then
+            echo "prerelease='true'" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease='false'" >> $GITHUB_OUTPUT
+          fi
 
       - name: Generate release notes
-        id: release-notes
+        id: release_notes
         run: |
           brew install cocogitto
-          latest_tag=$(git tag -l --sort -creatordate | head -1)
-          echo "release_notes=\"$(cog changelog -a $latest_tag)\"" >> $GITHUB_OUTPUT
+          echo "release_notes=\"$(cog changelog -a ${{ needs.info.outputs.semantic_version }})\"" >> $GITHUB_OUTPUT
 
   build:
     needs: [setup]
