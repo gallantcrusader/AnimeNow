@@ -6,8 +6,8 @@
 //
 
 #if os(macOS)
-import SwiftUI
 import ComposableArchitecture
+import SwiftUI
 
 extension AppView {
 
@@ -88,17 +88,6 @@ extension AppView {
                 .ignoresSafeArea(.container, edges: .top)
             )
         }
-    }
-}
-
-struct AppView_macOS_Previews: PreviewProvider {
-    static var previews: some View {
-        AppView(
-            store: .init(
-                initialState: .init(),
-                reducer: AppReducer()
-            )
-        )
     }
 }
 #endif

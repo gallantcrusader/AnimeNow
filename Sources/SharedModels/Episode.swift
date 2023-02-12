@@ -158,14 +158,20 @@ public extension Episode {
         .init(
             title: "Homecoming",
             number: 1,
-            description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
+            description:
+                """
+                An older and stronger Naruto returns from his two and a half years of training with Jiraiya.
+                """,
             thumbnail: .original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!),
             isFiller: false
         ),
         .init(
             title: "Homecoming 2",
             number: 2,
-            description: "An older and stronger Naruto returns from his two and a half years of training with Jiraiya. When he gets back he finds that many things have changed since he left. From Konohamaru becoming a Gennin and being under the supervision of Ebisu to Tsunade's, the Fifth Hokage, being added to the great stone faces. Now the tasks of starting things where they were left has begun. And what new danger does Jiraiya know about?",
+            description:
+                """
+                An older and stronger Naruto returns from his two and a half years of training with Jiraiya.
+                """,
             thumbnail: .original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!),
             isFiller: true
         )

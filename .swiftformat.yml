@@ -1,7 +1,3 @@
-# file options
-
---symlinks ignore
-
 # format options
 
 --allman false
@@ -11,7 +7,6 @@
 --comments indent
 --decimalgrouping 3,3
 --elseposition same-line
---empty void
 --exponentcase lowercase
 --exponentgrouping disabled
 --extensionacl on-declarations
@@ -21,8 +16,9 @@
 --ifdef indent
 --indent 2
 --indentcase false
---importgrouping testable-bottom
+--importgrouping default
 --linebreaks lf
+--maxwidth 200
 --octalgrouping 4,8
 --operatorfunc spaced
 --patternlet hoist
@@ -31,8 +27,11 @@
 --semicolons inline
 --stripunusedargs always
 --trimwhitespace always
---maxwidth 130
+--voidtype void
 --wraparguments before-first
 --wrapcollections before-first
 --wrapconditions after-first
 --wrapparameters before-first
+
+# op-ins
+--enable isEmpty

@@ -2,6 +2,9 @@ included:
   - App
   - Sources
   - Tests
+excluded:
+  - Sources/OpenCastSwift
+  - "**/.build"
 disabled_rules:
   - nesting
   - trailing_comma
@@ -79,3 +82,9 @@ identifier_name:
     error: 60
   min_length:
     warning: 1
+file_length:
+  warning: 1000
+  error: 1300
+cyclomatic_complexity:
+  warning: 20
+  error: 30

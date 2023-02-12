@@ -5,9 +5,9 @@
 //  Created by ErrorErrorError on 9/12/22.
 //
 
+import ComposableArchitecture
 import Foundation
 import SharedModels
-import ComposableArchitecture
 
 public struct AnimeClient {
     public let getTopTrendingAnime: @Sendable () async throws -> [Anime]

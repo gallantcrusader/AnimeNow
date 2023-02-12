@@ -6,16 +6,16 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import Logger
-import Utilities
-import Foundation
 import AnimeClient
-import SharedModels
-import DatabaseClient
 import AnimeStreamLogic
-import DownloaderClient
-import UserDefaultsClient
 import ComposableArchitecture
+import DatabaseClient
+import DownloaderClient
+import Foundation
+import Logger
+import SharedModels
+import UserDefaultsClient
+import Utilities
 
 public struct AnimeDetailReducer: ReducerProtocol {
 
@@ -94,7 +94,7 @@ extension AnimeDetailReducer.State {
     ) {
         self.init(
             animeId: anime.id,
-            anime: anime as? Anime != nil ? .success(anime as! Anime) : .idle,
+            anime: (anime as? Anime).flatMap { .success($0) } ?? .idle,
             availableProviders: availableProviders
         )
     }
@@ -102,7 +102,9 @@ extension AnimeDetailReducer.State {
 
 extension AnimeDetailReducer.State {
     var isLoadingAnime: Bool {
-        guard let anime = anime.value else { return !anime.finished }
+        guard let anime = anime.value else {
+            return !anime.finished
+        }
         return anime.status != .upcoming && (!animeStore.finished || !collectionStores.finished)
     }
 
@@ -111,8 +113,10 @@ extension AnimeDetailReducer.State {
     }
 
     var isInACollection: Bool {
-        guard let collections = collectionStores.value else { return false }
-        return collections.contains(where: { $0.animes.contains(where: { animeStore in animeStore.id == animeId }) } )
+        guard let collections = collectionStores.value else {
+            return false
+        }
+        return collections.contains { $0.animes.contains { animeStore in animeStore.id == animeId } }
     }
 
     var streamingProvider: Loadable<AnimeStreamingProvider>? {
@@ -139,6 +143,7 @@ extension AnimeDetailReducer {
     struct FavoritesDebouce: Hashable {}
     struct CancelObservingDownloadState: Hashable {}
 
+    // swiftlint:disable cyclomatic_complexity function_body_length
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
@@ -154,7 +159,7 @@ extension AnimeDetailReducer {
         case .tappedFavorite:
             guard var animeStore = state.animeStore.value else { break }
             animeStore.isFavorite.toggle()
-            
+
             return .run { [animeStore] _ in
                 try await withTaskCancellation(id: FavoritesDebouce.self, cancelInFlight: true) {
                     if !(try await databaseClient.update(animeStore.id, \AnimeStore.isFavorite, animeStore.isFavorite)) {
@@ -221,7 +226,9 @@ extension AnimeDetailReducer {
 
         case .fetchedAnime(let loaded):
             state.anime = loaded
-            if case .success = loaded { return startObservations(&state) }
+            if case .success = loaded {
+                return startObservations(&state)
+            }
 
         case .fetchedAnimeFromDB(let animesMatched):
             guard let anime = state.anime.value else { break }
@@ -314,7 +321,9 @@ extension AnimeDetailReducer {
     }
 
     private func startObservations(_ state: inout State) -> EffectTask<Action> {
-        guard let anime = state.anime.value else { return .none }
+        guard let anime = state.anime.value else {
+            return .none
+        }
         let animeId = anime.id
         var effects = [EffectTask<Action>]()
 

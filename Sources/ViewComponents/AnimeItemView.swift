@@ -5,8 +5,8 @@
 //  Created by ErrorErrorError on 9/4/22.
 //
 
-import SwiftUI
 import SharedModels
+import SwiftUI
 
 public struct AnimeItemView: View {
     let anime: any AnimeRepresentable
@@ -16,10 +16,7 @@ public struct AnimeItemView: View {
     }
 
     public var body: some View {
-        GeometryReader { reader in
-            FillAspectImage(
-                url: anime.posterImage.largest?.link
-            )
+        FillAspectImage(url: anime.posterImage.largest?.link)
             .overlay(
                 LinearGradient(
                     stops: [
@@ -47,9 +44,8 @@ public struct AnimeItemView: View {
                         maxHeight: .infinity
                     )
             )
-        }
-        .aspectRatio(2/3, contentMode: .fit)
-        .cornerRadius(12)
+            .aspectRatio(2 / 3, contentMode: .fit)
+            .cornerRadius(12)
     }
 }
 

@@ -42,7 +42,7 @@ public struct SearchView: View {
                                 .searchQueryChanged("")
                             )
                         }
-                        .opacity(viewStore.query.count > 0 ? 1.0 : 0.0)
+                        .opacity(viewStore.query.isEmpty ? 0.0 : 1.0)
                 }
                 .fixedSize(horizontal: false, vertical: true)
                 .padding()
@@ -114,7 +114,7 @@ extension SearchView {
             store,
             observe: \.searched
         ) { viewStore in
-            if viewStore.state.count > 0 {
+            if !viewStore.state.isEmpty {
                 VStack(alignment: .leading) {
                     HStack {
                         Text("Search History")
@@ -179,7 +179,7 @@ extension SearchView {
 
     @ViewBuilder
     func presentAnimes(_ animes: [Anime]) -> some View {
-        if animes.count > 0 {
+        if !animes.isEmpty {
             ScrollView {
                 ZStack {
                     VStack {
@@ -199,7 +199,7 @@ extension SearchView {
                                         #if os(iOS)
                                         UIApplication.shared
                                             .windows
-                                                .filter{ $0.isKeyWindow }
+                                                .filter { $0.isKeyWindow }
                                                 .first?
                                                 .endEditing(true)
                                         #endif

@@ -110,12 +110,18 @@ extension VideoPlayer {
             videoPlayer.pipActive = false
         }
 
-        public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+        public func pictureInPictureController(
+            _ pictureInPictureController: AVPictureInPictureController,
+            restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void
+        ) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.restoreUI)
             completionHandler(true)
         }
 
-        public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
+        public func pictureInPictureController(
+            _ pictureInPictureController: AVPictureInPictureController,
+            failedToStartPictureInPictureWithError error: Error
+        ) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.failedToStart)
             videoPlayer.pipActive = false
         }
@@ -134,6 +140,7 @@ extension VideoPlayer {
 
 extension VideoPlayer {
     public final class PlayerView: PlatformView {
+        // swiftlint:disable force_cast
         var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
 
         var player: AVPlayer? {
@@ -142,9 +149,9 @@ extension VideoPlayer {
         }
 
         #if os(iOS)
-        public override class var layerClass: AnyClass { AVPlayerLayer.self }
+        override public class var layerClass: AnyClass { AVPlayerLayer.self }
         #else
-        public override func makeBackingLayer() -> CALayer { AVPlayerLayer() }
+        override public func makeBackingLayer() -> CALayer { AVPlayerLayer() }
         #endif
 
         var videoGravity: AVLayerVideoGravity {

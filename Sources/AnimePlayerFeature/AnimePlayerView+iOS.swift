@@ -6,11 +6,11 @@
 //
 
 #if os(iOS)
-import SwiftUI
-import SharedModels
 import AVFoundation
-import ViewComponents
 import ComposableArchitecture
+import SharedModels
+import SwiftUI
+import ViewComponents
 
 // MARK: Player Controls Overlay
 
@@ -213,7 +213,7 @@ extension AnimePlayerView {
                             Spacer()
                         }
 
-                        if viewState.episodes.count > 0 {
+                        if !viewState.episodes.isEmpty {
                             ScrollViewReader { proxy in
                                 ScrollView(
                                     .horizontal,
@@ -223,7 +223,7 @@ extension AnimePlayerView {
                                         ForEach(viewState.episodes) { episode in
                                             ThumbnailItemBigView(
                                                 episode: episode,
-                                                progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress,
+                                                progress: viewState.episodesStore.first { $0.number == episode.number }?.progress,
                                                 nowPlaying: episode.id == viewState.selectedEpisode,
                                                 progressSize: 8
                                             )

@@ -20,11 +20,9 @@ public protocol AnimeRepresentable: Hashable, Identifiable {
 
 public extension AnimeRepresentable where Self: Equatable {
     func isEqualTo(_ item: some AnimeRepresentable) -> Bool {
-        guard let item = item as? Self else { return false }
-        return self == item
+        (item as? Self) == self
     }
 }
-
 public extension AnimeRepresentable {
     func eraseAsRepresentable() -> AnyAnimeRepresentable {
         .init(self)
@@ -124,7 +122,6 @@ public struct Anime: AnimeRepresentable {
         self.releaseYear = releaseYear
         self.avgRating = avgRating
     }
-    
 }
 
 public extension Anime {
@@ -132,7 +129,10 @@ public extension Anime {
         id: 0,
         malId: 0,
         title: "Naruto Shippuden",
-        description: "It has been two and a half years since Naruto Uzumaki left Konohagakure, the Hidden Leaf Village, for intense training following events which fueled his desire to be stronger. Now Akatsuki, the mysterious organization of elite rogue ninja, is closing in on their grand plan which may threaten the safety of the entire shinobi world.\n\nAlthough Naruto is older and sinister events loom on the horizon, he has changed little in personality—still rambunctious and childish—though he is now far more confident and possesses an even greater determination to protect his friends and home. Come whatever may, Naruto will carry on with the fight for what is important to him, even at the expense of his own body, in the continuation of the saga about the boy who wishes to become Hokage.\n\n(Source: MAL Rewrite)",
+        description:
+        """
+        It has been two and a half years since Naruto Uzumaki left Konohagakure, the Hidden Leaf Village...
+        """,
         posterImage: [.large(URL(string: "https://media.kitsu.io/anime/poster_images/1555/large.jpg")!)],
         coverImage: [.large(URL(string: "https://media.kitsu.io/anime/cover_images/1555/large.jpg")!)],
         categories: [
@@ -142,12 +142,12 @@ public extension Anime {
         ],
         status: .finished,
         format: .tv,
-        releaseYear: 2009,
+        releaseYear: 2_009,
         avgRating: nil
     )
 
     static let attackOnTitan = Anime(
-        id: 16498,
+        id: 16_498,
         malId: 0,
         title: "Attack on Titan",
         description: "Centuries ago, mankind was slaughtered to near extinction by monstrous humanoid creatures called titans.",
@@ -160,7 +160,7 @@ public extension Anime {
         ],
         status: .current,
         format: .tv,
-        releaseYear: 2013,
+        releaseYear: 2_013,
         avgRating: nil
     )
 
@@ -185,13 +185,15 @@ public extension Anime {
             id: id,
             malId: 0,
             title: "Placeholder",
-            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+            description: """
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                """,
             posterImage: [],
             coverImage: [],
             categories: ["One", "Two", "Three"],
             status: .tba,
             format: .tv,
-            releaseYear: 2020,
+            releaseYear: 2_020,
             avgRating: 0.5
         )
     }

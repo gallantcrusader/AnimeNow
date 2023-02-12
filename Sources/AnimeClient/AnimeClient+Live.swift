@@ -5,13 +5,13 @@
 //  Created by ErrorErrorError on 9/12/22.
 //
 
-import Combine
 import APIClient
-import Utilities
+import Combine
+import ComposableArchitecture
 import Foundation
 import SharedModels
 import SociableWeaver
-import ComposableArchitecture
+import Utilities
 
 extension AnimeClient {
     public static let liveValue: AnimeClient = {
@@ -152,7 +152,7 @@ extension AnimeClient {
             return providerData
         } getSources: { provider, link in
             switch link {
-            case .stream(let id, let audio):
+            case let .stream(id, audio):
                 let response = try await apiClient.request(
                     .consumetAPI,
                     .anilistWatch(
@@ -210,19 +210,23 @@ extension AnimeClient {
 
             var mainEpisodeInfo: ConsumetAPI.Episode?
 
-            primary.filter({ $0.number == episodeNumber })
-                .forEach {
-                    if mainEpisodeInfo == nil { mainEpisodeInfo = $0 }
-                    providers.insert(.stream(id: $0.id, audio: .sub))
+            primary.filter { $0.number == episodeNumber }
+                .forEach { episode in
+                    if mainEpisodeInfo == nil {
+                        mainEpisodeInfo = episode
+                    }
+                    providers.insert(.stream(id: episode.id, audio: .sub))
                 }
 
-            secondary.filter({ $0.number == episodeNumber })
-                .forEach {
-                    if mainEpisodeInfo == nil { mainEpisodeInfo = $0 }
-                    if let type = $0.type {
-                        providers.insert(.stream(id: $0.id, audio: .custom(type)))
+            secondary.filter { $0.number == episodeNumber }
+                .forEach { episode in
+                    if mainEpisodeInfo == nil {
+                        mainEpisodeInfo = episode
+                    }
+                    if let type = episode.type {
+                        providers.insert(.stream(id: episode.id, audio: .custom(type)))
                     } else {
-                        providers.insert(.stream(id: $0.id, audio: .dub))
+                        providers.insert(.stream(id: episode.id, audio: .dub))
                     }
                 }
 

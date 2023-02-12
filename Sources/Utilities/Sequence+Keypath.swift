@@ -9,6 +9,14 @@ import Foundation
 
 public extension Sequence {
     func sorted<T: Comparable>(by keyPath: KeyPath<Element, T>) -> [Element] {
-        return sorted { $0[keyPath: keyPath] < $1[keyPath: keyPath] }
+        sorted { $0[keyPath: keyPath] < $1[keyPath: keyPath] }
+    }
+
+    func min<T: Comparable>(by keyPath: KeyPath<Element, T>) -> Element? {
+        self.min { $0[keyPath: keyPath] < $1[keyPath: keyPath] }
+    }
+
+    func max<T: Comparable>(by keyPath: KeyPath<Element, T>) -> Element? {
+        self.max { $0[keyPath: keyPath] < $1[keyPath: keyPath] }
     }
 }

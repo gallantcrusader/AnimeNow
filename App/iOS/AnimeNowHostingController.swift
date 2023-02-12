@@ -6,8 +6,8 @@
 //
 
 #if os(iOS)
-import SwiftUI
 import Foundation
+import SwiftUI
 import ViewComponents
 
 class AnimeNowHostingController: UIHostingController<AnyView> {
@@ -62,7 +62,7 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
         box.delegate = self
     }
 
-    @objc required dynamic init?(coder aDecoder: NSCoder) {
+    @objc dynamic required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 }

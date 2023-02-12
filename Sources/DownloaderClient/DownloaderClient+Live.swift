@@ -146,10 +146,10 @@ extension DownloaderClient {
                         anime.episodes.remove(episode)
                     }
 
-                    if anime.episodes.count > 0 {
-                        downloadedContent.value.update(anime)
-                    } else {
+                    if anime.episodes.isEmpty {
                         downloadedContent.value[id: anime.id] = nil
+                    } else {
+                        downloadedContent.value.update(anime)
                     }
 
                     syncToDisk()
@@ -281,7 +281,13 @@ fileprivate class DownloaderDelegate: NSObject, AVAssetDownloadDelegate {
         self.callback = callback
     }
 
-    func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
+    func urlSession(
+        _ session: URLSession,
+        assetDownloadTask: AVAssetDownloadTask,
+        didLoad timeRange: CMTimeRange,
+        totalTimeRangesLoaded loadedTimeRanges: [NSValue],
+        timeRangeExpectedToLoad: CMTimeRange
+    ) {
         callback(
             assetDownloadTask.taskIdentifier,
             .downloading(

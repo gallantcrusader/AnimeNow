@@ -188,7 +188,7 @@ extension SettingsRowView {
     ) -> some View where Accessory == Text {
         let view = SettingsRowView(
             name: name,
-            text: selectable.item?.description ?? ((selectable.items.count > 0) ? "Not Selected" : "Unavailable")
+            text: selectable.item?.description ?? ((selectable.items.isEmpty) ? "Unavailable" : "Not Selected")
         )
             .multiSelection(selectable.items.count > 1)
             .loading(loading)
@@ -230,7 +230,7 @@ extension SettingsRowView {
     }
 }
 
-struct SettingsRowViewV2_Previes: PreviewProvider {
+struct SettingsRowViewV2Previes: PreviewProvider {
     static var previews: some View {
         SettingsRowView(name: "Yes", active: .constant(true))
     }

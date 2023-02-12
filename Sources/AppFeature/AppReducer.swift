@@ -180,6 +180,7 @@ extension AppReducer.State {
 }
 
 extension AppReducer {
+    // swiftlint:disable cyclomatic_complexity function_body_length
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .appDelegate(.appDidEnterBackground):

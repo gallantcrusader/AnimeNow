@@ -6,15 +6,15 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import AnimeStreamLogic
+import AVFoundation
+import ComposableArchitecture
+import DownloadOptionsFeature
+import SettingsFeature
+import SharedModels
 import SwiftUI
 import Utilities
-import AVFoundation
-import SharedModels
 import ViewComponents
-import SettingsFeature
-import AnimeStreamLogic
-import DownloadOptionsFeature
-import ComposableArchitecture
 
 public struct AnimePlayerView: View {
     let store: StoreOf<AnimePlayerReducer>
@@ -362,10 +362,9 @@ extension AnimePlayerView {
 
     @ViewBuilder
     var subtitlesButton: some View {
-        WithViewStore(
-            store,
-            observe: { $0.stream.sourceOptions.map(\.subtitles) }
-        ) { viewStore in
+        WithViewStore(store) { state in
+            state.stream.sourceOptions.map(\.subtitles)
+        } content: { viewStore in
             if (viewStore.value?.count ?? 0) > 0 {
                 Image(systemName: "captions.bubble.fill")
                     .foregroundColor(Color.white)
@@ -407,10 +406,9 @@ extension AnimePlayerView {
 
     @ViewBuilder
     var episodesButton: some View {
-        WithViewStore(
-            store,
-            observe: { ($0.stream.streamingProvider?.episodes.count ?? 0) > 1 }
-        ) { viewState in
+        WithViewStore(store) { state in
+            (state.stream.streamingProvider?.episodes.count ?? 0) > 1
+        } content: { viewState in
             if viewState.state {
                 Button {
                     viewState.send(.toggleEpisodes)
@@ -428,10 +426,9 @@ extension AnimePlayerView {
 
     @ViewBuilder
     var videoGravityButton: some View {
-        WithViewStore(
-            store,
-            observe: { $0.playerGravity }
-        ) { viewState in
+        WithViewStore(store) { state in
+            state.playerGravity
+        } content: { viewState in
             Button {
                 viewState.send(.toggleVideoGravity)
             } label: {
@@ -511,16 +508,13 @@ extension AnimePlayerView {
     @ViewBuilder
     var sidebarOverlay: some View {
         IfLetStore(
-            store.scope(
-                state: {
-                    $0.selectedSidebar != .episodes ? $0.selectedSidebar : nil
-                }
-            )
+            store.scope { state in
+                state.selectedSidebar != .episodes ? state.selectedSidebar : nil
+            }
         ) { store in
-            WithViewStore(
-                store,
-                observe: { $0 }
-            ) { selectedSidebar in
+            WithViewStore(store) { state in
+                state
+            } content: { selectedSidebar in
                 VStack {
                     HStack(alignment: .center) {
                         if case .settings(let options) = selectedSidebar.state,
@@ -561,7 +555,7 @@ extension AnimePlayerView {
                     maxWidth: .infinity,
                     maxHeight: .infinity
                 )
-                .aspectRatio(8/9, contentMode: .fit)
+                .aspectRatio(8 / 9, contentMode: .fit)
                 .padding(24)
                 .background(
                     Color(white: 0.12)
@@ -646,7 +640,7 @@ extension AnimePlayerView {
                         SettingsRowView(
                             name: "Provider",
                             text: viewState.stream.availableProviders.item?.name ??
-                                (viewState.stream.availableProviders.items.count > 0 ? "Not Selected" : "Unavailable")
+                            (viewState.stream.availableProviders.items.isEmpty ? "Unavailable" : "Not Selected")
                         ) {
                             viewState.send(.selectSidebarSettings(.provider))
                         }
@@ -657,7 +651,7 @@ extension AnimePlayerView {
                         SettingsRowView(
                             name: "Audio",
                             text: viewState.stream.links.item?.audio.description ??
-                                (viewState.stream.links.items.count > 0 ? "Not Selected" : "Unavailable")
+                                (viewState.stream.links.items.isEmpty ? "Unavailable" : "Not Selected")
                         ) {
                             viewState.send(.selectSidebarSettings(.audio))
                         }
@@ -669,13 +663,13 @@ extension AnimePlayerView {
                         SettingsRowView(
                             name: "Quality",
                             text: viewState.stream.sources.item?.quality.description ??
-                                (viewState.stream.sources.items.count > 0 ? "Not Selected" : "Unavailable")
+                                (viewState.stream.sources.items.isEmpty ? "Unavailable" : "Not Selected")
                         ) {
                             viewState.send(.selectSidebarSettings(.quality))
                         }
                         .loading(
                             viewState.stream.loadingLink ?
-                                true : viewState.stream.links.items.count > 0 ?
+                                true : !viewState.stream.links.items.isEmpty ?
                                 viewState.stream.loadingSource : false
                         )
                         .multiSelection(viewState.stream.sources.items.count > 1)
@@ -709,14 +703,14 @@ extension AnimePlayerView {
 
     @ViewBuilder
     var subtitlesSidebar: some View {
-        ScrollViewReader { proxy in
+        ScrollViewReader { _ in
             ScrollView(
                 .vertical,
                 showsIndicators: false
             ) {
                 WithViewStore(
                     store,
-                    observe:  SubtitlesViewState.init
+                    observe: SubtitlesViewState.init
                 ) { viewStore in
                     LazyVStack {
                         Text("None")

@@ -71,6 +71,7 @@ private class PlayerWrapper {
         configureInit()
     }
 
+    // swiftlint:disable cyclomatic_complexity
     private func configureInit() {
         player.automaticallyWaitsToMinimizeStalling = true
         player.preventsDisplaySleepDuringVideoPlayback = true
@@ -303,6 +304,7 @@ private class PlayerWrapper {
                         boundsSize: image.size
                     ) { size in
                         #if os(macOS)
+                        // swiftlint:disable force_cast
                         let copy = image.copy() as! PlatformImage
                         copy.size = size
                         #elseif os(iOS)

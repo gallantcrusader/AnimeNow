@@ -447,6 +447,7 @@ extension KitsuAPI {
             case FALL
         }
 
+        // swiftlint:disable identifier_name
         enum AgeRating: String, Decodable {
             case G
             case PG

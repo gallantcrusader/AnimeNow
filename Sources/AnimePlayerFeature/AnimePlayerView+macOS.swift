@@ -176,7 +176,7 @@ extension AnimePlayerView {
             store,
             observe: EpisodesOverlayViewState.init
         ) { viewState in
-            if viewState.isVisible && viewState.episodes.count > 0 {
+            if viewState.isVisible && !viewState.episodes.isEmpty {
                 LazyVStack(alignment: .leading) {
                     Text("Up Next")
                         .font(.title2.bold())

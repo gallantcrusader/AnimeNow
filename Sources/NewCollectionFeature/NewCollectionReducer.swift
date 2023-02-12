@@ -67,7 +67,7 @@ extension NewCollectionReducer.State {
     var canSave: Bool {
         let formatTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        return formatTitle.count > 0 && !namesUsed
+        return !formatTitle.isEmpty && !namesUsed
             .map({ $0.localizedLowercase.trimmingCharacters(in: .whitespacesAndNewlines) })
             .contains(formatTitle.localizedLowercase.trimmingCharacters(in: .whitespacesAndNewlines))
     }

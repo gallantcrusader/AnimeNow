@@ -10,7 +10,8 @@ import XMLCoder
 import Foundation
 import AVFoundation
 
-fileprivate struct MPD: Codable {
+private struct MPD: Codable {
+    // swiftlint:disable identifier_name
     var Period: Period
     var mediaPresentationDuration: String
 
@@ -25,8 +26,9 @@ fileprivate struct MPD: Codable {
     }
 }
 
-fileprivate extension MPD {
+extension MPD {
     struct Period: Codable {
+        // swiftlint:disable identifier_name
         var AdaptationSet: [AdaptationSet] = []
     }
 }
@@ -37,12 +39,14 @@ fileprivate extension MPD.Period {
         let group: String
         let subsegmentAlignment: String?
         let subsegmentStartsWithSAP: String
+        // swiftlint:disable identifier_name
         let Representation: [Representation]
     }
 }
 
 fileprivate extension MPD.Period.AdaptationSet {
     struct Representation: Codable {
+        // swiftlint:disable identifier_name
         let BaseURL: String
         let id: String
         let mimeType: String
@@ -55,7 +59,7 @@ fileprivate extension MPD.Period.AdaptationSet {
         var segmentBase: SegmentBase?
 
         var hlsAttribute: String {
-            
+
             if mimeType.contains("audio") {
                 return [
                     "#EXT-X-MEDIA:TYPE=AUDIO",

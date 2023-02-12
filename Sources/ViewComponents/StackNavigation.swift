@@ -135,14 +135,14 @@ public struct StackNavigationLink: View {
 }
 
 class StackNavigationObservable: ObservableObject {
-    @Published var stack = Array<StackNavigationLink>()
+    @Published var stack = [StackNavigationLink]()
 
     func push(_ view: StackNavigationLink) {
         stack.append(view)
     }
 
     func pop() {
-        if stack.count > 0 {
+        if !stack.isEmpty {
             stack.removeLast()
         }
     }

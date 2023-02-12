@@ -6,10 +6,10 @@
 //
 
 #if os(macOS)
-import SwiftUI
 import AppFeature
-import SettingsFeature
 import ComposableArchitecture
+import SettingsFeature
+import SwiftUI
 
 @main
 struct AnimeNowApp: App {

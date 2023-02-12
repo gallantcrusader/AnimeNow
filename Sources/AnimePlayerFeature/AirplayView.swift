@@ -6,8 +6,8 @@
 //
 
 import AVKit
-import SwiftUI
 import Foundation
+import SwiftUI
 import ViewComponents
 
 public struct AirplayView: PlatformAgnosticViewRepresentable {

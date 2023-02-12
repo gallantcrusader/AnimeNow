@@ -6,19 +6,19 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import Logger
-import SwiftUI
-import Utilities
-import Foundation
 import AnimeClient
-import AVFoundation
-import SharedModels
-import DatabaseClient
-import ViewComponents
 import AnimeStreamLogic
-import VideoPlayerClient
-import UserDefaultsClient
+import AVFoundation
 import ComposableArchitecture
+import DatabaseClient
+import Foundation
+import Logger
+import SharedModels
+import SwiftUI
+import UserDefaultsClient
+import Utilities
+import VideoPlayerClient
+import ViewComponents
 
 public struct AnimePlayerReducer: ReducerProtocol {
     typealias LoadableSourcesOptions = Loadable<SourcesOptions>
@@ -71,7 +71,7 @@ public struct AnimePlayerReducer: ReducerProtocol {
         var animeStore = Loadable<AnimeStore>.idle
         var skipTimes = Loadable<[SkipTime]>.idle
 
-        var selectedSidebar: Sidebar? = nil
+        var selectedSidebar: Sidebar?
 
         var showPlayerOverlay = true
 
@@ -217,7 +217,7 @@ public struct AnimePlayerReducer: ReducerProtocol {
 
             case .stream(.selectSource):
                 return common(&state)
-                
+
             default:
                 break
             }
@@ -246,17 +246,17 @@ extension AnimePlayerReducer.State {
 
         // Error States
 
-        if stream.availableProviders.items.count == 0 {
+        if stream.availableProviders.items.isEmpty {
             return .error("There are no available streaming providers at this time. Please try again later.")
 //        } else if case .none = stream.availableProviders.item {
 //            return .error("Please select a valid streaming provider.")
         } else if case .some(.failed) = stream.loadableStreamingProvider {
             return .error("There was an error retrieving episodes from selected streaming provider.")
-        } else if case .some(.success(let item)) = stream.loadableStreamingProvider, item.episodes.count == 0 {
+        } else if case .some(.success(let item)) = stream.loadableStreamingProvider, item.episodes.isEmpty {
             return .error("There are no available episodes as of this time. Please try again later.")
         } else if case .failed = stream.sourceOptions {
             return .error("There was an error trying to retrieve sources. Please try again later.")
-        } else if case .success(let sourcesOptions) = stream.sourceOptions, sourcesOptions.sources.count == 0 {
+        } else if case .success(let sourcesOptions) = stream.sourceOptions, sourcesOptions.sources.isEmpty {
             return .error("There are currently no sources available for this episode. Please try again later.")
         } else if case .error = playerStatus {
             return .error("There was an error starting video player. Please try again later.")
@@ -267,7 +267,7 @@ extension AnimePlayerReducer.State {
             return .loading
         } else if (episode?.links.count ?? 0) > 0 && !stream.sourceOptions.finished {
             return .loading
-        } else if playerStatus == .finished ||  finishedWatching {
+        } else if playerStatus == .finished || finishedWatching {
             return .replay
         } else if playerStatus == .idle || playerStatus == .loading || playerStatus == .playback(.buffering) {
             return .loading
@@ -357,6 +357,7 @@ extension AnimePlayerReducer {
     struct VideoPlayerStatusCancellable: Hashable {}
     struct VideoPlayerProgressCancellable: Hashable {}
 
+    // swiftlint:disable cyclomatic_complexity function_body_length
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
 
@@ -724,7 +725,7 @@ extension AnimePlayerReducer {
             // First time duration is set and is not zero, resume progress
             if let animeInfo = state.animeStore.value,
                let episode = state.episode,
-               let savedEpisodeProgress = animeInfo.episodes.first(where: { $0.number ==  episode.number }),
+               let savedEpisodeProgress = animeInfo.episodes.first { $0.number == episode.number },
                !savedEpisodeProgress.almostFinished {
                 state.playerProgress = savedEpisodeProgress.progress ?? .zero
                 return .run { _ in
@@ -806,7 +807,7 @@ extension AnimePlayerReducer {
     // Internal Effects
 
     private func hideOverlayAnimationDelay() -> EffectTask<Action> {
-        return .run { send in
+        .run { send in
             try await withTaskCancellation(id: HidePlayerOverlayDelayCancellable.self, cancelInFlight: true) {
                 try await self.mainQueue.sleep(for: .seconds(2.5))
                 await send(
@@ -823,9 +824,11 @@ extension AnimePlayerReducer {
 
     private func saveEpisodeState(state: State, episodeId: Episode.ID? = nil) -> EffectTask<Action> {
         let episodeId = episodeId ?? state.stream.selectedEpisode
-        guard let episode = state.stream.streamingProvider?.episodes[id: episodeId] else { return .none }
-        guard state.playerDuration > 0 else { return .none }
-        guard var animeStore = state.animeStore.value else { return .none }
+        guard let episode = state.stream.streamingProvider?.episodes[id: episodeId],
+              state.playerDuration > 0,
+              var animeStore = state.animeStore.value else {
+            return .none
+        }
 
         let progress = state.playerProgress
 

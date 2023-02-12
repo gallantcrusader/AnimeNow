@@ -12,7 +12,6 @@ public final class AnimeNowAPI: APIBase {
     public static var shared: AnimeNowAPI = .init()
     public let base = URL(string: "https://api.animenow.app")!
 
-
     private init() { }
 }
 

@@ -5,10 +5,10 @@
 //  Created by ErrorErrorError on 9/28/22.
 //
 
-import Utilities
 import Foundation
 import SharedModels
 import SociableWeaver
+import Utilities
 
 public final class AniListAPI: APIBase {
     public static let shared: AniListAPI = .init()
@@ -29,7 +29,7 @@ extension Request where Route == AniListAPI {
 
         return .init(
             method: .post(data)
-        ) { api in
+        ) { _ in
             [
                 "Content-Type": "application/json",
                 "Content-Length": data.count
@@ -47,6 +47,7 @@ extension AniListAPI {
         }
     }
 
+    // swiftlint:disable function_body_length
     public static func convert(from media: Media) -> Anime {
         var coverImages: [ImageSize] = []
 
@@ -163,9 +164,9 @@ extension AniListAPI {
             case items
 
             public init?(stringValue: String) {
-                if stringValue == CodingKeys.pageInfo.stringValue {
-                    self = CodingKeys.pageInfo
-                } else if stringValue == CodingKeys.items.stringValue {
+                if stringValue == Self.pageInfo.stringValue {
+                    self = .pageInfo
+                } else if stringValue == Self.items.stringValue {
                     self = .items
                 } else {
                     return nil
@@ -208,12 +209,13 @@ extension AniListAPI {
 
 extension AniListAPI {
     public struct PageResponse<T: Decodable>: Decodable {
+        // swiftlint:disable identifier_name
         public let Page: T
     }
 
     public struct PageInfo: GraphQLQueryObject {
         public typealias Argument = Void
-        
+
         let total: Int
         let perPage: Int
         let currentPage: Int
@@ -257,7 +259,7 @@ extension AniListAPI {
 
     public struct Media: GraphQLQuery, GraphQLQueryObject, PageResponseObject {
         public typealias Response = GraphQL.Response<MediaResponse>
-        
+
         public static var pageResponseName: String { "media" }
 
         let id: Int
@@ -349,7 +351,7 @@ extension AniListAPI {
             }
 
             return Weave(.query) {
-                Media.createQueryObject(CodingKeys.Media, arguments)
+                Self.createQueryObject(CodingKeys.Media, arguments)
                     .caseStyle(.pascalCase)
             }
         }

@@ -16,8 +16,8 @@ class CollectionStoreModel4ToModel5: NSEntityMigrationPolicy {
         manager: NSMigrationManager
     ) throws {
         if sInstance.entity.name == "CDCollectionStore" {
-            let lastUpdated = sInstance.primitiveValue(forKey: "lastUpdated") as! Date
-            let userRemovable = sInstance.primitiveValue(forKey: "userRemovable") as! Bool
+            let lastUpdated = sInstance.primitiveValue(forKey: "lastUpdated") as? Date ?? .init()
+            let userRemovable = sInstance.primitiveValue(forKey: "userRemovable") as? Bool ?? false
 
             if let title = sInstance.primitiveValue(forKey: "title") as? String {
                 let newCollection = NSEntityDescription.insertNewObject(

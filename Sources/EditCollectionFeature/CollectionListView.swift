@@ -37,12 +37,12 @@ public struct EditCollectionView: View {
                         observe: { $0 }
                     ) { viewStore in
                         Group {
-                            if viewStore.sortedCollections.count > 0 {
+                            if !viewStore.sortedCollections.isEmpty {
                                 Text("Collections")
                                     .font(.callout.bold())
                                     .foregroundColor(.gray.opacity(0.85))
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                
+  
                                 ForEach(viewStore.sortedCollections) { collection in
                                     collectionItem(collection, animeId: viewStore.animeId)
                                 }
@@ -97,7 +97,7 @@ extension EditCollectionView {
     }
 }
 
-struct EditCollectionView_Preview: PreviewProvider {
+struct EditCollectionViewPreview: PreviewProvider {
     static var previews: some View {
         ModalCardContainer {
             EditCollectionView(

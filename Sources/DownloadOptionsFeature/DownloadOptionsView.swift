@@ -62,7 +62,7 @@ public struct DownloadOptionsView: View {
                         SettingsRowView.listSelection(
                             name: "Quality",
                             selectable: viewState.sources,
-                            loading: viewState.loadingLink || viewState.links.items.count > 0 && viewState.loadingSource
+                            loading: viewState.loadingLink || !viewState.links.items.isEmpty && viewState.loadingSource
                         ) {
                             viewState.send(.animeStream(.selectSource($0)))
                         } itemView: {

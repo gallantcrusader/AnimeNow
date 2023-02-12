@@ -6,11 +6,11 @@
 //
 //  Modified version of https://github.com/manuelduarte077/CustomCarouselList/blob/main/Shared/View/SnapCarousel.swift
 
+import Foundation
+import IdentifiedCollections
+import SharedModels
 import SwiftUI
 import Utilities
-import Foundation
-import SharedModels
-import IdentifiedCollections
 
 public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
     @Binding var position: Int
@@ -21,7 +21,7 @@ public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
     public init(
         position: Binding<Int>,
         items: [T],
-        @ViewBuilder content: @escaping (T)-> Content
+        @ViewBuilder content: @escaping (T) -> Content
     ) {
         self._position = position
         self.list = items
@@ -45,11 +45,13 @@ public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
                 .offset(x: translation)
                 .highPriorityGesture(
                     DragGesture()
-                        .updating($translation, body: { value, out, _ in
-                            let shouldRestrict = position == 0 && value.translation.width > 0 || position == list.count - 1 && value.translation.width < 0
+                        .updating($translation) { value, out, _ in
+                            let leftOverscrol = position == 0 && value.translation.width > 0
+                            let rightOverscroll = position == list.count - 1 && value.translation.width < 0
+                            let shouldRestrict = leftOverscrol || rightOverscroll
                             out = value.translation.width / (shouldRestrict ? log10(abs(value.translation.width)) : 1)
-                        })
-                        .onEnded({ value in
+                        }
+                        .onEnded { value in
                             let offset = -(value.translation.width / proxy.size.width)
                             let roundIndex: Int
 
@@ -60,7 +62,7 @@ public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
                             }
 
                             position = max(min(position + roundIndex, list.count - 1), 0)
-                        })
+                        }
                 )
             }
 
@@ -95,7 +97,7 @@ public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
             .padding()
             .background(
                 LinearGradient(colors: [.clear, .black.opacity(0.75)], startPoint: .top, endPoint: .bottom)
-                    .opacity(anime != nil && translation == .zero  ? 1.0 : 0)
+                    .opacity(anime != nil && translation == .zero ? 1.0 : 0)
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -150,11 +152,11 @@ extension AnimeCarousel {
     }
 
     private var indicatorStates: [IndicatorState] {
-        guard list.indices.count > 0 && position >= 0 && position < list.indices.count else {
+        guard !list.isEmpty && position >= 0 && position < list.indices.count else {
             return []
         }
 
-        var indicatorStates = list.indices.map { IndicatorState.init(id: $0, size: .gone) }
+        var indicatorStates = list.indices.map { IndicatorState(id: $0, size: .gone) }
         let indicatorCount = indicatorStates.count
 
         let maxIndicators = 9

@@ -6,13 +6,13 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import SwiftUI
 import Awesome
-import Utilities
-import SharedModels
-import ViewComponents
-import DownloaderClient
 import ComposableArchitecture
+import DownloaderClient
+import SharedModels
+import SwiftUI
+import Utilities
+import ViewComponents
 
 public struct AnimeDetailView: View {
     let store: StoreOf<AnimeDetailReducer>
@@ -29,9 +29,7 @@ public struct AnimeDetailView: View {
                 store,
                 observe: \.anime
             ) { viewStore in
-                LoadableView(
-                    loadable: viewStore.state
-                ) { anime in
+                LoadableView(loadable: viewStore.state) { anime in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 16) {
                             topContainer(anime)
@@ -141,7 +139,7 @@ extension AnimeDetailView {
 // MARK: - Top Container
 
 extension AnimeDetailView {
-    
+
     private enum PlayButtonState: Equatable, CustomStringConvertible {
         case loading
         case unavailable
@@ -178,7 +176,7 @@ extension AnimeDetailView {
             }
 
             let episodesProgress = state.animeStore.value?.episodes
-            let lastUpdatedProgress = episodesProgress?.sorted(by: \.lastUpdatedProgress).last
+            let lastUpdatedProgress = episodesProgress?.max(by: \.lastUpdatedProgress)
 
             if let lastUpdatedProgress,
                let episode = episodes.first(where: { $0.number == lastUpdatedProgress.number }) {
@@ -269,14 +267,15 @@ extension AnimeDetailView {
 }
 
 extension AnimeDetailView {
+    // swiftlint:disable function_body_length
     @ViewBuilder
     func topContainer(_ anime: Anime) -> some View {
         ZStack {
             FillAspectImage(
                 url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
             )
-            .onAverageColor {
-                averageImageColor = $0 ?? .black
+            .onAverageColor { color in
+                averageImageColor = color ?? .black
             }
             .overscrollExpandView()
 
@@ -292,7 +291,7 @@ extension AnimeDetailView {
                             maxWidth: .infinity,
                             alignment: .leading
                         )
-                    
+
                     HStack(alignment: .top, spacing: 4) {
                         ForEach(
                             anime.categories,
@@ -358,10 +357,9 @@ extension AnimeDetailView {
                         .contentShape(Rectangle())
                     }
 
-                    WithViewStore(
-                        store,
-                        observe: { $0.animeStore.value?.isFavorite ?? false }
-                    ) { isFavoriteViewStore in
+                    WithViewStore(store) { state in
+                        state.animeStore.value?.isFavorite ?? false
+                    } content: { isFavoriteViewStore in
                         Button {
                             isFavoriteViewStore.send(.tappedFavorite)
                         } label: {
@@ -412,7 +410,10 @@ extension AnimeDetailView {
                 alignment: .bottomLeading
             )
         }
-        .aspectRatio(DeviceUtil.isPhone ? 2/3 : DeviceUtil.isPad ? 7/3 : 9/3, contentMode: .fit)
+        .aspectRatio(
+            DeviceUtil.isPhone ? 2 / 3 : DeviceUtil.isPad ? 7 / 3 : 9 / 3,
+            contentMode: .fit
+        )
         .frame(maxWidth: .infinity)
     }
 
@@ -490,6 +491,7 @@ extension AnimeDetailView {
         }
     }
 
+    // swiftlint:disable function_body_length
     @ViewBuilder
     func episodesContainer(_ anime: Anime?) -> some View {
         if anime?.status.canShowEpisodes ?? true {
@@ -499,7 +501,7 @@ extension AnimeDetailView {
             ) { viewState in
                 HStack(alignment: .center) {
                     buildSubHeading(title: "Episodes")
-  
+
                     Spacer()
 
                     if DeviceUtil.isPhone {
@@ -559,19 +561,19 @@ extension AnimeDetailView {
                 HStack {
                     ContextButton(
                         items: viewState.providers.items
-                            .map {
+                            .map { item in
                                 .init(
-                                    name: $0.name,
-                                    image: $0.logo != nil ? .init(string: $0.logo!) : nil
+                                    name: item.name,
+                                    image: item.logo.flatMap { .init(string: $0) }
                                 )
                             }
-                    ) {
-                        viewState.send(.stream(.selectProvider($0)))
+                    ) { provider in
+                        viewState.send(.stream(.selectProvider(provider)))
                     } label: {
                         HStack {
                             if let logo = viewState.providers.item?.logo {
-                                CachedAsyncImage(url: .init(string: logo)) {
-                                    $0.resizable()
+                                CachedAsyncImage(url: .init(string: logo)) { image in
+                                    image.resizable()
                                 } placeholder: {
                                     EmptyView()
                                 }
@@ -583,7 +585,7 @@ extension AnimeDetailView {
                             Text(viewState.providers.item?.name ?? "Not Selected")
                                 .foregroundColor(.white)
 
-                            if viewState.providers.items.count > 0 {
+                            if !viewState.providers.items.isEmpty {
                                 Image(systemName: "chevron.up.chevron.down")
                                     .font(.footnote.weight(.semibold))
                                     .foregroundColor(.gray)
@@ -607,12 +609,10 @@ extension AnimeDetailView {
                 .padding(.horizontal, 40)
                 #endif
 
-                LoadableView(
-                    loadable: viewState.episodes
-                ) { episodes in
-                    if episodes.count > 0 {
+                LoadableView(loadable: viewState.episodes) { episodes in
+                    if !episodes.isEmpty {
                         generateEpisodesContainer(
-                            viewState.ascendingOrder ? episodes : episodes.reversed().map { $0 },
+                            viewState.ascendingOrder ? episodes : .init(episodes.reversed()),
                             viewState.compact
                         )
                     } else {
@@ -657,17 +657,14 @@ extension AnimeDetailView {
             }
             .padding(.horizontal)
         } else {
-            ScrollViewReader { proxy in
-                DynamicHStackScrollView(
-                    idealWidth: 350,
-                    items: episodes
-                ) { episode in
-                    generateEpisodeItem(
-                        episode,
-                        compact: false
-                    )
-                    .id(episode.id)
-                }
+            DynamicHStackScrollView(
+                idealWidth: 350,
+                items: episodes
+            ) { episode in
+                generateEpisodeItem(
+                    episode,
+                    compact: false
+                )
             }
         }
     }
@@ -680,7 +677,7 @@ extension AnimeDetailView {
             _ state: AnimeDetailReducer.State,
             _ episodeNumber: Int
         ) {
-            self.episodeStore = !state.isLoadingEpisodes ? state.animeStore.value?.episodes.first(where: { $0.number == episodeNumber }) : nil
+            self.episodeStore = !state.isLoadingEpisodes ? state.animeStore.value?.episodes.first { $0.number == episodeNumber } : nil
             self.downloadStatus = !state.isLoadingEpisodes ? state.episodesStatus[id: episodeNumber]?.status : nil
         }
     }
@@ -690,30 +687,24 @@ extension AnimeDetailView {
         _ episode: Episode,
         compact: Bool
     ) -> some View {
-        WithViewStore(
-            store,
-            observe: {
-                EpisodeDownloadingViewState($0, episode.number)
-            }
-        ) { viewState in
+        WithViewStore(store) { state in
+            EpisodeDownloadingViewState(state, episode.number)
+        } content: { viewState in
             Group {
                 if compact {
                     ThumbnailItemCompactView(
                         episode: episode,
                         progress: viewState.episodeStore?.progress,
-                        downloadStatus: .init(
-                            state: viewState.downloadStatus,
-                            callback: { action in
-                                switch action {
-                                case .download:
-                                    viewState.send(.downloadEpisode(episode.number))
-                                case .cancel:
-                                    viewState.send(.cancelDownload(episode.number))
-                                case .retry:
-                                    viewState.send(.retryDownload(episode.number))
-                                }
+                        downloadStatus: .init(state: viewState.downloadStatus) { action in
+                            switch action {
+                            case .download:
+                                viewState.send(.downloadEpisode(episode.number))
+                            case .cancel:
+                                viewState.send(.cancelDownload(episode.number))
+                            case .retry:
+                                viewState.send(.retryDownload(episode.number))
                             }
-                        )
+                        }
                     )
                     .frame(height: 84)
                     .frame(maxWidth: .infinity)
@@ -722,19 +713,16 @@ extension AnimeDetailView {
                         episode: episode,
                         progress: viewState.episodeStore?.progress,
                         progressSize: 10,
-                        downloadStatus: .init(
-                            state: viewState.downloadStatus,
-                            callback: { action in
-                                switch action {
-                                case .download:
-                                    viewState.send(.downloadEpisode(episode.number))
-                                case .cancel:
-                                    viewState.send(.cancelDownload(episode.number))
-                                case .retry:
-                                    viewState.send(.retryDownload(episode.number))
-                                }
+                        downloadStatus: .init(state: viewState.downloadStatus) { action in
+                            switch action {
+                            case .download:
+                                viewState.send(.downloadEpisode(episode.number))
+                            case .cancel:
+                                viewState.send(.cancelDownload(episode.number))
+                            case .retry:
+                                viewState.send(.retryDownload(episode.number))
                             }
-                        )
+                        }
                     )
                 }
             }
@@ -824,7 +812,7 @@ struct AnimeDetailView_Previews: PreviewProvider {
         AnimeDetailView(
             store: .init(
                 initialState: .init(
-                    animeId: 127230,
+                    animeId: 127_230,
                     availableProviders: .init(
                         items: [
                             .init(name: "Gogoanime"),

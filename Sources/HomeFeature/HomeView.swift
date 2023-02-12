@@ -200,7 +200,7 @@ extension HomeView {
             store,
             observe: HeaderViewState.init
         ) { viewStore in
-            if let animes = isLoading ? [.placeholder] : viewStore.animes.value, animes.count > 0 {
+            if let animes = isLoading ? [.placeholder] : viewStore.animes.value, !animes.isEmpty {
                 AnimeCarousel(
                     position: viewStore.binding(\.$heroPosition, as: \.position),
                     items: animes
@@ -218,7 +218,7 @@ extension HomeView {
                     }
                 }
                 .overscrollExpandView(DeviceUtil.isPhone)
-                .aspectRatio(DeviceUtil.isPhone ? 5/7 : 6/2, contentMode: .fill)
+                .aspectRatio(DeviceUtil.isPhone ? 5 / 7 : 6 / 2, contentMode: .fill)
                 .frame(maxWidth: .infinity)
             }
         }
@@ -239,7 +239,7 @@ extension HomeView {
             store,
             observe: { $0 }
         ) { viewStore in
-            if let items = isLoading ? Anime.placeholders(5) : viewStore.value, items.count > 0 {
+            if let items = isLoading ? Anime.placeholders(5) : viewStore.value, !items.isEmpty {
                 DynamicHStackScrollView(
                     idealWidth: DeviceUtil.isPhone ? 140 : 190,
                     items: items
@@ -268,7 +268,7 @@ extension HomeView {
             store,
             observe: { $0 }
         ) { viewStore in
-            if let items = isLoading ? Anime.placeholders(5).map { $0.eraseAsRepresentable() } : viewStore.value, items.count > 0 {
+            if let items = isLoading ? Anime.placeholders(5).map { $0.eraseAsRepresentable() } : viewStore.value, !items.isEmpty {
                 DynamicHStackScrollView(
                     idealWidth: DeviceUtil.isPhone ? 140 : 190,
                     items: items
@@ -312,7 +312,7 @@ extension HomeView {
         LoadableViewStore(
             loadable: store
         ) { viewStore in
-            if viewStore.count > 0 && !isLoading {
+            if !viewStore.isEmpty && !isLoading {
                 DynamicHStackScrollView(
                     idealWidth: DeviceUtil.isPhone ? 260 : 400,
                     items: viewStore.state

@@ -5,8 +5,8 @@
 //  Created by ErrorErrorError on 9/12/22.
 //
 
-import SharedModels
 import ComposableArchitecture
+import SharedModels
 
 extension AnimeClient {
     public static let previewValue = Self {
@@ -27,11 +27,11 @@ extension AnimeClient {
         []
     } getRecentlyUpdated: {
         []
-    } getEpisodes: { _,_  in
+    } getEpisodes: { _, _ in
         .init(name: "", episodes: [Episode(title: "", number: 0, description: "", isFiller: true)])
-    } getSources: { _,_ in
+    } getSources: { _, _ in
         .init([])
-    } getSkipTimes: { _,_  in
+    } getSkipTimes: { _, _ in
             .init()
     } getAnimeProviders: {
         []

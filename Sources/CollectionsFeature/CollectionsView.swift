@@ -206,9 +206,9 @@ extension CollectionsView {
             ZStack(alignment: .bottom) {
                 let cornerRadius: CGFloat = 12
                 let padding: CGFloat = 12
-                let aspectRatio: CGFloat = 5/7
+                let aspectRatio: CGFloat = 5 / 7
                 let offsetBy: CGFloat = 28
-                if images.count == 0 {
+                if images.isEmpty {
                     Color(
                         white: 0.1
                     )

@@ -92,12 +92,12 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
 
             // Adding and updating existing elements
             for object in objects {
-                var managed: NSManagedObject? = try managedObjects.first {
-                    (try Relation(from: $0 as! NSManagedObject))[keyPath: Relation.idKeyPath] == object[keyPath: Relation.idKeyPath]
-                } as? NSManagedObject
+                var managed = try managedObjects.compactMap({ $0 as? NSManagedObject })
+                    .first(where: { try Relation(from: $0)[keyPath: Relation.idKeyPath] == object[keyPath: Relation.idKeyPath] })
 
                 if managed == nil {
-                    managed = try managedObject.managedObjectContext?.fetchOne(Relation.all.where(Relation.idKeyPath == object[keyPath: Relation.idKeyPath]))
+                    managed = try managedObject.managedObjectContext?
+                        .fetchOne(Relation.all.where(Relation.idKeyPath == object[keyPath: Relation.idKeyPath]))
                 }
 
                 if managed == nil {
@@ -113,10 +113,10 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
             }
 
             // Remove elements not in array
-            let copiedManagedObjects = managedObjects.copy() as! NSSet
+            let copiedManagedObjects = (managedObjects.copy() as? NSSet)?.compactMap({ $0 as? NSManagedObject }) ?? .init()
 
             for managed in copiedManagedObjects {
-                guard let wrapped = try? Relation(from: managed as! NSManagedObject) else {
+                guard let wrapped = try? Relation(from: managed) else {
                     continue
                 }
 
@@ -149,9 +149,8 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
 
             // Adding and updating existing elements
             for (index, object) in objects.enumerated() {
-                var managed: NSManagedObject? = try managedObjects.first {
-                    (try Relation(from: $0 as! NSManagedObject))[keyPath: Relation.idKeyPath] == object[keyPath: Relation.idKeyPath]
-                } as? NSManagedObject
+                var managed = try managedObjects.compactMap({ $0 as? NSManagedObject })
+                    .first(where: { try Relation(from: $0)[keyPath: Relation.idKeyPath] == object[keyPath: Relation.idKeyPath] })
 
                 if managed == nil {
                     managed = try managedObject.managedObjectContext?.fetchOne(Relation.all.where(Relation.idKeyPath == object[keyPath: Relation.idKeyPath]))
@@ -175,10 +174,10 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
             }
 
             // Remove elements not in array
-            let copiedManagedObjects = managedObjects.copy() as! NSOrderedSet
+            let copiedManagedObjects = (managedObjects.copy() as? NSSet)?.compactMap({ $0 as? NSManagedObject }) ?? .init()
 
             for managed in copiedManagedObjects {
-                guard let wrapped = try? Relation(from: managed as! NSManagedObject) else {
+                guard let wrapped = try? Relation(from: managed) else {
                     continue
                 }
 
