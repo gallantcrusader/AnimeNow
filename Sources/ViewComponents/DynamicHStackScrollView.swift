@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-public struct DynamicHStackScrollView<T: Identifiable, C: RandomAccessCollection<T>, V: View, L: View>: View where C.Index == Int {
+public struct DynamicHStackScrollView<T, C: RandomAccessCollection<T>, V: View, L: View>: View where C.Index == Int {
     private let items: C
     private let itemContent: (T) -> V
     private let label: (() -> L)?
@@ -74,8 +74,8 @@ extension DynamicHStackScrollView {
     var container: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: spacing) {
-                ForEach(items, id: \.id) {
-                    itemContent($0)
+                ForEach(items.indices, id: \.self) {
+                    itemContent(items[$0])
                         .frame(width: idealWidth)
                 }
             }
@@ -89,8 +89,8 @@ extension DynamicHStackScrollView {
     var container: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: spacing) {
-                ForEach(items[visibleRange], id: \.id) {
-                    itemContent($0)
+                ForEach(items.bounds[visibleRange], id: \.self) {
+                    itemContent(items[$0])
                         .frame(width: max(0, actualWidth))
                 }
             }

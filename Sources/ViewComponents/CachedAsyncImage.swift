@@ -62,6 +62,7 @@ public struct CachedAsyncImage<Content: View>: View {
         return copy
     }
 
+    @MainActor
     private func fetchImage(
         _ url: URL?,
         _ transaction: Transaction
@@ -83,15 +84,19 @@ public struct CachedAsyncImage<Content: View>: View {
             do {
                 let image = try await ImageDatabase.shared.image(url)
 
-                withTransaction(transaction) {
-                    phase = .success(.init(image))
+                await MainActor.run {
+                    withTransaction(transaction) {
+                        phase = .success(.init(image))
+                    }
+                    onAverageColorChanged?(image.averageColor)
                 }
-                onAverageColorChanged?(image.averageColor)
             } catch {
-                withTransaction(transaction) {
-                    phase = .failed(error)
+                await MainActor.run {
+                    withTransaction(transaction) {
+                        phase = .failed(error)
+                    }
+                    onAverageColorChanged?(nil)
                 }
-                onAverageColorChanged?(nil)
             }
         }
     }

@@ -11,16 +11,16 @@ import SwiftUI
 struct OverscrollExpandView: ViewModifier {
     func body(content: Content) -> some View {
         GeometryReader { reader in
-            let globalFrame = reader.frame(in: .global)
+            let minY = reader.frame(in: .global).minY
             content
                 .frame(
                     width: reader.size.width,
-                    height: reader.size.height + (globalFrame.minY > 0 ? globalFrame.minY : 0),
-                    alignment: .center
+                    height: reader.size.height + (minY > 0 ? minY : 0),
+                    alignment: .top
                 )
                 .contentShape(Rectangle())
                 .clipped()
-                .offset(y: globalFrame.minY <= 0 ? 0 : -globalFrame.minY)
+                .offset(y: minY < 0 ? 0 : -minY)
         }
     }
 }

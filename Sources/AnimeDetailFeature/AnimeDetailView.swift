@@ -19,17 +19,6 @@ public struct AnimeDetailView: View {
 
     @State private var averageImageColor: Color = .black
 
-    private var fontColor: Color {
-        let color = PlatformColor(averageImageColor)
-        var red: CGFloat = 0.0
-        var green: CGFloat = 0.0
-        var blue: CGFloat = 0.0
-        var alpha: CGFloat = 1.0
-        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-
-        return red * 0.299 + green * 0.578 + blue * 0.113 > 0.72 ? .black : .white
-    }
-
     public init(store: StoreOf<AnimeDetailReducer>) {
         self.store = store
     }
@@ -103,9 +92,15 @@ public struct AnimeDetailView: View {
         #endif
         .background(
             LinearGradient(
-                colors: [
-                    averageImageColor,
-                    .black
+                stops: [
+                    .init(
+                        color: averageImageColor,
+                        location: 0.0
+                    ),
+                    .init(
+                        color: .black,
+                        location: 1.0
+                    )
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -395,7 +390,6 @@ extension AnimeDetailView {
             #if os(macOS)
             .padding(.horizontal, 40)
             #endif
-
             .background(
                 LinearGradient(
                     stops: [
@@ -641,7 +635,7 @@ extension AnimeDetailView {
                 .animation(.linear(duration: 0.12), value: viewState.episodes)
             }
             .frame(maxWidth: .infinity)
-            .foregroundColor(fontColor)
+            .foregroundColor(.white)
         }
     }
 }

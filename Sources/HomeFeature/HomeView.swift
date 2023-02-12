@@ -37,7 +37,7 @@ public struct HomeView: View {
             store,
             observe: ViewState.init
         ) { viewStore in
-            Group {
+            ZStack {
                 if let error = viewStore.error {
                     VStack(spacing: 14) {
                         Text(error.title)
@@ -123,6 +123,7 @@ public struct HomeView: View {
                     }
                 }
             }
+            .transition(.opacity)
             .animation(
                 .easeInOut(duration: 0.5),
                 value: viewStore.isLoading
@@ -150,11 +151,11 @@ extension HomeView {
             store,
             observe: \.heroPosition
         ) { viewStore in
+            let color = animeHeroColors[viewStore.state] ?? .clear
             LinearGradient(
                 stops: [
                     .init(
-                        color: animeHeroColors[viewStore.state] ?? .clear,
-//                        location: DeviceUtil.isPhone ? 5/7 : 0.0
+                        color: color,
                         location: 0.0
                     ),
                     .init(color: .clear, location: 1.0)
@@ -216,19 +217,9 @@ extension HomeView {
                         viewStore.send(.animeTapped(anime))
                     }
                 }
-                .cornerRadius(DeviceUtil.isPhone ? 0 : 32)
                 .overscrollExpandView(DeviceUtil.isPhone)
                 .aspectRatio(DeviceUtil.isPhone ? 5/7 : 6/2, contentMode: .fill)
                 .frame(maxWidth: .infinity)
-                #if os(macOS)
-                .arrowIndicators(
-                    viewStore.binding(
-                        \.$heroPosition,
-                         as: \.position
-                    ),
-                    count: animes.count
-                )
-                #endif
             }
         }
         .padding(DeviceUtil.isPad ? .all : [])

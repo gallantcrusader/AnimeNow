@@ -27,7 +27,7 @@ struct AnimeNowApp: App {
             CommandGroup(replacing: .newItem) { }
             CommandGroup(after: .appInfo) {
                 Button {
-                    
+
                 } label: {
                     Text("Check for Updates...")
                 }

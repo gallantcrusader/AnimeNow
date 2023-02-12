@@ -39,17 +39,8 @@ extension AppView {
                                 Image("\(item == viewStore.state ? item.selectedIcon : item.icon)")
                             }
                         }
-
-                        Text(item.title)
-                            .font(.system(size: 10))
-                    }
-                    .foregroundColor(
-                        item == viewStore.state ? Color.white : Color.gray
-                    )
-                    .font(.system(size: 18).weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(alignment: .center)
-                    .overlay(
+                        .frame(width: 26, height: 26)
+                        .overlay(
                             WithViewStore(
                                 store,
                                 observe: \.totalDownloadsCount
@@ -66,11 +57,21 @@ extension AppView {
                                             maxHeight: .infinity,
                                             alignment: .topTrailing
                                         )
-                                        .padding(8)
                                         .animation(.linear, value: $0.state)
+                                        .offset(x: 4, y: -4)
                                 }
-                        }
+                            }
+                        )
+
+                        Text(item.title)
+                            .font(.system(size: 10))
+                    }
+                    .foregroundColor(
+                        item == viewStore.state ? Color.white : Color.gray
                     )
+                    .font(.system(size: 18).weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(alignment: .center)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         viewStore.send(
