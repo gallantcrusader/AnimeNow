@@ -3,20 +3,20 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/17/22.
-//  
+//
 //
 
-import SwiftUI
-import SharedModels
-import ViewComponents
 import ComposableArchitecture
+import SharedModels
+import SwiftUI
+import ViewComponents
+
+// MARK: - EditCollectionView
 
 public struct EditCollectionView: View {
     let store: StoreOf<EditCollectionReducer>
 
-    public init(
-        store: StoreOf<EditCollectionReducer>
-    ) {
+    public init(store: StoreOf<EditCollectionReducer>) {
         self.store = store
     }
 
@@ -32,17 +32,16 @@ public struct EditCollectionView: View {
 
             ScrollView(.vertical) {
                 LazyVStack(spacing: 8) {
-                    WithViewStore(
-                        store,
-                        observe: { $0 }
-                    ) { viewStore in
+                    WithViewStore(store) { state in
+                        state
+                    } content: { viewStore in
                         Group {
                             if !viewStore.sortedCollections.isEmpty {
                                 Text("Collections")
                                     .font(.callout.bold())
                                     .foregroundColor(.gray.opacity(0.85))
                                     .frame(maxWidth: .infinity, alignment: .leading)
-  
+
                                 ForEach(viewStore.sortedCollections) { collection in
                                     collectionItem(collection, animeId: viewStore.animeId)
                                 }
@@ -96,6 +95,8 @@ extension EditCollectionView {
         }
     }
 }
+
+// MARK: - EditCollectionViewPreview
 
 struct EditCollectionViewPreview: PreviewProvider {
     static var previews: some View {

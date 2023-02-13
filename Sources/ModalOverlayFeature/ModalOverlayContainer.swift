@@ -3,15 +3,17 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/20/22.
-//  
+//
 //
 
+import ComposableArchitecture
+import DownloadOptionsFeature
+import EditCollectionFeature
+import NewCollectionFeature
 import SwiftUI
 import ViewComponents
-import NewCollectionFeature
-import EditCollectionFeature
-import DownloadOptionsFeature
-import ComposableArchitecture
+
+// MARK: - ModalOverlayView
 
 public struct ModalOverlayView: View {
     let store: StoreOf<ModalOverlayReducer>
@@ -21,9 +23,9 @@ public struct ModalOverlayView: View {
     }
 
     public var body: some View {
-        ModalCardContainer(
-            onDismiss: { ViewStore(store).send(.onClose) }
-        ) {
+        ModalCardContainer {
+            ViewStore(store).send(.onClose)
+        } content: {
             SwitchStore(store) {
                 CaseLet(
                     state: /ModalOverlayReducer.State.addNewCollection,
@@ -46,6 +48,8 @@ public struct ModalOverlayView: View {
         }
     }
 }
+
+// MARK: - ModalOverlayView_Previews
 
 struct ModalOverlayView_Previews: PreviewProvider {
     static var previews: some View {

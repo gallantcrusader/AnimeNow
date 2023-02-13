@@ -8,10 +8,9 @@
 
 import Foundation
 
-
 extension Encodable {
     func toData() throws -> Data {
-        if let `self` = self as? Data {
+        if let self = self as? Data {
             return self
         }
         return try JSONEncoder().encode(self)

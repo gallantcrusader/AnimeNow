@@ -2,12 +2,14 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/16/22.
-//  
+//
 
 import Foundation
 import SharedModels
 
-extension AnimeStore: ManagedObjectConvertible {    
+// MARK: - AnimeStore + ManagedObjectConvertible
+
+extension AnimeStore: ManagedObjectConvertible {
     public static let entityName = "CDAnimeStore"
 
     public static var idKeyPath: KeyPath = \Self.id
@@ -22,9 +24,11 @@ extension AnimeStore: ManagedObjectConvertible {
     ]
 }
 
+// MARK: - Array + ConvertableValue
+
 extension Array: ConvertableValue where Element: Codable {
     public func encode() -> Data {
-        (try? self.toData()) ?? .init()
+        (try? toData()) ?? .init()
     }
 
     public static func decode(value: Data) throws -> Self {
@@ -32,12 +36,14 @@ extension Array: ConvertableValue where Element: Codable {
     }
 }
 
+// MARK: - Anime.Format + ConvertableValue
+
 extension Anime.Format: ConvertableValue {
     public static func decode(value: Data) throws -> Self {
         try value.toObject()
     }
 
     public func encode() -> Data {
-        (try? self.toData()) ?? .init()
+        (try? toData()) ?? .init()
     }
 }

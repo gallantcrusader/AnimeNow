@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - Loadable
+
 public enum Loadable<T> {
     case idle
     case loading
@@ -14,8 +16,8 @@ public enum Loadable<T> {
     case failed(Error)
 }
 
-extension Loadable {
-    public var isLoading: Bool {
+public extension Loadable {
+    var isLoading: Bool {
         switch self {
         case .loading:
             return true
@@ -24,7 +26,7 @@ extension Loadable {
         }
     }
 
-    public var hasInitialized: Bool {
+    var hasInitialized: Bool {
         switch self {
         case .idle:
             return false
@@ -33,7 +35,7 @@ extension Loadable {
         }
     }
 
-    public var finished: Bool {
+    var finished: Bool {
         switch self {
         case .success, .failed:
             return true
@@ -42,14 +44,16 @@ extension Loadable {
         }
     }
 
-    public var successful: Bool {
+    var successful: Bool {
         switch self {
-        case .success: return true
-        default: return false
+        case .success:
+            return true
+        default:
+            return false
         }
     }
 
-    public var failed: Bool {
+    var failed: Bool {
         switch self {
         case .failed:
             return true
@@ -58,26 +62,28 @@ extension Loadable {
         }
     }
 
-    public var value: T? {
-        if case .success(let value) = self {
+    var value: T? {
+        if case let .success(value) = self {
             return value
         }
         return nil
     }
 
-    public func map<N>(_ mapped: @escaping (T) -> N) -> Loadable<N> {
+    func map<N>(_ mapped: @escaping (T) -> N) -> Loadable<N> {
         switch self {
         case .idle:
             return .idle
         case .loading:
             return .loading
-        case .success(let item):
+        case let .success(item):
             return .success(mapped(item))
-        case .failed(let error):
+        case let .failed(error):
             return .failed(error)
         }
     }
 }
+
+// MARK: Equatable
 
 extension Loadable: Equatable where T: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
@@ -94,12 +100,12 @@ extension Loadable: Equatable where T: Equatable {
     }
 }
 
-extension Loadable {
-    public init(capture body: @Sendable () async throws -> T) async {
-      do {
-        self = .success(try await body())
-      } catch {
-        self = .failed(error)
-      }
+public extension Loadable {
+    init(capture body: @Sendable () async throws -> T) async {
+        do {
+            self = .success(try await body())
+        } catch {
+            self = .failed(error)
+        }
     }
 }

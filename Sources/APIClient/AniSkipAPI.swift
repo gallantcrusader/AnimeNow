@@ -5,19 +5,23 @@
 //  Created by ErrorErrorError on 10/11/22.
 //
 
-import Utilities
 import Foundation
 import SharedModels
+import Utilities
+
+// MARK: - AniSkipAPI
 
 public final class AniSkipAPI: APIBase {
     public static var shared: AniSkipAPI = .init()
+
+    // swiftlint:disable force_unwrapping
     public let base = URL(string: "https://api.aniskip.com/v2")!
 
-    private init() { }
+    private init() {}
 }
 
-extension Request where Route == AniSkipAPI {
-    public static func skipTime(
+public extension Request where Route == AniSkipAPI {
+    static func skipTime(
         malId: Int,
         episode: Int,
         types: [AniSkipAPI.SkipItem.SkipType] = .allCases,
@@ -32,24 +36,24 @@ extension Request where Route == AniSkipAPI {
     }
 }
 
-extension AniSkipAPI {
-    public struct Response: Decodable {
+public extension AniSkipAPI {
+    struct Response: Decodable {
         public let found: Bool
         public let results: [SkipItem]
         public let statusCode: Int
     }
 
-    public struct SkipItem: Decodable {
+    struct SkipItem: Decodable {
         let interval: Interval
         let episodeLength: Double
         let skipType: SkipType
 
         public enum SkipType: String, Decodable, CaseIterable {
-            case ed = "ed"
-            case op = "op"
+            case ed
+            case op
             case mixedEd = "mixed-ed"
             case mixedOp = "mixed-op"
-            case recap = "recap"
+            case recap
         }
 
         public struct Interval: Decodable {
@@ -59,8 +63,8 @@ extension AniSkipAPI {
     }
 }
 
-extension AniSkipAPI {
-    public static func convert(from items: [SkipItem]) -> [SharedModels.SkipTime] {
+public extension AniSkipAPI {
+    static func convert(from items: [SkipItem]) -> [SharedModels.SkipTime] {
         items.map { item -> SharedModels.SkipTime in
             let option: SharedModels.SkipTime.Option
 

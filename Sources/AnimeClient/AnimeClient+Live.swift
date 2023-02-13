@@ -13,9 +13,10 @@ import SharedModels
 import SociableWeaver
 import Utilities
 
-extension AnimeClient {
-    public static let liveValue: AnimeClient = {
-        @Dependency(\.apiClient) var apiClient
+public extension AnimeClient {
+    static let liveValue: AnimeClient = {
+        @Dependency(\.apiClient)
+        var apiClient
 
         let cachedStreamingProviders = Cache<String, AnimeStreamingProvider>()
 
@@ -37,7 +38,10 @@ extension AnimeClient {
                 .graphql(
                     AniListAPI.PageMediaQuery.self,
                     .init(
-                        itemArguments: .defaultArgs + [.sort([.TRENDING_DESC, .POPULARITY_DESC]), .status(.NOT_YET_RELEASED)]
+                        itemArguments: .defaultArgs + [
+                            .sort([.TRENDING_DESC, .POPULARITY_DESC]),
+                            .status(.NOT_YET_RELEASED)
+                        ]
                     )
                 )
             )
@@ -61,7 +65,7 @@ extension AnimeClient {
                 .graphql(
                     AniListAPI.PageMediaQuery.self,
                     .init(
-                        itemArguments: .defaultArgs + [.sort([.SCORE_DESC]), .status(.RELEASING) ]
+                        itemArguments: .defaultArgs + [.sort([.SCORE_DESC]), .status(.RELEASING)]
                     )
                 )
             )
@@ -163,7 +167,7 @@ extension AnimeClient {
                 )
 
                 return ConsumetAPI.convert(from: response)
-            case .offline(let url):
+            case let .offline(url):
                 return .init([
                     .init(
                         url: url,
@@ -189,8 +193,8 @@ extension AnimeClient {
     }()
 }
 
-extension AnimeClient {
-    fileprivate static func mergeSources(
+private extension AnimeClient {
+    static func mergeSources(
         _ sub: [ConsumetAPI.Episode],
         _ dub: [ConsumetAPI.Episode]
     ) -> [Episode] {
@@ -230,7 +234,9 @@ extension AnimeClient {
                     }
                 }
 
-            guard let mainEpisodeInfo = mainEpisodeInfo else { continue }
+            guard let mainEpisodeInfo else {
+                continue
+            }
 
             var episode = ConsumetAPI.convert(from: mainEpisodeInfo)
             episode.links = providers

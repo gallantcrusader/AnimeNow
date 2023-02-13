@@ -3,20 +3,20 @@
 //  VideoPlayerClient
 //
 //  Created by ErrorErrorError on 12/23/22.
-//  
+//
 
-import AVKit
-import Logger
-import Combine
-import AVFAudio
-import Foundation
-import MediaPlayer
-import AVFoundation
 import AnyPublisherStream
+import AVFAudio
+import AVFoundation
+import AVKit
+import Combine
+import Foundation
 import ImageDatabaseClient
+import Logger
+import MediaPlayer
 
-extension VideoPlayerClient {
-    public static let liveValue: Self = {
+public extension VideoPlayerClient {
+    static let liveValue: Self = {
         let wrapper = PlayerWrapper()
 
         return .init(
@@ -44,6 +44,9 @@ extension VideoPlayerClient {
     }()
 }
 
+// MARK: - PlayerWrapper
+
+// swiftlint:disable type_body_length
 private class PlayerWrapper {
     let player = AVQueuePlayer()
     let statusPublisher = CurrentValueSubject<VideoPlayerClient.Status, Never>(.idle)
@@ -93,7 +96,7 @@ private class PlayerWrapper {
             }
             .store(in: &cancellables)
 
-        /// Observe Player
+        // Observe Player
 
         player.publisher(
             for: \.timeControlStatus
@@ -141,13 +144,15 @@ private class PlayerWrapper {
                 preferredTimescale: 1
             ),
             queue: .main
-        ) { [unowned self] time in
+        ) { [unowned self] _ in
             self.updateNowPlaying()
         }
 
         let commandCenter = MPRemoteCommandCenter.shared()
-        commandCenter.playCommand.addTarget { [weak self] event in
-            guard let `self` = self else { return .commandFailed }
+        commandCenter.playCommand.addTarget { [weak self] _ in
+            guard let self else {
+                return .commandFailed
+            }
 
             if self.player.rate == 0.0 {
                 self.player.play()
@@ -157,8 +162,10 @@ private class PlayerWrapper {
             return .commandFailed
         }
 
-        commandCenter.pauseCommand.addTarget { [weak self] event in
-            guard let `self` = self else { return .commandFailed }
+        commandCenter.pauseCommand.addTarget { [weak self] _ in
+            guard let self else {
+                return .commandFailed
+            }
             if self.player.rate > 0 {
                 self.player.pause()
                 return .success
@@ -172,7 +179,9 @@ private class PlayerWrapper {
                 return .commandFailed
             }
 
-            guard let `self` = self else { return .commandFailed }
+            guard let self else {
+                return .commandFailed
+            }
 
             if self.player.totalDuration > 0.0 {
                 let time = CMTime(seconds: event.positionTime, preferredTimescale: 1)
@@ -188,7 +197,9 @@ private class PlayerWrapper {
                 return .commandFailed
             }
 
-            guard let `self` = self else { return .commandFailed }
+            guard let self else {
+                return .commandFailed
+            }
 
             if self.player.totalDuration > 0.0 {
                 let time = CMTime(
@@ -207,7 +218,9 @@ private class PlayerWrapper {
                 return .commandFailed
             }
 
-            guard let `self` = self else { return .commandFailed }
+            guard let self else {
+                return .commandFailed
+            }
 
             if self.player.totalDuration > 0.0 {
                 let time = CMTime(
@@ -223,7 +236,7 @@ private class PlayerWrapper {
     }
 
     private func observe(playerItem: AVPlayerItem?) {
-        guard let playerItem = playerItem else {
+        guard let playerItem else {
             playerItemCancellables.removeAll()
             updateStatus(.idle)
             return
@@ -270,7 +283,7 @@ private class PlayerWrapper {
         )
         .dropFirst()
         .sink { [unowned self] canKeepUp in
-            if canKeepUp && self.status == .playback(.buffering) {
+            if canKeepUp, self.status == .playback(.buffering) {
                 self.updateStatus(.playback(self.player.rate > 0 ? .playing : .paused))
             }
         }
@@ -279,7 +292,7 @@ private class PlayerWrapper {
         playerItem.publisher(for: \.duration)
             .dropFirst()
             .sink { [unowned self] duration in
-                if duration.isValid && duration.seconds > 0.0 {
+                if duration.isValid, duration.seconds > 0.0 {
                     self.updateStatus(.loaded(duration: duration.seconds))
                 }
             }
@@ -291,8 +304,10 @@ private class PlayerWrapper {
             let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
             var nowPlayingInfo = nowPlayingInfoCenter.nowPlayingInfo ?? [:]
 
-            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = self.player.currentItem?.totalDuration ?? self.player.totalDuration
-            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = self.player.currentItem?.currentDuration ?? self.player.currentDuration
+            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = self.player.currentItem?.totalDuration ?? self.player
+                .totalDuration
+            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = self.player.currentItem?
+                .currentDuration ?? self.player.currentDuration
             nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
 
             if let metadata {
@@ -300,7 +315,7 @@ private class PlayerWrapper {
                 nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = metadata.videoAuthor
                 nowPlayingInfo[MPMediaItemPropertyAlbumArtist] = "Anime Now!"
                 if let imageURL = metadata.thumbnail, let image = ImageDatabase.shared.cachedImage(imageURL) {
-                    let media =  MPMediaItemArtwork(
+                    let media = MPMediaItemArtwork(
                         boundsSize: image.size
                     ) { size in
                         #if os(macOS)
@@ -345,7 +360,7 @@ private class PlayerWrapper {
 
     func handle(_ action: VideoPlayerClient.Action) {
         switch action {
-        case .play(let payload):
+        case let .play(payload):
             let videoPlayerItem = VideoPlayerItem(payload)
 
             player.replaceCurrentItem(with: videoPlayerItem)
@@ -365,7 +380,7 @@ private class PlayerWrapper {
                 player.pause()
             }
 
-        case .seekTo(let progress):
+        case let .seekTo(progress):
             if status.canChangePlayback {
                 let time = CMTime(
                     seconds: round(progress * player.totalDuration),
@@ -375,7 +390,7 @@ private class PlayerWrapper {
                 player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
             }
 
-        case .volume(let volume):
+        case let .volume(volume):
             player.volume = Float(volume)
 
         case .clear:
@@ -394,30 +409,32 @@ private class PlayerWrapper {
     }
 
     private func updateStatus(_ newStatus: VideoPlayerClient.Status) {
-        let oldStatus = self.status
+        let oldStatus = status
 
-        guard oldStatus != newStatus else { return }
+        guard oldStatus != newStatus else {
+            return
+        }
 
-        guard newStatus != .idle && newStatus != .error else {
-            self.status = newStatus
+        guard newStatus != .idle, newStatus != .error else {
+            status = newStatus
             return
         }
 
         switch (oldStatus, newStatus) {
         case (.idle, .loading), (.idle, .loaded):
-            self.status = newStatus
+            status = newStatus
 
         case (.loading, .loaded):
-            self.status = newStatus
+            status = newStatus
 
         case (.loaded, .playback), (.loaded, .loaded):
-            self.status = newStatus
+            status = newStatus
 
         case (.playback, .finished), (.playback, .playback):
-            self.status = newStatus
+            status = newStatus
 
         case (.finished, .playback(.playing)), (.finished, .playback(.buffering)):
-            self.status = newStatus
+            status = newStatus
 
         default:
             break
@@ -426,7 +443,7 @@ private class PlayerWrapper {
 }
 
 extension VideoPlayerClient.Status {
-    internal var canChangePlayback: Bool {
+    var canChangePlayback: Bool {
         switch self {
         case .loaded, .playback, .finished:
             return true
@@ -440,10 +457,12 @@ extension VideoPlayerClient.Status {
 extension UIImage {
     func resizeImageTo(size: CGSize) -> UIImage? {
         UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
-        self.draw(in: CGRect(origin: CGPoint.zero, size: size))
-        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-        return resizedImage
+        draw(in: CGRect(origin: CGPoint.zero, size: size))
+        if let resizedImage = UIGraphicsGetImageFromCurrentImageContext() {
+            UIGraphicsEndImageContext()
+            return resizedImage
+        }
+        return nil
     }
 }
 #endif

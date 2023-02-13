@@ -3,10 +3,11 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/28/22.
-//  
-
+//
 
 import SwiftUI
+
+// MARK: - CircularProgressView
 
 struct CircularProgressView: View {
     var progress: CGFloat = 0.5
@@ -31,6 +32,8 @@ struct CircularProgressView: View {
     }
 }
 
+// MARK: - ArcShape
+
 private struct ArcShape: Shape {
     let progress: CGFloat
 
@@ -48,6 +51,8 @@ private struct ArcShape: Shape {
         return p
     }
 }
+
+// MARK: - CircularProgressView_Previews
 
 struct CircularProgressView_Previews: PreviewProvider {
     static var previews: some View {

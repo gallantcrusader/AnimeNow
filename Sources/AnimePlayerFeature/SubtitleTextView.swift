@@ -3,13 +3,15 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 10/30/22.
-//  
+//
 //
 
 import SwiftUI
-import Utilities
 import SwiftWebVTT
+import Utilities
 import ViewComponents
+
+// MARK: - SubtitleTextView
 
 public struct SubtitleTextView: View {
     public enum Size: CGFloat {
@@ -49,9 +51,10 @@ public struct SubtitleTextView: View {
         }
     }
 
-    @StateObject private var viewModel = ViewModel()
+    @StateObject
+    private var viewModel = ViewModel()
 
-    var url: URL? = nil
+    var url: URL?
     var progress: Double = .zero
     var duration: Double = .zero
     var options: Options = .defaultBoxed
@@ -101,20 +104,18 @@ public struct SubtitleTextView: View {
                 maxHeight: .infinity
             )
         }
-        .onChange(of: url, perform: {
-            viewModel.updateURL($0)
-        })
+        .onChange(of: url) { viewModel.updateURL($0) }
     }
 }
 
-extension SubtitleTextView.Options {
-    public static let defaultBoxed: Self = .init(
+public extension SubtitleTextView.Options {
+    static let defaultBoxed: Self = .init(
         backgroundColor: .black.opacity(0.5),
         backgroundRadius: 8,
         backgroundPadding: 8
     )
 
-    public static let defaultStroke: Self = .init(
+    static let defaultStroke: Self = .init(
         shadowColor: .black,
         shadowOffset: 2,
         strokeColor: .black,
@@ -122,34 +123,38 @@ extension SubtitleTextView.Options {
     )
 }
 
-extension SubtitleTextView {
+// MARK: - SubtitleTextView.ViewModel
 
+extension SubtitleTextView {
     class ViewModel: ObservableObject {
-        var subtitleURL: URL? = nil
-        @Published var vtt = Loadable<WebVTT>.idle
+        var subtitleURL: URL?
+        @Published
+        var vtt = Loadable<WebVTT>.idle
 
         private var subtitlesTask: URLSessionDataTask?
 
         func updateURL(_ url: URL?) {
-            guard let url = url else {
+            guard let url else {
                 subtitlesTask?.cancel()
                 subtitleURL = nil
                 vtt = .idle
                 return
             }
 
-            guard url != subtitleURL else { return }
+            guard url != subtitleURL else {
+                return
+            }
             subtitlesTask?.cancel()
             subtitleURL = url
             vtt = .loading
 
-            subtitlesTask = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            subtitlesTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
                 do {
                     if error != nil {
                         throw URLError(.badServerResponse)
                     }
 
-                    guard let data = data else {
+                    guard let data else {
                         throw URLError(.badServerResponse)
                     }
 
@@ -176,33 +181,39 @@ extension SubtitleTextView {
     }
 }
 
+// MARK: - WebVTT + Equatable
+
 extension WebVTT: Equatable {
     public static func == (lhs: WebVTT, rhs: WebVTT) -> Bool {
         lhs.cues == rhs.cues
     }
 }
 
+// MARK: - WebVTT.Cue + Hashable
+
 extension WebVTT.Cue: Hashable {
     public static func == (lhs: WebVTT.Cue, rhs: WebVTT.Cue) -> Bool {
         lhs.timing == rhs.timing &&
-        lhs.text == rhs.text
+            lhs.text == rhs.text
     }
 
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(self.text)
-        hasher.combine(self.timing)
+        hasher.combine(text)
+        hasher.combine(timing)
     }
 }
+
+// MARK: - WebVTT.Timing + Hashable
 
 extension WebVTT.Timing: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(start)
         hasher.combine(end)
     }
-    
+
     public static func == (lhs: WebVTT.Timing, rhs: WebVTT.Timing) -> Bool {
         lhs.start == rhs.start &&
-        lhs.end == rhs.end
+            lhs.end == rhs.end
     }
 }
 
@@ -211,6 +222,8 @@ extension WebVTT {
         cues.filter { $0.timeStart <= timeStamp && timeStamp <= $0.timeEnd }
     }
 }
+
+// MARK: - SubtitleTextView_Previews
 
 struct SubtitleTextView_Previews: PreviewProvider {
     static var previews: some View {
@@ -221,6 +234,6 @@ struct SubtitleTextView_Previews: PreviewProvider {
             progress: 0.2,
             duration: 1.0
         )
-            .frame(width: 1280, height: 720)
+        .frame(width: 1_280, height: 720)
     }
 }

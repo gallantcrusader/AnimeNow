@@ -3,8 +3,9 @@ import XCTest
 @testable import VideoPlayerClient
 
 final class VideoPlayerClientTests: XCTestCase {
-    let videoPlayer = VideoPlayerClient.testValue
+    private let videoPlayer = VideoPlayerClient.testValue
 
+    // swiftlint:disable force_unwrapping
     func testHLSVideoPlayer() async throws {
         let loadExpectation = expectation(description: "Video can load.")
         let playExpectation = expectation(description: "Video can play.")
@@ -35,8 +36,7 @@ final class VideoPlayerClientTests: XCTestCase {
                 } else if status == .playback(.playing) {
                     playExpectation.fulfill()
                 } else if status == .playback(.paused) {
-                } else if status == .finished {
-                }
+                } else if status == .finished {}
             }
         }
 
@@ -76,8 +76,7 @@ final class VideoPlayerClientTests: XCTestCase {
                 } else if status == .playback(.playing) {
                     playExpectation.fulfill()
                 } else if status == .playback(.paused) {
-                } else if status == .finished {
-                }
+                } else if status == .finished {}
             }
         }
 

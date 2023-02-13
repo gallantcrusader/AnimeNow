@@ -13,7 +13,8 @@ import SwiftUI
 
 @main
 struct AnimeNowApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @NSApplicationDelegateAdaptor(AppDelegate.self)
+    var appDelegate
 
     var body: some Scene {
         WindowGroup {
@@ -24,11 +25,9 @@ struct AnimeNowApp: App {
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.expanded)
         .commands {
-            CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .newItem) {}
             CommandGroup(after: .appInfo) {
-                Button {
-
-                } label: {
+                Button {} label: {
                     Text("Check for Updates...")
                 }
             }

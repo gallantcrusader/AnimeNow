@@ -1,13 +1,15 @@
 //
 //  Provider.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/3/23.
-//  
+//
 //
 
-import Utilities
 import Foundation
+import Utilities
+
+// MARK: - ProviderInfo
 
 public struct ProviderInfo: Hashable, Identifiable, Decodable {
     public var id: String { name }
@@ -29,14 +31,20 @@ public struct ProviderInfo: Hashable, Identifiable, Decodable {
     }
 }
 
+// MARK: CustomStringConvertible
+
 extension ProviderInfo: CustomStringConvertible {
     public var description: String { name }
 }
+
+// MARK: - ProviderRepresentable
 
 public protocol ProviderRepresentable {
     var name: String { get }
     var logo: String? { get }
 }
+
+// MARK: - AnimeStreamingProvider
 
 public struct AnimeStreamingProvider: Equatable, Identifiable {
     public var id: String { name }

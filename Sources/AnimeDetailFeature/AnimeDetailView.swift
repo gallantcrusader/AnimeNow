@@ -14,10 +14,13 @@ import SwiftUI
 import Utilities
 import ViewComponents
 
+// MARK: - AnimeDetailView
+
 public struct AnimeDetailView: View {
     let store: StoreOf<AnimeDetailReducer>
 
-    @State private var averageImageColor: Color = .black
+    @State
+    private var averageImageColor: Color = .black
 
     public init(store: StoreOf<AnimeDetailReducer>) {
         self.store = store
@@ -85,28 +88,28 @@ public struct AnimeDetailView: View {
         )
         .overlay(closeButton)
         #if os(iOS)
-        .ignoresSafeArea(edges: .top)
-        .statusBarHidden()
+            .ignoresSafeArea(edges: .top)
+            .statusBarHidden()
         #endif
-        .background(
-            LinearGradient(
-                stops: [
-                    .init(
-                        color: averageImageColor,
-                        location: 0.0
-                    ),
-                    .init(
-                        color: .black,
-                        location: 1.0
-                    )
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+            .background(
+                LinearGradient(
+                    stops: [
+                        .init(
+                            color: averageImageColor,
+                            location: 0.0
+                        ),
+                        .init(
+                            color: .black,
+                            location: 1.0
+                        )
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(maxWidth: .infinity)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .ignoresSafeArea()
             )
-            .frame(maxWidth: .infinity)
-            .frame(maxHeight: .infinity, alignment: .top)
-            .ignoresSafeArea()
-        )
     }
 }
 
@@ -136,10 +139,9 @@ extension AnimeDetailView {
     }
 }
 
-// MARK: - Top Container
+// MARK: AnimeDetailView.PlayButtonState
 
 extension AnimeDetailView {
-
     private enum PlayButtonState: Equatable, CustomStringConvertible {
         case loading
         case unavailable
@@ -159,7 +161,7 @@ extension AnimeDetailView {
                 return
             }
 
-            guard anime.status != .upcoming && anime.status != .tba else {
+            guard anime.status != .upcoming, anime.status != .tba else {
                 self = .comingSoon
                 return
             }
@@ -220,9 +222,9 @@ extension AnimeDetailView {
 
         var episodeNumber: Episode.ID? {
             switch self {
-            case .playFromBeginning(let info),
-                    .playNextEpisode(let info),
-                    .resumeEpisode(let info):
+            case let .playFromBeginning(info),
+                 let .playNextEpisode(info),
+                 let .resumeEpisode(info):
                 return info.episodeNumber
             default:
                 return nil
@@ -240,13 +242,13 @@ extension AnimeDetailView {
             case .comingSoon:
                 return "Coming Soon"
 
-            case .playFromBeginning(let info):
+            case let .playFromBeginning(info):
                 return "Play \(info.format == .movie ? "Movie" : "")"
 
-            case .playNextEpisode(let info):
+            case let .playNextEpisode(info):
                 return "Play E\(info.episodeNumber)"
 
-            case .resumeEpisode(let info):
+            case let .resumeEpisode(info):
                 if info.format == .movie {
                     return "Resume Movie"
                 } else {
@@ -267,12 +269,14 @@ extension AnimeDetailView {
 }
 
 extension AnimeDetailView {
-    // swiftlint:disable function_body_length
     @ViewBuilder
     func topContainer(_ anime: Anime) -> some View {
         ZStack {
             FillAspectImage(
-                url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
+                url: (
+                    DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage
+                        .largest
+                )?.link
             )
             .onAverageColor { color in
                 averageImageColor = color ?? .black
@@ -308,7 +312,6 @@ extension AnimeDetailView {
                 }
 
                 HStack {
-
                     // MARK: Play Button
 
                     WithViewStore(
@@ -386,29 +389,29 @@ extension AnimeDetailView {
             .padding(.horizontal)
             .padding(.vertical)
             #if os(macOS)
-            .padding(.horizontal, 40)
+                .padding(.horizontal, 40)
             #endif
-            .background(
-                LinearGradient(
-                    stops: [
-                        .init(
-                            color: .clear,
-                            location: 0.0
-                        ),
-                        .init(
-                            color: averageImageColor.opacity(0.5),
-                            location: 1.0
-                        )
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
+                .background(
+                    LinearGradient(
+                        stops: [
+                            .init(
+                                color: .clear,
+                                location: 0.0
+                            ),
+                            .init(
+                                color: averageImageColor.opacity(0.5),
+                                location: 1.0
+                            )
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 )
-            )
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .bottomLeading
-            )
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .bottomLeading
+                )
         }
         .aspectRatio(
             DeviceUtil.isPhone ? 2 / 3 : DeviceUtil.isPad ? 7 / 3 : 9 / 3,
@@ -433,11 +436,9 @@ extension AnimeDetailView {
 // MARK: - Info Container
 
 extension AnimeDetailView {
-
     @ViewBuilder
     func infoContainer(_ anime: Anime) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-
             // MARK: Description Info
 
             Text(anime.description)
@@ -469,7 +470,7 @@ extension AnimeDetailView {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
         #if os(macOS)
-        .padding(.horizontal, 40)
+            .padding(.horizontal, 40)
         #endif
     }
 }
@@ -491,7 +492,6 @@ extension AnimeDetailView {
         }
     }
 
-    // swiftlint:disable function_body_length
     @ViewBuilder
     func episodesContainer(_ anime: Anime?) -> some View {
         if anime?.status.canShowEpisodes ?? true {
@@ -555,7 +555,7 @@ extension AnimeDetailView {
                 }
                 .padding(.horizontal)
                 #if os(macOS)
-                .padding(.horizontal, 40)
+                    .padding(.horizontal, 40)
                 #endif
 
                 HStack {
@@ -602,11 +602,10 @@ extension AnimeDetailView {
                     Spacer()
 
                     // TODO: Add option for selecting a list of episodes
-
                 }
                 .padding(.horizontal)
                 #if os(macOS)
-                .padding(.horizontal, 40)
+                    .padding(.horizontal, 40)
                 #endif
 
                 LoadableView(loadable: viewState.episodes) { episodes in
@@ -677,7 +676,8 @@ extension AnimeDetailView {
             _ state: AnimeDetailReducer.State,
             _ episodeNumber: Int
         ) {
-            self.episodeStore = !state.isLoadingEpisodes ? state.animeStore.value?.episodes.first { $0.number == episodeNumber } : nil
+            self.episodeStore = !state.isLoadingEpisodes ? state.animeStore.value?.episodes
+                .first { $0.number == episodeNumber } : nil
             self.downloadStatus = !state.isLoadingEpisodes ? state.episodesStatus[id: episodeNumber]?.status : nil
         }
     }
@@ -790,6 +790,8 @@ extension AnimeDetailView {
     }
 }
 
+// MARK: AnimeDetailView.PlayButtonStyle
+
 extension AnimeDetailView {
     struct PlayButtonStyle: ButtonStyle {
         let isEnabled: Bool
@@ -806,6 +808,8 @@ extension AnimeDetailView {
         }
     }
 }
+
+// MARK: - AnimeDetailView_Previews
 
 struct AnimeDetailView_Previews: PreviewProvider {
     static var previews: some View {

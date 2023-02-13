@@ -1,13 +1,15 @@
 //
 //  Live.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/16/23.
-//  
+//
 //
 
-import Foundation
 import ComposableArchitecture
+import Foundation
+
+// MARK: - FileClient + DependencyKey
 
 extension FileClient: DependencyKey {
     public static let liveValue = {
@@ -21,24 +23,24 @@ extension FileClient: DependencyKey {
         }
 
         return Self(
-            delete: {
+            delete: { url in
                 try FileManager.default.removeItem(
                     at: mainDirectory
-                        .appendingPathComponent($0)
+                        .appendingPathComponent(url)
                         .appendingPathExtension("json")
                 )
             },
-            load: {
+            load: { url in
                 try Data(
                     contentsOf: mainDirectory
-                        .appendingPathComponent($0)
+                        .appendingPathComponent(url)
                         .appendingPathExtension("json")
                 )
             },
-            save: {
-                try $1.write(
+            save: { url, data in
+                try data.write(
                     to: mainDirectory
-                        .appendingPathComponent($0)
+                        .appendingPathComponent(url)
                         .appendingPathExtension("json")
                 )
             }
@@ -46,10 +48,9 @@ extension FileClient: DependencyKey {
     }()
 }
 
-extension FileClient {
-    public static let applicationDirectory = FileManager.default
-        .urls(for: .applicationSupportDirectory, in: .userDomainMask)
-        .first!
+public extension FileClient {
+    static let applicationDirectory = FileManager.default
+        .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent(
             Bundle.main.bundleIdentifier ?? "com.errorerrorerror.animenow",
             isDirectory: true

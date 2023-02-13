@@ -5,28 +5,27 @@
 //  Created by ErrorErrorError on 10/22/22.
 //
 
-import Foundation
 import ComposableArchitecture
+import Foundation
 import SwiftUI
 
-extension EffectTask where Failure == Never {
-
+public extension EffectTask where Failure == Never {
     /// Custom version of sending action using run
-    public static func action(
-      priority: TaskPriority? = nil,
-      _ action: Action,
-      animation: Animation? = nil
+    static func action(
+        priority: TaskPriority? = nil,
+        _ action: Action,
+        animation: Animation? = nil
     ) -> Self {
-        self.run(priority: priority) { await $0(action, animation: animation) }
+        run(priority: priority) { await $0(action, animation: animation) }
     }
 
     /// Custom version of `.fireAndForget` using run.
-    public static func run(_ operation: @escaping @Sendable () async throws -> Void) -> Self {
-      self.run { _ in try await operation() }
+    static func run(_ operation: @escaping @Sendable () async throws -> Void) -> Self {
+        run { _ in try await operation() }
     }
 
     /// Custom version of `.task` using run.
-    public static func run(_ operation: @escaping @Sendable () async throws -> Action) -> Self {
-      self.run { try await $0(operation()) }
+    static func run(_ operation: @escaping @Sendable () async throws -> Action) -> Self {
+        run { try await $0(operation()) }
     }
 }

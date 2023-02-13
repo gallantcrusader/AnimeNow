@@ -3,17 +3,20 @@
 //  Anime Now! (iOS)
 //
 //  Created by ErrorErrorError on 11/19/22.
-//  
+//
 
-import SharedModels
-import DatabaseClient
 import ComposableArchitecture
+import DatabaseClient
+import SharedModels
+
+// MARK: - NewCollectionReducer
 
 public struct NewCollectionReducer: ReducerProtocol {
-    public init() { }
+    public init() {}
 
     public struct State: Equatable {
-        @BindableState var title = ""
+        @BindableState
+        var title = ""
         var namesUsed: Set<String> = []
 
         public init(
@@ -37,7 +40,8 @@ public struct NewCollectionReducer: ReducerProtocol {
         Reduce(self.core)
     }
 
-    @Dependency(\.databaseClient) var databaseClient
+    @Dependency(\.databaseClient)
+    var databaseClient
 
     func core(_ state: inout State, _ action: Action) -> EffectTask<Action> {
         switch action {
@@ -46,12 +50,12 @@ public struct NewCollectionReducer: ReducerProtocol {
                 let titles: [CollectionStore] = try await databaseClient.fetch(CollectionStore.all)
                 await send(.fetchedTitles(titles.map(\.title.value)))
             }
-        case .fetchedTitles(let titles):
+        case let .fetchedTitles(titles):
             state.namesUsed = .init(titles)
 
         case .saveTitle:
             let title = state.title
-            return .run { send in
+            return .run { _ in
                 let collection = CollectionStore(title: .custom(title))
                 try await databaseClient.insert(collection)
             }
@@ -68,7 +72,7 @@ extension NewCollectionReducer.State {
         let formatTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
 
         return !formatTitle.isEmpty && !namesUsed
-            .map({ $0.localizedLowercase.trimmingCharacters(in: .whitespacesAndNewlines) })
+            .map { $0.localizedLowercase.trimmingCharacters(in: .whitespacesAndNewlines) }
             .contains(formatTitle.localizedLowercase.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 }

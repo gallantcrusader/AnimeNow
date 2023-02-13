@@ -3,15 +3,15 @@
 //  Anime Now! (macOS)
 //
 //  Created by ErrorErrorError on 10/23/22.
-//  
+//
 //
 
 #if os(macOS)
 import AppKit
 import SwiftUI
 
-extension View {
-    public func mouseEvents(
+public extension View {
+    func mouseEvents(
         options: NSTrackingArea.Options,
         _ mouseEvents: @escaping (NSEvent.EventType) -> Void
     ) -> some View {
@@ -70,7 +70,7 @@ struct MouseEventsModifier: ViewModifier {
         }
 
         private func updateTrackingAreas(view: NSView, context: Context) {
-            Representable.dismantleNSView(view, coordinator: context.coordinator)
+            Self.dismantleNSView(view, coordinator: context.coordinator)
 
             let trackingArea = NSTrackingArea(
                 rect: frame,
@@ -82,22 +82,22 @@ struct MouseEventsModifier: ViewModifier {
             view.addTrackingArea(trackingArea)
         }
 
-        static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        static func dismantleNSView(_ nsView: NSView, coordinator _: Coordinator) {
             nsView.trackingAreas.forEach { nsView.removeTrackingArea($0) }
         }
 
         class Coordinator: NSResponder {
             var onMouseEvent: ((NSEvent.EventType) -> Void)?
 
-            override func mouseEntered(with event: NSEvent) {
+            override func mouseEntered(with _: NSEvent) {
                 onMouseEvent?(.mouseEntered)
             }
 
-            override func mouseExited(with event: NSEvent) {
+            override func mouseExited(with _: NSEvent) {
                 onMouseEvent?(.mouseExited)
             }
 
-            override func mouseMoved(with event: NSEvent) {
+            override func mouseMoved(with _: NSEvent) {
                 onMouseEvent?(.mouseMoved)
             }
         }

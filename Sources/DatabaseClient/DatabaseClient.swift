@@ -7,15 +7,25 @@
 
 import ComposableArchitecture
 
+// MARK: - DatabaseClient
+
 public protocol DatabaseClient {
     // Insert
     func insert<T: ManagedObjectConvertible>(_ item: T) async throws
 
     // Update
     @discardableResult
-    func update<T: ManagedObjectConvertible, V: ConvertableValue>(_ id: T.ID, _ keyPath: WritableKeyPath<T, V>, _ value: V) async throws -> Bool
+    func update<T: ManagedObjectConvertible, V: ConvertableValue>(
+        _ id: T.ID,
+        _ keyPath: WritableKeyPath<T, V>,
+        _ value: V
+    ) async throws -> Bool
     @discardableResult
-    func update<T: ManagedObjectConvertible, V: ConvertableValue>(_ id: T.ID, _ keyPath: WritableKeyPath<T, V?>, _ value: V?) async throws -> Bool
+    func update<T: ManagedObjectConvertible, V: ConvertableValue>(
+        _ id: T.ID,
+        _ keyPath: WritableKeyPath<T, V?>,
+        _ value: V?
+    ) async throws -> Bool
 
     // Delete
     func delete<T: ManagedObjectConvertible>(_ item: T) async throws
@@ -24,12 +34,14 @@ public protocol DatabaseClient {
     func observe<T: ManagedObjectConvertible>(_ request: Request<T>) -> AsyncStream<[T]>
 }
 
+// MARK: - DatabaseClientKey
+
 public enum DatabaseClientKey: DependencyKey {
     public static let liveValue = DatabaseClientLive.shared as DatabaseClient
 }
 
-extension DependencyValues {
-    public var databaseClient: DatabaseClient {
+public extension DependencyValues {
+    var databaseClient: DatabaseClient {
         get { self[DatabaseClientKey.self] }
         set { self[DatabaseClientKey.self] = newValue }
     }

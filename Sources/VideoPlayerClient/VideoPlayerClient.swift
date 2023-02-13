@@ -4,10 +4,12 @@
 //  Created by ErrorErrorError on 12/23/22.
 //
 
-import Foundation
 import AVFoundation
-import SharedModels
 import ComposableArchitecture
+import Foundation
+import SharedModels
+
+// MARK: - VideoPlayerClient
 
 public struct VideoPlayerClient {
     public let status: () -> AsyncStream<Status>
@@ -20,7 +22,6 @@ public extension VideoPlayerClient {
     typealias VideoGravity = AVLayerVideoGravity
 
     enum Status: Equatable {
-
         /// Idle
         case idle
 
@@ -47,7 +48,6 @@ public extension VideoPlayerClient {
     }
 
     enum Action: Equatable {
-
         /// Play Item
         /// Thos requires url and metadata and optional referer (if the video requires it)
 
@@ -89,7 +89,7 @@ public extension VideoPlayerClient {
     struct Metadata: Equatable {
         let videoTitle: String
         let videoAuthor: String
-        var thumbnail: URL? = nil
+        var thumbnail: URL?
 
         public init(
             videoTitle: String,
@@ -103,9 +103,14 @@ public extension VideoPlayerClient {
     }
 }
 
-extension VideoPlayerClient: @unchecked Sendable { }
+// MARK: Sendable
 
-extension VideoPlayerClient: DependencyKey { }
+extension VideoPlayerClient: @unchecked
+Sendable {}
+
+// MARK: DependencyKey
+
+extension VideoPlayerClient: DependencyKey {}
 
 public extension DependencyValues {
     var videoPlayerClient: VideoPlayerClient {

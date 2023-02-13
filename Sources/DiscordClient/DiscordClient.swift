@@ -1,30 +1,32 @@
 //
 //  DiscordClient.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 12/29/22.
-//  
+//
 //
 
-import Foundation
 import ComposableArchitecture
+import Foundation
+
+// MARK: - DiscordClient
 
 public struct DiscordClient {
-    public let status: () -> AsyncStream<Status>
     public let isActive: Bool
     public let isConnected: Bool
+    public let status: () -> AsyncStream<Status>
     public let setActive: (Bool) async throws -> Void
     public let setActivity: (Activity?) async -> Void
 }
 
-extension DiscordClient {
-    public enum Status: String, Equatable {
+public extension DiscordClient {
+    enum Status: String, Equatable {
         case connected = "Connected"
         case failed = "Failed"
         case offline = "Offline"
     }
 
-    public var isSupported: Bool {
+    var isSupported: Bool {
         #if os(macOS)
         true
         #else
@@ -33,8 +35,10 @@ extension DiscordClient {
     }
 }
 
-extension DiscordClient {
-    public enum Activity {
+// MARK: DiscordClient.Activity
+
+public extension DiscordClient {
+    enum Activity {
         case watching(WatchingInfo)
         case searching
         case looking
@@ -63,14 +67,16 @@ extension DiscordClient {
     }
 }
 
+// MARK: DependencyKey
+
 extension DiscordClient: DependencyKey {
     #if os(iOS)
     public static var liveValue: DiscordClient = .noop
     #endif
 }
 
-extension DependencyValues {
-    public var discordClient: DiscordClient {
+public extension DependencyValues {
+    var discordClient: DiscordClient {
         get { self[DiscordClient.self] }
         set { self[DiscordClient.self] = newValue }
     }

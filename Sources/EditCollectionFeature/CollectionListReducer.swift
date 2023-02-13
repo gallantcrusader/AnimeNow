@@ -3,15 +3,17 @@
 //  Anime Now! (iOS)
 //
 //  Created by ErrorErrorError on 11/17/22.
-//  
+//
 //
 
+import ComposableArchitecture
 import Foundation
 import SharedModels
-import ComposableArchitecture
+
+// MARK: - EditCollectionReducer
 
 public struct EditCollectionReducer: ReducerProtocol {
-    public init() { }
+    public init() {}
 
     public struct State: Equatable {
         public let animeId: AnyAnimeRepresentable.ID
@@ -43,7 +45,7 @@ extension EditCollectionReducer.State {
             let oneHasAnime = one.animes[id: animeId] != nil
             let twoHasAnime = two.animes[id: animeId] != nil
 
-            if oneHasAnime && twoHasAnime {
+            if oneHasAnime, twoHasAnime {
                 return one.title.value < two.title.value
             } else if oneHasAnime {
                 return true
@@ -57,7 +59,7 @@ extension EditCollectionReducer.State {
 }
 
 extension EditCollectionReducer {
-    func core(into state: inout State, action: Action) -> EffectTask<Action> {
+    func core(into _: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
             break

@@ -3,7 +3,7 @@
 //
 //
 //  Created by ErrorErrorError on 10/25/22.
-//  
+//
 //
 
 import SwiftUI
@@ -18,11 +18,8 @@ public struct FillAspectImage: View {
 
     public var body: some View {
         GeometryReader { proxy in
-            CachedAsyncImage(
-                url: url,
-                transaction: .init(animation: .easeInOut(duration: 0.4))
-            ) {
-                $0.resizable()
+            CachedAsyncImage(url: url, transaction: .init(animation: .easeInOut(duration: 0.4))) { image in
+                image.resizable()
             } placeholder: {
                 Color.gray.opacity(0.25)
                     .placeholder(active: true)

@@ -12,8 +12,11 @@ import SharedModels
 import SwiftUI
 import Utilities
 
+// MARK: - AnimeCarousel
+
 public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
-    @Binding var position: Int
+    @Binding
+    var position: Int
 
     var list: [T]
     var content: (T) -> Content
@@ -23,13 +26,14 @@ public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
         items: [T],
         @ViewBuilder content: @escaping (T) -> Content
     ) {
-        self._position = position
+        _position = position
         self.list = items
         self.content = content
     }
 
     // Offset...
-    @GestureState private var translation: CGFloat = 0
+    @GestureState
+    private var translation: CGFloat = 0
 
     public var body: some View {
         ZStack(alignment: .bottom) {
@@ -104,10 +108,10 @@ public struct AnimeCarousel<Content: View, T: AnimeRepresentable>: View {
         .cornerRadius(DeviceUtil.isPhone ? 0 : 32)
         .animation(.easeInOut, value: translation == .zero)
         #if os(macOS)
-        .arrowIndicators(
-            $position,
-            count: list.count
-        )
+            .arrowIndicators(
+                $position,
+                count: list.count
+            )
         #endif
     }
 }
@@ -152,7 +156,7 @@ extension AnimeCarousel {
     }
 
     private var indicatorStates: [IndicatorState] {
-        guard !list.isEmpty && position >= 0 && position < list.indices.count else {
+        guard !list.isEmpty, position >= 0, position < list.indices.count else {
             return []
         }
 
@@ -178,9 +182,10 @@ extension AnimeCarousel {
                 indicatorStates[index].size = .small
             } else if startIndex == index && leftSideCount >= 1 {
                 indicatorStates[index].size = .smallest
-            } else if (endIndex - 2 == index && rightSideCount < indicatorCount) || (endIndex - 1 == index && rightSideCount == indicatorCount) {
+            } else if (endIndex - 2 == index && rightSideCount < indicatorCount) ||
+                (endIndex - 1 == index && rightSideCount == indicatorCount) {
                 indicatorStates[index].size = .small
-            } else if endIndex - 1 == index && rightSideCount < indicatorCount {
+            } else if endIndex - 1 == index, rightSideCount < indicatorCount {
                 indicatorStates[index].size = .smallest
             } else {
                 indicatorStates[index].size = .normal

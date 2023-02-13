@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - EpisodeRepresentable
+
 public protocol EpisodeRepresentable: Hashable, Identifiable {
     var number: Int { get }
     var title: String { get }
@@ -18,12 +20,14 @@ public protocol EpisodeRepresentable: Hashable, Identifiable {
     func eraseAsRepresentable() -> AnyEpisodeRepresentable
 }
 
+// MARK: - EpisodeLink
+
 public enum EpisodeLink: Hashable, Identifiable, CustomStringConvertible {
     public var id: String {
         switch self {
-        case .stream(id: let id, audio: let audio):
+        case let .stream(id: id, audio: audio):
             return "\(id)-\(audio)"
-        case .offline(url: let url):
+        case let .offline(url: url):
             return "\(url.description)"
         }
     }
@@ -35,7 +39,7 @@ public enum EpisodeLink: Hashable, Identifiable, CustomStringConvertible {
 
     public var audio: Audio {
         switch self {
-        case .stream(_, let audio):
+        case let .stream(_, audio):
             return audio
         default:
             return .sub
@@ -57,25 +61,29 @@ public enum EpisodeLink: Hashable, Identifiable, CustomStringConvertible {
                 return "Sub"
             case .dub:
                 return "Dub"
-            case .custom(let custom):
+            case let .custom(custom):
                 return custom
             }
         }
     }
 }
 
-extension EpisodeRepresentable where Self: Equatable {
-    public func isEqualTo(_ item: some EpisodeRepresentable) -> Bool {
-        guard let item = item as? Self else { return false }
+public extension EpisodeRepresentable where Self: Equatable {
+    func isEqualTo(_ item: some EpisodeRepresentable) -> Bool {
+        guard let item = item as? Self else {
+            return false
+        }
         return self == item
     }
 }
 
-extension EpisodeRepresentable {
-    public func eraseAsRepresentable() -> AnyEpisodeRepresentable {
+public extension EpisodeRepresentable {
+    func eraseAsRepresentable() -> AnyEpisodeRepresentable {
         .init(self)
     }
 }
+
+// MARK: - AnyEpisodeRepresentable
 
 public struct AnyEpisodeRepresentable: EpisodeRepresentable, Identifiable {
     private let episode: any EpisodeRepresentable
@@ -109,15 +117,19 @@ public struct AnyEpisodeRepresentable: EpisodeRepresentable, Identifiable {
     }
 }
 
+// MARK: Hashable
+
 extension AnyEpisodeRepresentable: Hashable {
     public static func == (lhs: AnyEpisodeRepresentable, rhs: AnyEpisodeRepresentable) -> Bool {
         lhs.episode.isEqualTo(rhs.episode)
     }
 
     public func hash(into hasher: inout Hasher) {
-        self.episode.hash(into: &hasher)
+        episode.hash(into: &hasher)
     }
 }
+
+// MARK: - Episode
 
 public struct Episode: EpisodeRepresentable {
     public var id: Int { number }
@@ -154,14 +166,15 @@ public extension Episode {
         isFiller: false
     )
 
+    // swiftlint:disable force_unwrapping
     static let demoEpisodes: [Episode] = [
         .init(
             title: "Homecoming",
             number: 1,
             description:
-                """
-                An older and stronger Naruto returns from his two and a half years of training with Jiraiya.
-                """,
+            """
+            An older and stronger Naruto returns from his two and a half years of training with Jiraiya.
+            """,
             thumbnail: .original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!),
             isFiller: false
         ),
@@ -169,9 +182,9 @@ public extension Episode {
             title: "Homecoming 2",
             number: 2,
             description:
-                """
-                An older and stronger Naruto returns from his two and a half years of training with Jiraiya.
-                """,
+            """
+            An older and stronger Naruto returns from his two and a half years of training with Jiraiya.
+            """,
             thumbnail: .original(URL(string: "https://artworks.thetvdb.com/banners/episodes/79824/320623.jpg")!),
             isFiller: true
         )

@@ -5,17 +5,17 @@
 //  Created by ErrorErrorError on 10/18/22.
 //
 
-import SwiftUI
 import IdentifiedCollections
+import SwiftUI
 
 struct SideArrowsList<Content: View, T: Identifiable & Hashable>: View {
-
     let items: [T]
     let spacing: CGFloat
     var showArrows = false
     var content: (T) -> Content
 
-    @State private var rangesVisible = Set<T.ID>()
+    @State
+    private var rangesVisible = Set<T.ID>()
 
     var body: some View {
         if showArrows {
@@ -23,7 +23,7 @@ struct SideArrowsList<Content: View, T: Identifiable & Hashable>: View {
                 if showArrows, let first = items.first, !rangesVisible.contains(first.id) {
                     Image(systemName: "chevron.backward")
                         .padding()
-                        .aspectRatio(9/16, contentMode: .fill)
+                        .aspectRatio(9 / 16, contentMode: .fill)
                 }
 
                 createItems()
@@ -31,7 +31,7 @@ struct SideArrowsList<Content: View, T: Identifiable & Hashable>: View {
                 if showArrows, let last = items.last, !rangesVisible.contains(last.id) {
                     Image(systemName: "chevron.forward")
                         .padding()
-                        .aspectRatio(9/16, contentMode: .fill)
+                        .aspectRatio(9 / 16, contentMode: .fill)
                 }
             }
         } else {
@@ -45,7 +45,7 @@ struct SideArrowsList<Content: View, T: Identifiable & Hashable>: View {
             GridItem(.flexible())
         ]
 
-        ScrollViewReader { proxy in
+        ScrollViewReader { _ in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHGrid(rows: layout, alignment: .center, spacing: spacing) {
                     ForEach(items) { item in
@@ -61,8 +61,7 @@ struct SideArrowsList<Content: View, T: Identifiable & Hashable>: View {
                 }
                 .padding(.horizontal)
             }
-            .onChange(of: rangesVisible) { newValue in
-                
+            .onChange(of: rangesVisible) { _ in
             }
         }
     }

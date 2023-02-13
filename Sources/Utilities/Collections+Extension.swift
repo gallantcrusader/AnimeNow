@@ -10,28 +10,32 @@ import OrderedCollections
 
 // MARK: Identifiable
 
-extension Collection where Element: Identifiable, Self: RangeReplaceableCollection {
-    public mutating func update(_ element: Element) {
-        if let index = self.firstIndex(where: { $0.id == element.id }) {
-            self.remove(at: index)
-            self.insert(element, at: index)
+public extension Collection where Element: Identifiable, Self: RangeReplaceableCollection {
+    mutating func update(_ element: Element) {
+        if let index = firstIndex(where: { $0.id == element.id }) {
+            remove(at: index)
+            insert(element, at: index)
         } else {
-            self.append(element)
+            append(element)
         }
     }
 }
 
+// MARK: - IdentifiableArray
+
 public protocol IdentifiableArray: Collection where Element: Identifiable {
-    subscript(id id: Element.ID) -> Element? { get set }
+    subscript(id _: Element.ID) -> Element? { get set }
 }
+
+// MARK: - Set + IdentifiableArray
 
 extension Set: IdentifiableArray where Element: Identifiable {
     public subscript(id id: Element.ID) -> Element? {
         get {
-            first(where: { $0.id == id })
+            first { $0.id == id }
         }
         set {
-            if let index = firstIndex(where: { $0.id == id }) {
+            if let index = firstIndex(where: { obj in obj.id == id }) {
                 remove(at: index)
                 if let newValue {
                     insert(newValue)
@@ -45,13 +49,15 @@ extension Set: IdentifiableArray where Element: Identifiable {
     }
 }
 
+// MARK: - Array + IdentifiableArray
+
 extension Array: IdentifiableArray where Element: Identifiable {
     public subscript(id id: Element.ID) -> Element? {
         get {
-            first(where: { $0.id == id })
+            first { $0.id == id }
         }
         set {
-            if let index = firstIndex(where: { $0.id == id }) {
+            if let index = firstIndex(where: { obj in obj.id == id }) {
                 if let value = newValue {
                     self[index] = value
                 } else {
@@ -66,23 +72,25 @@ extension Array: IdentifiableArray where Element: Identifiable {
     }
 
     public func index(id: Element.ID) -> Int? {
-        firstIndex(where: { $0.id == id })
+        firstIndex { $0.id == id }
     }
 }
 
-extension Set where Element: Identifiable {
-    public mutating func update(_ element: Element) {
-        if let index = self.firstIndex(where: { $0.id == element.id }) {
-            self.remove(at: index)
+public extension Set where Element: Identifiable {
+    mutating func update(_ element: Element) {
+        if let index = firstIndex(where: { $0.id == element.id }) {
+            remove(at: index)
         }
-        self.insert(element)
+        insert(element)
     }
 }
+
+// MARK: - OrderedSet + IdentifiableArray
 
 extension OrderedSet: IdentifiableArray where Element: Identifiable {
     public subscript(id id: Element.ID) -> Element? {
         get {
-            first(where: { $0.id == id })
+            first { $0.id == id }
         }
         set {
             if let index = firstIndex(where: { $0.id == id }) {
@@ -99,6 +107,6 @@ extension OrderedSet: IdentifiableArray where Element: Identifiable {
     }
 
     public func index(id: Element.ID) -> Int? {
-        firstIndex(where: { $0.id == id })
+        firstIndex { $0.id == id }
     }
 }

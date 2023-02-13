@@ -6,9 +6,9 @@
 //
 
 #if os(iOS)
-import UIKit
 import AppFeature
 import ComposableArchitecture
+import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     lazy var viewStore = ViewStore(store.stateless)
@@ -17,28 +17,28 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func scene(
         _ scene: UIScene,
-        willConnectTo session: UISceneSession,
-        options connectionOptions: UIScene.ConnectionOptions
+        willConnectTo _: UISceneSession,
+        options _: UIScene.ConnectionOptions
     ) {
-        self.window = (scene as? UIWindowScene).map { UIWindow(windowScene: $0) }
-        self.window?.rootViewController = AnimeNowHostingController(
+        window = (scene as? UIWindowScene).map { UIWindow(windowScene: $0) }
+        window?.rootViewController = AnimeNowHostingController(
             wrappedView:
-                AppView(
-                    store: store
-                )
+            AppView(
+                store: store
+            )
         )
-        self.window?.makeKeyAndVisible()
+        window?.makeKeyAndVisible()
     }
 
-    func sceneWillResignActive(_ scene: UIScene) {
+    func sceneWillResignActive(_: UIScene) {
         viewStore.send(.appDelegate(.appDidEnterBackground))
     }
 
-    func sceneDidDisconnect(_ scene: UIScene) {
+    func sceneDidDisconnect(_: UIScene) {
         viewStore.send(.appDelegate(.appWillTerminate))
     }
 
-    func sceneDidEnterBackground(_ scene: UIScene) {
+    func sceneDidEnterBackground(_: UIScene) {
         viewStore.send(.appDelegate(.appDidEnterBackground))
     }
 }

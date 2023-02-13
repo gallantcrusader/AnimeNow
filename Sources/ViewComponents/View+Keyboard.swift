@@ -2,18 +2,18 @@
 //  Anime Now! (macOS)
 //
 //  Created by ErrorErrorError on 10/29/22.
-//  
+//
 //
 
 #if os(macOS)
-import SwiftUI
 import AppKit
+import SwiftUI
 
-extension View {
-    public func onKeyDown(
+public extension View {
+    func onKeyDown(
         _ onKeyDown: @escaping (KeyCommandsHandlerModifier.KeyCommands) -> Void
     ) -> some View {
-        self.modifier(KeyCommandsHandlerModifier(onKeyDown: onKeyDown))
+        modifier(KeyCommandsHandlerModifier(onKeyDown: onKeyDown))
     }
 }
 
@@ -39,12 +39,12 @@ extension KeyCommandsHandlerModifier {
     struct Representable: NSViewRepresentable {
         var onKeyDown: (KeyCommands) -> Void
 
-        func makeNSView(context: Context) -> NSView {
+        func makeNSView(context _: Context) -> NSView {
             let view = EventView(onKeyDown)
             return view
         }
 
-        func updateNSView(_ nsView: NSView, context: Context) {}
+        func updateNSView(_: NSView, context _: Context) {}
     }
 
     class EventView: NSView {
@@ -58,19 +58,22 @@ extension KeyCommandsHandlerModifier {
             self.onKeyDown = onKeyDown
             super.init(frame: .zero)
 
-            observer = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] (event) -> NSEvent? in
-                guard let keyDown = KeyCommands(rawValue: event.keyCode) else { return event }
+            self.observer = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event -> NSEvent? in
+                guard let keyDown = KeyCommands(rawValue: event.keyCode) else {
+                    return event
+                }
                 DispatchQueue.main.async { [weak self] in self?.onKeyDown(keyDown) }
                 return nil
             }
         }
 
-        required init?(coder: NSCoder) {
+        @available(*, unavailable)
+        required init?(coder _: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
 
         deinit {
-            guard let observer = observer else {
+            guard let observer else {
                 return
             }
 

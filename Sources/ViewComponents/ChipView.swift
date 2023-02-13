@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// MARK: - ChipView
+
 public struct ChipView<Accessory: View>: View {
     let text: String
     var accessory: (() -> Accessory)?
@@ -40,32 +42,33 @@ public struct ChipView<Accessory: View>: View {
     }
 }
 
-extension ChipView {
-    public func chipBackgroundColor(_ color: Color) -> Self {
+public extension ChipView {
+    func chipBackgroundColor(_ color: Color) -> Self {
         var view = self
         view.backgroundColor = color
         return view
     }
 
-    public func chipOpacity(_ opacity: Double) -> Self {
+    func chipOpacity(_ opacity: Double) -> Self {
         var view = self
         view.opacity = opacity
         return view
     }
 }
 
-extension ChipView where Accessory == EmptyView {
-    public init(text: String) {
+public extension ChipView where Accessory == EmptyView {
+    init(text: String) {
         self.init(text: text, accessory: nil)
     }
 }
 
+// MARK: - ChipView_Previews
+
 struct ChipView_Previews: PreviewProvider {
     static var previews: some View {
-        ChipView(
-            text: "2021",
-            accessory: { Image(systemName: "star.fill") }
-        )
+        ChipView(text: "2021") {
+            Image(systemName: "star.fill")
+        }
         .preferredColorScheme(.dark)
     }
 }

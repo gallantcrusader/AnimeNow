@@ -1,13 +1,13 @@
 //  View+SupportedOrientation.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 12/26/22.
-//  
+//
 //
 
 #if os(iOS)
-import UIKit
 import SwiftUI
+import UIKit
 
 public struct SupportedOrientationPreferenceKey: PreferenceKey {
     public static var defaultValue: UIInterfaceOrientationMask = .portrait

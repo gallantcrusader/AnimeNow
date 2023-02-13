@@ -7,19 +7,18 @@
 
 #if os(macOS)
 import AppKit
-import SwiftUI
-import SharedModels
-import ViewComponents
 import ComposableArchitecture
+import SharedModels
+import SwiftUI
+import ViewComponents
 
 extension AnimePlayerView {
     @ViewBuilder
     var playerControlsOverlay: some View {
-        WithViewStore(
-            store,
-            observe: { $0.canShowPlayerOverlay }
-        ) { viewState in
-            GeometryReader { proxy in
+        WithViewStore(store) { state in
+            state.canShowPlayerOverlay
+        } content: { viewState in
+            GeometryReader { _ in
                 VStack(spacing: 0) {
                     if viewState.state {
                         topPlayerItems
@@ -60,22 +59,27 @@ extension AnimePlayerView {
             }
         }
         .onReceive(ViewStore(store).publisher.canShowPlayerOverlay) { showOverlay in
-            showOverlay ? NSCursor.unhide() : NSCursor.setHiddenUntilMouseMoves(true)
+            if showOverlay {
+                NSCursor.unhide()
+            } else {
+                NSCursor.setHiddenUntilMouseMoves(true)
+            }
+
             NSWindow.ButtonType.allCases
-                .forEach {
+                .forEach { button in
                     NSApp.mainWindow?
-                        .standardWindowButton($0)?
+                        .standardWindowButton(button)?
                         .isHidden = !showOverlay
                 }
         }
         .onReceive(ViewStore(store).publisher.playerIsFullScreen) { fullScreen in
             NSWindow.ButtonType.allCases
-                .forEach {
+                .forEach { button in
                     NSApp.mainWindow?
-                        .standardWindowButton($0)?
+                        .standardWindowButton(button)?
                         .isHidden = !fullScreen
                 }
-        } 
+        }
         .onKeyDown { key in
             let viewStore = ViewStore(store)
             switch key {
@@ -93,9 +97,9 @@ extension AnimePlayerView {
         }
         .onDisappear {
             NSWindow.ButtonType.allCases
-                .forEach {
+                .forEach { button in
                     NSApp.mainWindow?
-                        .standardWindowButton($0)?
+                        .standardWindowButton(button)?
                         .isHidden = false
                 }
             NSCursor.unhide()
@@ -108,10 +112,9 @@ extension AnimePlayerView {
 extension AnimePlayerView {
     @ViewBuilder
     var statusOverlay: some View {
-        WithViewStore(
-            store,
-            observe: { $0.status }
-        ) { viewState in
+        WithViewStore(store) { state in
+            state.status
+        } content: { viewState in
             if viewState.state == .loading {
                 loadingView
             } else if viewState.state == .paused || viewState.state == .replay {
@@ -148,10 +151,9 @@ extension AnimePlayerView {
 
     @ViewBuilder
     var pipButton: some View {
-        WithViewStore(
-            store,
-            observe: { $0.playerPiPStatus == .didStart }
-        ) { viewStore in
+        WithViewStore(store) { state in
+            state.playerPiPStatus == .didStart
+        } content: { viewStore in
             Button {
                 viewStore.send(.togglePictureInPicture)
             } label: {
@@ -176,7 +178,7 @@ extension AnimePlayerView {
             store,
             observe: EpisodesOverlayViewState.init
         ) { viewState in
-            if viewState.isVisible && !viewState.episodes.isEmpty {
+            if viewState.isVisible, !viewState.episodes.isEmpty {
                 LazyVStack(alignment: .leading) {
                     Text("Up Next")
                         .font(.title2.bold())
@@ -191,7 +193,8 @@ extension AnimePlayerView {
                                 ForEach(viewState.episodes) { episode in
                                     ThumbnailItemBigView(
                                         episode: episode,
-                                        progress: viewState.episodesStore.first(where: { $0.number == episode.number })?.progress,
+                                        progress: viewState.episodesStore.first { $0.number == episode.number }?
+                                            .progress,
                                         nowPlaying: episode.id == viewState.selectedEpisode,
                                         progressSize: 8
                                     )
@@ -245,29 +248,27 @@ extension AnimePlayerView {
                 durationView
                 Spacer()
                 subtitlesButton
-                    .popoverStore(
-                        store: store.scope(
-                            state: { $0.showSubtitlesOverlay }
-                        ),
-                        onDismiss: { ViewStore(store).send(.closeSidebar) }
-                    ) { _ in
+                    .popover(
+                        store.scope { state in
+                            state.showSubtitlesOverlay
+                        }
+                    ) {
+                        .closeSidebar
+                    } content: {
                         sidebarOverlay
-                            .frame(
-                                height: 300
-                            )
+                            .frame(height: 300)
                     }
                 episodesButton
                 settingsButton
-                    .popoverStore(
-                        store: store.scope(
-                            state: { $0.showSettingsOverlay }
-                        ),
-                        onDismiss: { ViewStore(store).send(.closeSidebar) }
-                    ) { _ in
+                    .popover(
+                        store.scope { state in
+                            state.showSettingsOverlay
+                        }
+                    ) {
+                        .closeSidebar
+                    } content: {
                         sidebarOverlay
-                            .frame(
-                                height: 300
-                            )
+                            .frame(height: 300)
                     }
                 fullscreenButton
             }
@@ -276,10 +277,9 @@ extension AnimePlayerView {
 
     @ViewBuilder
     var playStateView: some View {
-        WithViewStore(
-            store,
-            observe: { $0.playerStatus == .playback(.playing) }
-        ) { viewState in
+        WithViewStore(store) { state in
+            state.playerStatus == .playback(.playing)
+        } content: { viewState in
             Button {
                 viewState.send(.togglePlayback)
             } label: {
@@ -306,8 +306,8 @@ extension AnimePlayerView {
                 ),
                 buffered: viewState.state.buffered,
                 padding: 6
-            ) {
-                viewState.send($0 ? .startSeeking : .stopSeeking)
+            ) { isEditing in
+                viewState.send(isEditing ? .startSeeking : .stopSeeking)
             }
             .frame(height: 20)
             .disabled(!viewState.isLoaded)
@@ -341,9 +341,9 @@ extension AnimePlayerView {
         case high
 
         init(_ state: AnimePlayerReducer.State) {
-            if state.playerProgress > 2/3 {
+            if state.playerProgress > 2 / 3 {
                 self = .high
-            } else if state.playerVolume > 1/3 {
+            } else if state.playerVolume > 1 / 3 {
                 self = .mid
             } else if state.playerVolume > 0 {
                 self = .low
@@ -353,14 +353,15 @@ extension AnimePlayerView {
         }
 
         var image: String {
+            // TODO: Fix since this bugs the volume slider
             switch self {
-//            case .muted:
-//                return "speaker.slash.fill"
-//            case .low:
-//                return "speaker.wave.1.fill"
-//            case .mid:
-//                return "speaker.wave.2.fill"
-//            case .high:
+            //            case .muted:
+            //                return "speaker.slash.fill"
+            //            case .low:
+            //                return "speaker.wave.1.fill"
+            //            case .mid:
+            //                return "speaker.wave.2.fill"
+            //            case .high:
             default:
                 return "speaker.wave.3.fill"
             }
@@ -374,13 +375,10 @@ extension AnimePlayerView {
                 store,
                 observe: VolumeViewState.init
             ) { viewState in
-                // TODO: Fix since this bugs the volume slider
-                Image(
-                    systemName: viewState.image
-                )
-                .font(.title2.bold())
-                .contentShape(Rectangle())
-                .foregroundColor(Color.white)
+                Image(systemName: viewState.image)
+                    .font(.title2.bold())
+                    .contentShape(Rectangle())
+                    .foregroundColor(Color.white)
             }
 
             WithViewStore(
@@ -404,16 +402,18 @@ extension AnimePlayerView {
 
     @ViewBuilder
     var fullscreenButton: some View {
-        WithViewStore(
-            store,
-            observe: { $0.playerIsFullScreen }
-        ) { viewState in
+        WithViewStore(store) { state in
+            state.playerIsFullScreen
+        } content: { viewState in
             Button {
                 NSApp.mainWindow?.toggleFullScreen(nil)
             } label: {
-                Image(systemName: viewState.state ? "arrow.down.right.and.arrow.up.left" : "arrow.up.backward.and.arrow.down.forward")
-                    .font(.title2.bold())
-                    .foregroundColor(Color.white)
+                Image(
+                    systemName: viewState
+                        .state ? "arrow.down.right.and.arrow.up.left" : "arrow.up.backward.and.arrow.down.forward"
+                )
+                .font(.title2.bold())
+                .foregroundColor(Color.white)
             }
             .buttonStyle(.plain)
             .contentShape(Rectangle())
@@ -437,7 +437,7 @@ struct VideoPlayerViewMacOS_Previews: PreviewProvider {
                         name: "Gogoanime",
                         episodes: Episode.demoEpisodes
                     ),
-                    selectedEpisode: Episode.demoEpisodes.first!.id
+                    selectedEpisode: Episode.demoEpisodes[0].id
                 ),
                 reducer: AnimePlayerReducer()
             )
@@ -456,18 +456,18 @@ extension AnimePlayerReducer.State {
         showPlayerOverlay || playerStatus == .playback(.paused) || selectedSidebar != nil
     }
 
-    var showSettingsOverlay: Bool? {
+    var showSettingsOverlay: Bool {
         if case .settings = selectedSidebar {
             return true
         }
-        return nil
+        return false
     }
 
-    var showSubtitlesOverlay: Bool? {
+    var showSubtitlesOverlay: Bool {
         if case .subtitles = selectedSidebar {
             return true
         }
-        return nil
+        return false
     }
 }
 #endif

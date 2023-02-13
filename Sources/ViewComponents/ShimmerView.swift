@@ -8,10 +8,13 @@
 
 import SwiftUI
 
+// MARK: - Shimmer
+
 /// A view modifier that applies an animated "shimmer" to any view, typically to show that
 /// an operation is in progress.
 public struct Shimmer: ViewModifier {
-    @State private var phase: CGFloat = 0
+    @State
+    private var phase: CGFloat = 0
     var duration = 1.5
     var bounce = false
 
@@ -47,12 +50,16 @@ public struct Shimmer: ViewModifier {
         let edgeColor = Color.black.opacity(0.3)
 
         var body: some View {
-            LinearGradient(gradient:
+            LinearGradient(
+                gradient:
                 Gradient(stops: [
                     .init(color: edgeColor, location: phase),
                     .init(color: centerColor, location: phase + 0.1),
                     .init(color: edgeColor, location: phase + 0.2)
-                ]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         }
     }
 }
@@ -64,7 +71,8 @@ public extension View {
     ///   - active: Convenience parameter to conditionally enable the effect. Defaults to `true`.
     ///   - duration: The duration of a shimmer cycle in seconds. Default: `1.5`.
     ///   - bounce: Whether to bounce (reverse) the animation back and forth. Defaults to `false`.
-    @ViewBuilder func shimmering(
+    @ViewBuilder
+    func shimmering(
         active: Bool = true, duration: Double = 1.5, bounce: Bool = false
     ) -> some View {
         if active {

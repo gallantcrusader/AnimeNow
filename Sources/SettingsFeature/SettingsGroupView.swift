@@ -1,12 +1,14 @@
 //
 //  SettingsGroupView.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/12/23.
-//  
+//
 //
 
 import SwiftUI
+
+// MARK: - SettingsGroupView
 
 public struct SettingsGroupView<Label: View, Items: View>: View {
     let label: () -> Label
@@ -34,6 +36,8 @@ public struct SettingsGroupView<Label: View, Items: View>: View {
     }
 }
 
+// MARK: - GroupLabel
+
 public struct GroupLabel: View {
     let title: String
     let padding = 12.0
@@ -47,8 +51,8 @@ public struct GroupLabel: View {
     }
 }
 
-extension SettingsGroupView {
-    public init(
+public extension SettingsGroupView {
+    init(
         title: String,
         @ViewBuilder items: @escaping () -> Items
     ) where Label == GroupLabel {
@@ -58,13 +62,15 @@ extension SettingsGroupView {
         )
     }
 
-    public init(@ViewBuilder items: @escaping () -> Items) where Label == EmptyView {
+    init(@ViewBuilder items: @escaping () -> Items) where Label == EmptyView {
         self.init(
             label: { EmptyView() },
             items: items
         )
     }
 }
+
+// MARK: - SettingsGroupView_Previews
 
 struct SettingsGroupView_Previews: PreviewProvider {
     static var previews: some View {

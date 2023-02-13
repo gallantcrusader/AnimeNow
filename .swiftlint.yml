@@ -2,12 +2,15 @@ included:
   - App
   - Sources
   - Tests
+
 excluded:
   - Sources/OpenCastSwift
   - "**/.build"
+
 disabled_rules:
   - nesting
-  - trailing_comma
+  - vertical_parameter_alignment_on_call
+
 opt_in_rules:
   - anonymous_argument_in_multiline_closure
   - array_init
@@ -33,6 +36,7 @@ opt_in_rules:
   - file_name_no_space
   - first_where
   - flatmap_over_map_reduce
+  - force_unwrapping
   - identical_operands
   - implicit_return
   - implicitly_unwrapped_optional
@@ -65,26 +69,48 @@ opt_in_rules:
   - untyped_error_in_catch
   - vertical_parameter_alignment_on_call
   - yoda_condition
+
 analyzer_rules:
   - capture_variable
+  - unused_import
+  - unused_declaration
+
+private_over_fileprivate:
+  validate_extensions: true
+  severity: error
+
+force_unwrapping:
+  severity: error
+
 line_length:
   warning: 150
   error: 175
+  ignores_function_declarations: true
   ignores_comments: true
+  ignores_urls: true
+
 type_name:
   max_length:
     warning: 60
     error: 60
+
 identifier_name:
   allowed_symbols: "_"
+  min_length: 3
   max_length:
     warning: 60
     error: 60
   min_length:
     warning: 1
-file_length:
-  warning: 1000
-  error: 1300
+
 cyclomatic_complexity:
   warning: 20
   error: 30
+
+file_length:
+  warning: 1000
+  error: 1300
+
+function_body_length:
+  warning: 250
+  error: 300

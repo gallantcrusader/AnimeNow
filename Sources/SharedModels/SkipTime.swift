@@ -8,8 +8,8 @@
 import Foundation
 
 public struct SkipTime: Hashable {
-    public let startTime: Double   // 0...1
-    public let endTime: Double     // 0...1
+    public let startTime: Double // 0...1
+    public let endTime: Double // 0...1
     public let type: Option
 
     public init(
@@ -34,4 +34,3 @@ public struct SkipTime: Hashable {
         startTime <= progress && progress <= endTime
     }
 }
-

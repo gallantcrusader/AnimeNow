@@ -8,15 +8,15 @@
 import Foundation
 
 public extension Sequence {
-    func sorted<T: Comparable>(by keyPath: KeyPath<Element, T>) -> [Element] {
+    func sorted(by keyPath: KeyPath<Element, some Comparable>) -> [Element] {
         sorted { $0[keyPath: keyPath] < $1[keyPath: keyPath] }
     }
 
-    func min<T: Comparable>(by keyPath: KeyPath<Element, T>) -> Element? {
+    func min(by keyPath: KeyPath<Element, some Comparable>) -> Element? {
         self.min { $0[keyPath: keyPath] < $1[keyPath: keyPath] }
     }
 
-    func max<T: Comparable>(by keyPath: KeyPath<Element, T>) -> Element? {
+    func max(by keyPath: KeyPath<Element, some Comparable>) -> Element? {
         self.max { $0[keyPath: keyPath] < $1[keyPath: keyPath] }
     }
 }

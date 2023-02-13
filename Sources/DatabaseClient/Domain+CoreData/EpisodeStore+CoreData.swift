@@ -2,11 +2,13 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/16/22.
-//  
+//
 
-import Utilities
 import Foundation
 import SharedModels
+import Utilities
+
+// MARK: - EpisodeStore + ManagedObjectConvertible
 
 extension EpisodeStore: ManagedObjectConvertible {
     public static let entityName = "CDEpisodeStore"
@@ -19,9 +21,11 @@ extension EpisodeStore: ManagedObjectConvertible {
         .init(\.title, "title"),
         .init(\.thumbnail, "cover"),
         .init(\.progress, "progress"),
-        .init(\.lastUpdatedProgress, "lastUpdatedProgress"),
+        .init(\.lastUpdatedProgress, "lastUpdatedProgress")
     ]
 }
+
+// MARK: - ImageSize + ConvertableValue
 
 extension ImageSize: ConvertableValue {
     public static func decode(value primitiveValue: Data) throws -> ImageSize {
@@ -29,6 +33,6 @@ extension ImageSize: ConvertableValue {
     }
 
     public func encode() -> Data {
-        (try? self.toData()) ?? .init()
+        (try? toData()) ?? .init()
     }
 }

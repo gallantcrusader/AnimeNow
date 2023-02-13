@@ -8,9 +8,11 @@
 import SwiftUI
 import Utilities
 
+// MARK: - ModalCardContainer
+
 public struct ModalCardContainer<Content: View>: View {
     private let corners: CGFloat = 38.5
-    private let continuous: Bool = true
+    private let continuous = true
     private let innerPadding: CGFloat = 20.0
     private let outerPadding: CGFloat = 6.0
     private let style = Color(white: 0.12, opacity: 1.0)
@@ -18,7 +20,8 @@ public struct ModalCardContainer<Content: View>: View {
     let onDismiss: (() -> Void)?
     let content: () -> Content
 
-    @GestureState private var viewOffset: CGFloat = 0.0
+    @GestureState
+    private var viewOffset: CGFloat = 0.0
 
     var isLargeDisplay: Bool {
         DeviceUtil.isPad || DeviceUtil.isMac
@@ -103,14 +106,14 @@ public struct ModalCardContainer<Content: View>: View {
         .padding(innerPadding)
         .background(cardShape.fill(style))
         .clipShape(cardShape)
-        .offset(x: 0, y: viewOffset/pow(2, abs(viewOffset)/500+1))
+        .offset(x: 0, y: viewOffset / pow(2, abs(viewOffset) / 500 + 1))
         .padding(outerPadding)
         .gesture(
             DragGesture()
-                .updating($viewOffset) { value, state, transaction in
+                .updating($viewOffset) { value, state, _ in
                     state = value.translation.height
                 }
-                .onEnded() { value in
+                .onEnded { value in
                     if value.predictedEndTranslation.height > 175 {
                         dismiss()
                     }
@@ -125,12 +128,12 @@ public struct ModalCardContainer<Content: View>: View {
     }
 }
 
-extension View {
-    public func slideOverCard<Content: View>(
+public extension View {
+    func slideOverCard(
         onDismiss: (() -> Void)? = nil,
-        @ViewBuilder content: @escaping () -> Content
+        @ViewBuilder content: @escaping () -> some View
     ) -> some View {
-        return ZStack {
+        ZStack {
             self
             ModalCardContainer(
                 onDismiss: onDismiss
@@ -141,9 +144,11 @@ extension View {
     }
 }
 
+// MARK: - ModalCardView_Previews
+
 struct ModalCardView_Previews: PreviewProvider {
     static var previews: some View {
-        ModalCardContainer() {
+        ModalCardContainer {
             VStack(alignment: .center, spacing: 25) {
                 VStack {
                     Text("Large title").font(.system(size: 28, weight: .bold))
@@ -156,9 +161,7 @@ struct ModalCardView_Previews: PreviewProvider {
                 }
 
                 VStack(spacing: 0) {
-                    Button {
-                        
-                    } label: {
+                    Button {} label: {
                         HStack {
                             Spacer()
                             Text("What the fuck")
@@ -169,9 +172,7 @@ struct ModalCardView_Previews: PreviewProvider {
                     .background(Color.white)
                     .cornerRadius(12)
 
-                    Button {
-                        
-                    } label: {
+                    Button {} label: {
                         HStack {
                             Spacer()
                             Text("Skip pls")

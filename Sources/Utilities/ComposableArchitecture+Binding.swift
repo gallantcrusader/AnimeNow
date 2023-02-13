@@ -5,8 +5,8 @@
 //  Created by ErrorErrorError on 9/26/22.
 //
 
-import SwiftUI
 import ComposableArchitecture
+import SwiftUI
 
 public extension ViewStore {
     func binding<ParentState, Value>(

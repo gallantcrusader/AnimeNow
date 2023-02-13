@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - ImageSize
+
 public enum ImageSize: Codable, Hashable, Comparable {
     case tiny(URL)
     case small(URL)
@@ -16,15 +18,15 @@ public enum ImageSize: Codable, Hashable, Comparable {
 
     public var link: URL {
         switch self {
-        case .tiny(let url):
+        case let .tiny(url):
             return url
-        case .small(let url):
+        case let .small(url):
             return url
-        case .medium(let url):
+        case let .medium(url):
             return url
-        case .large(let url):
+        case let .large(url):
             return url
-        case .original(let url):
+        case let .original(url):
             return url
         }
     }
@@ -73,12 +75,12 @@ public enum ImageSize: Codable, Hashable, Comparable {
     }
 }
 
-public extension Array where Element == ImageSize {
+public extension [ImageSize] {
     var smallest: ImageSize? {
-        self.sorted(by: { $0 < $1 }).first
+        self.min { $0 < $1 }
     }
 
     var largest: ImageSize? {
-        self.sorted(by: { $0 > $1 }).first
+        self.max { $0 < $1 }
     }
 }

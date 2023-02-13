@@ -5,9 +5,9 @@
 //
 
 #if os(iOS)
+import ComposableArchitecture
 import SwiftUI
 import Utilities
-import ComposableArchitecture
 import ViewComponents
 
 extension AppView {
@@ -44,9 +44,9 @@ extension AppView {
                             WithViewStore(
                                 store,
                                 observe: \.totalDownloadsCount
-                            ) {
-                                if item == .downloads, $0.state > 0 {
-                                    Text("\($0.state)")
+                            ) { countState in
+                                if item == .downloads, countState.state > 0 {
+                                    Text("\(countState.state)")
                                         .font(.footnote.bold())
                                         .foregroundColor(.black)
                                         .padding(4)
@@ -57,7 +57,7 @@ extension AppView {
                                             maxHeight: .infinity,
                                             alignment: .topTrailing
                                         )
-                                        .animation(.linear, value: $0.state)
+                                        .animation(.linear, value: countState.state)
                                         .offset(x: 4, y: -4)
                                 }
                             }
@@ -121,25 +121,25 @@ extension AppView {
                         alignment: .center
                     )
                     .overlay(
-                            WithViewStore(
-                                store,
-                                observe: \.totalDownloadsCount
-                            ) {
-                                if item == .downloads, $0.state > 0 {
-                                    Text("\($0.state)")
-                                        .font(.footnote.bold())
-                                        .foregroundColor(.black)
-                                        .padding(4)
-                                        .background(Color.white)
-                                        .clipShape(Circle())
-                                        .frame(
-                                            maxWidth: .infinity,
-                                            maxHeight: .infinity,
-                                            alignment: .topTrailing
-                                        )
-                                        .padding(8)
-                                        .animation(.linear, value: $0.state)
-                                }
+                        WithViewStore(
+                            store,
+                            observe: \.totalDownloadsCount
+                        ) { countState in
+                            if item == .downloads, countState.state > 0 {
+                                Text("\(countState.state)")
+                                    .font(.footnote.bold())
+                                    .foregroundColor(.black)
+                                    .padding(4)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .frame(
+                                        maxWidth: .infinity,
+                                        maxHeight: .infinity,
+                                        alignment: .topTrailing
+                                    )
+                                    .padding(8)
+                                    .animation(.linear, value: countState.state)
+                            }
                         }
                     )
                     .contentShape(Rectangle())

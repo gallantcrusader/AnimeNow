@@ -8,14 +8,14 @@
 
 import SwiftUI
 
+import AnimeDetailFeature
+import AnimePlayerFeature
+import CollectionsFeature
+import DownloadsFeature
 import HomeFeature
+import ModalOverlayFeature
 import SearchFeature
 import SettingsFeature
-import DownloadsFeature
-import AnimePlayerFeature
-import ModalOverlayFeature
-import CollectionsFeature
-import AnimeDetailFeature
 
 import DatabaseClient
 import DiscordClient
@@ -23,16 +23,22 @@ import DownloaderClient
 import VideoPlayerClient
 
 import Logger
-import Utilities
 import SharedModels
+import Utilities
 
 import ComposableArchitecture
 
+// MARK: - AppReducer
+
 public struct AppReducer: ReducerProtocol {
-    public init() { }
+    public init() {}
 
     public enum Route: String, CaseIterable {
-        case home, search, collection, downloads, settings
+        case home
+        case search
+        case collection
+        case downloads
+        case settings
 
         public var isIconSystemImage: Bool {
             switch self {
@@ -63,9 +69,9 @@ public struct AppReducer: ReducerProtocol {
             case .home:
                 return "house.fill"
             case .search:
-                return self.icon
+                return icon
             case .downloads:
-                return self.icon
+                return icon
             case .collection:
                 return "rectangle.stack.badge.play.fill"
             case .settings:
@@ -74,7 +80,7 @@ public struct AppReducer: ReducerProtocol {
         }
 
         public var title: String {
-            .init(self.rawValue.prefix(1).capitalized + self.rawValue.dropFirst())
+            .init(rawValue.prefix(1).capitalized + rawValue.dropFirst())
         }
 
         public static var allCases: [AppReducer.Route] {
@@ -84,11 +90,11 @@ public struct AppReducer: ReducerProtocol {
             return [.home, .search, .collection, .downloads, .settings]
             #endif
         }
-
     }
 
     public struct State: Equatable {
-        @BindableState public var route = Route.home
+        @BindableState
+        public var route = Route.home
 
         public var home = HomeReducer.State()
         public var collection = CollectionsReducer.State()
@@ -102,7 +108,7 @@ public struct AppReducer: ReducerProtocol {
 
         public var totalDownloadsCount = 0
 
-        public init() { }
+        public init() {}
     }
 
     public enum Action: BindableAction {
@@ -124,12 +130,18 @@ public struct AppReducer: ReducerProtocol {
         case binding(BindingAction<State>)
     }
 
-    @Dependency(\.apiClient) var apiClient
-    @Dependency(\.mainQueue) var mainQueue
-    @Dependency(\.discordClient) var discordClient
-    @Dependency(\.databaseClient) var databaseClient
-    @Dependency(\.downloaderClient) var downloaderClient
-    @Dependency(\.videoPlayerClient) var videoPlayerClient
+    @Dependency(\.apiClient)
+    var apiClient
+    @Dependency(\.mainQueue)
+    var mainQueue
+    @Dependency(\.discordClient)
+    var discordClient
+    @Dependency(\.databaseClient)
+    var databaseClient
+    @Dependency(\.downloaderClient)
+    var downloaderClient
+    @Dependency(\.videoPlayerClient)
+    var videoPlayerClient
 
     public var body: some ReducerProtocol<State, Action> {
         Scope(state: \.settings.userSettings, action: /Action.appDelegate) {
@@ -173,14 +185,14 @@ public struct AppReducer: ReducerProtocol {
     }
 }
 
-extension AppReducer.State {
-    public var hasPendingChanges: Bool {
+public extension AppReducer.State {
+    var hasPendingChanges: Bool {
         videoPlayer != nil
     }
 }
 
 extension AppReducer {
-    // swiftlint:disable cyclomatic_complexity function_body_length
+    // swiftlint:disable cyclomatic_complexity
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .appDelegate(.appDidEnterBackground):
@@ -188,7 +200,7 @@ extension AppReducer {
                 return .run { send in
                     await send(.videoPlayer(.saveState))
                 }
-        }
+            }
 
         case .appDelegate(.appWillTerminate):
             return .run { send in
@@ -222,10 +234,10 @@ extension AppReducer {
                 }
             }
 
-        case .setVideoPlayer(let item):
+        case let .setVideoPlayer(item):
             state.videoPlayer = item
-            
-        case .setAnimeDetail(let animeMaybe):
+
+        case let .setAnimeDetail(animeMaybe):
             if let anime = animeMaybe, state.animeDetail == nil {
                 // Allow only replacing anime detail one at a time
                 state.animeDetail = anime
@@ -234,7 +246,7 @@ extension AppReducer {
             }
 
         case let .home(.animeTapped(anime)),
-            let .search(.onAnimeTapped(anime)):
+             let .search(.onAnimeTapped(anime)):
             return .action(
                 .setAnimeDetail(
                     .init(
@@ -307,13 +319,13 @@ extension AppReducer {
                         ),
                         streamingProvider: .init(
                             name: "Offline",
-                            episodes: episodes.map {
+                            episodes: episodes.map { episode in
                                 .init(
-                                    title: $0.title,
-                                    number: $0.number,
+                                    title: episode.title,
+                                    number: episode.number,
                                     description: "",
                                     isFiller: false,
-                                    links: $0.links
+                                    links: episode.links
                                 )
                             }
                         ),
@@ -333,10 +345,10 @@ extension AppReducer {
                 .setVideoPlayer(nil)
             )
 
-        case .setModalOverlay(let overlay):
+        case let .setModalOverlay(overlay):
             state.modalOverlay = overlay
 
-        case .setDownloadingCount(let count):
+        case let .setDownloadingCount(count):
             state.totalDownloadsCount = count
 
         case .collection(.onAddNewCollectionTapped):
@@ -349,9 +361,11 @@ extension AppReducer {
                 animation: .spring(response: 0.35, dampingFraction: 1)
             )
 
-        case .animeDetail(.downloadEpisode(let episodeId)):
+        case let .animeDetail(.downloadEpisode(episodeId)):
             guard let availableProviders = state.animeDetail?.stream.availableProviders,
-                  let anime = state.animeDetail?.anime.value else { break }
+                  let anime = state.animeDetail?.anime.value else {
+                break
+            }
             return .action(
                 .setModalOverlay(
                     .downloadOptions(
@@ -365,7 +379,7 @@ extension AppReducer {
                 animation: .spring(response: 0.35, dampingFraction: 1)
             )
 
-        case .animeDetail(.showCollectionsList(let animeId, let collections)):
+        case let .animeDetail(.showCollectionsList(animeId, collections)):
             return .action(
                 .setModalOverlay(
                     .editCollection(
@@ -378,8 +392,8 @@ extension AppReducer {
                 animation: .spring(response: 0.35, dampingFraction: 1)
             )
 
-        case .animeDetail(.fetchedCollectionStores(let collections)):
-            if case .some(.editCollection(var collectionState)) = state.modalOverlay {
+        case let .animeDetail(.fetchedCollectionStores(collections)):
+            if case var .some(.editCollection(collectionState)) = state.modalOverlay {
                 collectionState.collections = .init(collections)
                 state.modalOverlay = .editCollection(collectionState)
             }
@@ -401,9 +415,9 @@ extension AppReducer {
         case .modalOverlay(.addNewCollection(.saveTitle)):
             return .action(.modalOverlay(.onClose))
 
-        case .modalOverlay(.editCollection(.collectionSelectedToggle(let collectionStoreId))):
+        case let .modalOverlay(.editCollection(.collectionSelectedToggle(collectionStoreId))):
             if var collection = state.animeDetail?.collectionStores.value?[id: collectionStoreId],
-                let anime = state.animeDetail?.animeStore.value {
+               let anime = state.animeDetail?.animeStore.value {
                 if collection.animes[id: anime.id] != nil {
                     collection.animes[id: anime.id] = nil
                 } else {
@@ -418,7 +432,7 @@ extension AppReducer {
         case .modalOverlay(.onClose):
             return .action(.setModalOverlay(nil), animation: .spring(response: 0.35, dampingFraction: 1))
 
-        case .fetchedAnimeProviders(let loadable):
+        case let .fetchedAnimeProviders(loadable):
             state.settings.animeProviders = loadable
 
             if loadable.failed {

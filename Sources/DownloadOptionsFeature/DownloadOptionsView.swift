@@ -2,14 +2,16 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/24/22.
-//  
+//
 
-import SwiftUI
-import Utilities
-import SharedModels
-import SettingsFeature
 import AnimeStreamLogic
 import ComposableArchitecture
+import SettingsFeature
+import SharedModels
+import SwiftUI
+import Utilities
+
+// MARK: - DownloadOptionsView
 
 public struct DownloadOptionsView: View {
     let store: StoreOf<DownloadOptionsReducer>
@@ -35,38 +37,37 @@ public struct DownloadOptionsView: View {
             }
 
             ScrollView {
-                WithViewStore(
-                    store,
-                    observe: { AnimeStreamViewState($0.stream) }
-                ) { viewState in
+                WithViewStore(store) { state in
+                    AnimeStreamViewState(state.stream)
+                } content: { viewState in
                     SettingsGroupView {
                         SettingsRowView.listSelection(
                             name: "Provider",
                             selectable: viewState.availableProviders
-                        ) {
-                            viewState.send(.animeStream(.selectProvider($0)))
-                        } itemView: {
-                            Text($0.name)
+                        ) { provider in
+                            viewState.send(.animeStream(.selectProvider(provider)))
+                        } itemView: { provider in
+                            Text(provider.name)
                         }
 
                         SettingsRowView.listSelection(
                             name: "Audio",
                             selectable: viewState.links,
                             loading: viewState.loadingLink
-                        ) {
-                            viewState.send(.animeStream(.selectLink($0)))
-                        } itemView: {
-                            Text($0.description)
+                        ) { link in
+                            viewState.send(.animeStream(.selectLink(link)))
+                        } itemView: { link in
+                            Text(link.description)
                         }
 
                         SettingsRowView.listSelection(
                             name: "Quality",
                             selectable: viewState.sources,
                             loading: viewState.loadingLink || !viewState.links.items.isEmpty && viewState.loadingSource
-                        ) {
-                            viewState.send(.animeStream(.selectSource($0)))
-                        } itemView: {
-                            Text($0.quality.description)
+                        ) { source in
+                            viewState.send(.animeStream(.selectSource(source)))
+                        } itemView: { source in
+                            Text(source.quality.description)
                         }
                     }
                     .animation(.easeInOut, value: viewState.state)
@@ -98,6 +99,8 @@ public struct DownloadOptionsView: View {
         }
     }
 }
+
+// MARK: - DownloadOptionsView_Previews
 
 struct DownloadOptionsView_Previews: PreviewProvider {
     static var previews: some View {

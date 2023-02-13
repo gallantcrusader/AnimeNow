@@ -3,22 +3,26 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 12/23/22.
-//  
+//
 
+import AVFoundation
 import AVKit
 import Combine
-import SwiftUI
 import Foundation
 import MediaPlayer
-import AVFoundation
+import SwiftUI
 import ViewComponents
 
+// MARK: - VideoPlayer
+
 public struct VideoPlayer {
-    @Binding private var gravity: Gravity
-    @Binding private var pipActive: Bool
+    @Binding
+    private var gravity: Gravity
+    @Binding
+    private var pipActive: Bool
 
     private let player: AVPlayer
-    private var onPictureInPictureStatusChangedCallback: ((PIPStatus) -> Void)? = nil
+    private var onPictureInPictureStatusChangedCallback: ((PIPStatus) -> Void)?
 
     public init(
         player: AVPlayer,
@@ -26,8 +30,8 @@ public struct VideoPlayer {
         pipActive: Binding<Bool>
     ) {
         self.player = player
-        self._gravity = gravity
-        self._pipActive = pipActive
+        _gravity = gravity
+        _pipActive = pipActive
     }
 }
 
@@ -43,6 +47,8 @@ public extension VideoPlayer {
 
     typealias Gravity = AVLayerVideoGravity
 }
+
+// MARK: PlatformAgnosticViewRepresentable
 
 extension VideoPlayer: PlatformAgnosticViewRepresentable {
     public func makeCoordinator() -> Coordinator {
@@ -66,20 +72,24 @@ extension VideoPlayer: PlatformAgnosticViewRepresentable {
             platformView.videoGravity = gravity
         }
 
-        guard let pipController = context.coordinator.controller else { return }
+        guard let pipController = context.coordinator.controller else {
+            return
+        }
 
-        if pipActive && !pipController.isPictureInPictureActive {
+        if pipActive, !pipController.isPictureInPictureActive {
             pipController.startPictureInPicture()
-        } else if !pipActive && pipController.isPictureInPictureActive {
+        } else if !pipActive, pipController.isPictureInPictureActive {
             pipController.stopPictureInPicture()
         }
     }
 }
 
-extension VideoPlayer {
-    public final class Coordinator: NSObject, AVPictureInPictureControllerDelegate {
+// MARK: VideoPlayer.Coordinator
+
+public extension VideoPlayer {
+    final class Coordinator: NSObject, AVPictureInPictureControllerDelegate {
         let videoPlayer: VideoPlayer
-        var controller: AVPictureInPictureController? = nil
+        var controller: AVPictureInPictureController?
 
         init(_ videoPlayer: VideoPlayer) {
             self.videoPlayer = videoPlayer
@@ -87,31 +97,33 @@ extension VideoPlayer {
         }
 
         func addDelegate(_ view: PlayerView) {
-            guard controller == nil else { return }
-            self.controller = .init(playerLayer: view.playerLayer)
-            self.controller?.delegate = self
+            guard controller == nil else {
+                return
+            }
+            controller = .init(playerLayer: view.playerLayer)
+            controller?.delegate = self
         }
 
-        public func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        public func pictureInPictureControllerWillStartPictureInPicture(_: AVPictureInPictureController) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.willStart)
         }
 
-        public func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        public func pictureInPictureControllerDidStartPictureInPicture(_: AVPictureInPictureController) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.didStart)
             videoPlayer.pipActive = true
         }
 
-        public func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        public func pictureInPictureControllerWillStopPictureInPicture(_: AVPictureInPictureController) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.willStop)
         }
 
-        public func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        public func pictureInPictureControllerDidStopPictureInPicture(_: AVPictureInPictureController) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.didStop)
             videoPlayer.pipActive = false
         }
 
         public func pictureInPictureController(
-            _ pictureInPictureController: AVPictureInPictureController,
+            _: AVPictureInPictureController,
             restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void
         ) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.restoreUI)
@@ -119,8 +131,8 @@ extension VideoPlayer {
         }
 
         public func pictureInPictureController(
-            _ pictureInPictureController: AVPictureInPictureController,
-            failedToStartPictureInPictureWithError error: Error
+            _: AVPictureInPictureController,
+            failedToStartPictureInPictureWithError _: Error
         ) {
             videoPlayer.onPictureInPictureStatusChangedCallback?(.failedToStart)
             videoPlayer.pipActive = false
@@ -128,8 +140,8 @@ extension VideoPlayer {
     }
 }
 
-extension VideoPlayer {
-    public func onPictureInPictureStatusChanged(
+public extension VideoPlayer {
+    func onPictureInPictureStatusChanged(
         _ callback: @escaping (PIPStatus) -> Void
     ) -> Self {
         var view = self
@@ -138,8 +150,10 @@ extension VideoPlayer {
     }
 }
 
-extension VideoPlayer {
-    public final class PlayerView: PlatformView {
+// MARK: VideoPlayer.PlayerView
+
+public extension VideoPlayer {
+    final class PlayerView: PlatformView {
         // swiftlint:disable force_cast
         var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
 
@@ -166,12 +180,13 @@ extension VideoPlayer {
         init(player: AVPlayer) {
             super.init(frame: .zero)
             #if os(macOS)
-            self.wantsLayer = true
+            wantsLayer = true
             #endif
             self.player = player
         }
 
-        required init?(coder: NSCoder) {
+        @available(*, unavailable)
+        required init?(coder _: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
     }

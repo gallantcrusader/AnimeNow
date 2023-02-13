@@ -2,18 +2,20 @@
 //  AppDelegateReducer.swift
 //
 //  Created by ErrorErrorError on 11/1/22.
-//  
+//
 //
 
-import Utilities
-import FileClient
-import SharedModels
-import DiscordClient
-import DatabaseClient
-import SettingsFeature
-import DownloaderClient
-import UserDefaultsClient
 import ComposableArchitecture
+import DatabaseClient
+import DiscordClient
+import DownloaderClient
+import FileClient
+import SettingsFeature
+import SharedModels
+import UserDefaultsClient
+import Utilities
+
+// MARK: - AppDelegateReducer
 
 public struct AppDelegateReducer: ReducerProtocol {
     public typealias State = UserSettings
@@ -29,11 +31,16 @@ public struct AppDelegateReducer: ReducerProtocol {
         Reduce(self.core)
     }
 
-    @Dependency(\.fileClient) var fileClient
-    @Dependency(\.discordClient) var discordClient
-    @Dependency(\.databaseClient) var databaseClient
-    @Dependency(\.downloaderClient) var downloaderClient
-    @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.fileClient)
+    var fileClient
+    @Dependency(\.discordClient)
+    var discordClient
+    @Dependency(\.databaseClient)
+    var databaseClient
+    @Dependency(\.downloaderClient)
+    var downloaderClient
+    @Dependency(\.userDefaultsClient)
+    var userDefaultsClient
 }
 
 extension AppDelegateReducer {
@@ -52,11 +59,10 @@ extension AppDelegateReducer {
                     }
 
                     group.addTask {
-                        for title in CollectionStore.Title.allCases {
-                            if try await databaseClient.fetch(CollectionStore.all.where(\CollectionStore.title == title)).first == nil {
-                                let collection = CollectionStore(title: title)
-                                try await databaseClient.insert(collection)
-                            }
+                        for title in CollectionStore.Title.allCases where try await databaseClient
+                            .fetch(CollectionStore.all.where(\CollectionStore.title == title)).first == nil {
+                            let collection = CollectionStore(title: title)
+                            try await databaseClient.insert(collection)
                         }
                     }
 
@@ -70,9 +76,9 @@ extension AppDelegateReducer {
                 }
             }
 
-        case .userSettingsLoaded(let result):
+        case let .userSettingsLoaded(result):
             state = result.value ?? state
-            return .run { [state] send in
+            return .run { [state] _ in
                 try await discordClient.setActive(state.discordEnabled)
             }
 

@@ -1,12 +1,14 @@
 //
 //  OverscrollExpandView.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 2/8/23.
-//  
+//
 //
 
 import SwiftUI
+
+// MARK: - OverscrollExpandView
 
 struct OverscrollExpandView: ViewModifier {
     func body(content: Content) -> some View {
@@ -25,11 +27,11 @@ struct OverscrollExpandView: ViewModifier {
     }
 }
 
-extension View {
+public extension View {
     @ViewBuilder
-    public func overscrollExpandView(_ active: Bool = true) -> some View {
+    func overscrollExpandView(_ active: Bool = true) -> some View {
         if active {
-            self.modifier(OverscrollExpandView())
+            modifier(OverscrollExpandView())
         } else {
             self
         }

@@ -2,10 +2,12 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/16/22.
-//  
+//
 
 import Foundation
 import SharedModels
+
+// MARK: - CollectionStore + ManagedObjectConvertible
 
 extension CollectionStore: ManagedObjectConvertible {
     public static let entityName = "CDCollectionStore"
@@ -19,9 +21,11 @@ extension CollectionStore: ManagedObjectConvertible {
     ]
 }
 
+// MARK: - CollectionStore.Title + ConvertableValue
+
 extension CollectionStore.Title: ConvertableValue {
     public func encode() -> Data {
-        (try? self.toData()) ?? .init()
+        (try? toData()) ?? .init()
     }
 
     public static func decode(value: Data) throws -> Self {

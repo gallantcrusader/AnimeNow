@@ -6,14 +6,16 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import AnimeClient
+import ComposableArchitecture
+import DatabaseClient
+import Foundation
 import Logger
+import SharedModels
 import SwiftUI
 import Utilities
-import Foundation
-import AnimeClient
-import SharedModels
-import DatabaseClient
-import ComposableArchitecture
+
+// MARK: - HomeReducer
 
 public struct HomeReducer: ReducerProtocol {
     public typealias LoadableAnime = Loadable<[Anime]>
@@ -28,7 +30,8 @@ public struct HomeReducer: ReducerProtocol {
         var resumeWatching: LoadableWatchAnimeEpisodes = .idle
         var lastWatchedAnime: Loadable<[AnyAnimeRepresentable]> = .idle
 
-        @BindableState var heroPosition = 0
+        @BindableState
+        var heroPosition = 0
 
         public init(
             topTrendingAnime: HomeReducer.LoadableAnime = .idle,
@@ -64,12 +67,16 @@ public struct HomeReducer: ReducerProtocol {
         case binding(BindingAction<HomeReducer.State>)
     }
 
-    @Dependency(\.mainQueue) var mainQueue
-    @Dependency(\.mainRunLoop) var mainRunLoop
-    @Dependency(\.animeClient) var animeClient
-    @Dependency(\.databaseClient) var databaseClient
+    @Dependency(\.mainQueue)
+    var mainQueue
+    @Dependency(\.mainRunLoop)
+    var mainRunLoop
+    @Dependency(\.animeClient)
+    var animeClient
+    @Dependency(\.databaseClient)
+    var databaseClient
 
-    public init() { }
+    public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
         BindingReducer()
@@ -80,20 +87,20 @@ public struct HomeReducer: ReducerProtocol {
 extension HomeReducer.State {
     var isLoading: Bool {
         !topTrendingAnime.finished ||
-        !topUpcomingAnime.finished ||
-        !highestRatedAnime.finished ||
-        !mostPopularAnime.finished ||
-        !resumeWatching.finished ||
-        !lastWatchedAnime.finished
+            !topUpcomingAnime.finished ||
+            !highestRatedAnime.finished ||
+            !mostPopularAnime.finished ||
+            !resumeWatching.finished ||
+            !lastWatchedAnime.finished
     }
 
     var hasInitialized: Bool {
         topTrendingAnime.hasInitialized &&
-        topUpcomingAnime.hasInitialized &&
-        highestRatedAnime.hasInitialized &&
-        mostPopularAnime.hasInitialized &&
-        resumeWatching.hasInitialized &&
-        lastWatchedAnime.hasInitialized
+            topUpcomingAnime.hasInitialized &&
+            highestRatedAnime.hasInitialized &&
+            mostPopularAnime.hasInitialized &&
+            resumeWatching.hasInitialized &&
+            lastWatchedAnime.hasInitialized
     }
 
     enum Error: Equatable {
@@ -103,14 +110,14 @@ extension HomeReducer.State {
         var title: String {
             switch self {
             case .failedToLoad:
-               return "Failed to Load Content."
+                return "Failed to Load Content."
             case .notConnectedToInternet:
                 return "No Internet Connectioin"
             }
         }
 
         var description: String? {
-            return nil
+            nil
         }
 
         var image: Image? {
@@ -125,14 +132,16 @@ extension HomeReducer.State {
         var action: (String, HomeReducer.Action)? {
             switch self {
             case .notConnectedToInternet,
-                    .failedToLoad:
+                 .failedToLoad:
                 return ("Retry", .retryFetchingContent)
             }
         }
     }
 
     var error: Error? {
-        guard !isLoading else { return nil }
+        guard !isLoading else {
+            return nil
+        }
 
         if topTrendingAnime.failed ||
             topUpcomingAnime.failed ||
@@ -154,14 +163,16 @@ extension HomeReducer {
     struct FetchLatestUpdatedCancellable: Hashable {}
 
     func core(state: inout State, action: Action) -> EffectTask<Action> {
-        switch (action) {
+        switch action {
         case .onAppear:
-            guard !state.hasInitialized else { break }
+            guard !state.hasInitialized else {
+                break
+            }
             state.resumeWatching = .loading
             state.lastWatchedAnime = .loading
 
             return .merge(
-                self.fetchForContent(state: &state),
+                fetchForContent(state: &state),
                 .run { send in
                     let animeStoresStream: AsyncStream<[AnimeStore]> = databaseClient.observe(
                         AnimeStore.all
@@ -174,29 +185,32 @@ extension HomeReducer {
             )
 
         case .retryFetchingContent:
-            return self.fetchForContent(state: &state)
+            return fetchForContent(state: &state)
 
-        case .fetchedAnime(let keyPath, let result):
+        case let .fetchedAnime(keyPath, result):
             state[keyPath: keyPath] = result
 
-        case .observingAnimesInDB(let animesInDb):
+        case let .observingAnimesInDB(animesInDb):
             return .run { send in
                 var lastWatched = [Anime.ID]()
                 var resumeWatchingEpisodes = [AnyWatchAnimeEpisode]()
 
                 let sortedAnimeStores = animesInDb.filter { $0.lastModifiedEpisode != nil }
                     .sorted { anime1, anime2 in
-                    guard let lastModifiedOne = anime1.lastModifiedEpisode,
-                          let lastModifiedTwo = anime2.lastModifiedEpisode else {
-                        return false
+                        guard let lastModifiedOne = anime1.lastModifiedEpisode,
+                              let lastModifiedTwo = anime2.lastModifiedEpisode else {
+                            return false
+                        }
+                        return lastModifiedOne.lastUpdatedProgress > lastModifiedTwo.lastUpdatedProgress
                     }
-                    return lastModifiedOne.lastUpdatedProgress > lastModifiedTwo.lastUpdatedProgress
-                }
 
                 for animeStore in sortedAnimeStores {
                     lastWatched.append(animeStore.id)
 
-                    guard let episode = animeStore.lastModifiedEpisode, !episode.almostFinished, (episode.progress ?? 0 > 0) else { continue }
+                    guard let episode = animeStore.lastModifiedEpisode, !episode.almostFinished,
+                          episode.progress ?? 0 > 0 else {
+                        continue
+                    }
                     resumeWatchingEpisodes.append(
                         .init(
                             anime: animeStore.eraseAsRepresentable(),
@@ -206,30 +220,32 @@ extension HomeReducer {
                     )
                 }
 
-                await send(.setResumeWatchingEpisodes(.success(resumeWatchingEpisodes)), animation: .easeInOut(duration: 0.25))
+                await send(
+                    .setResumeWatchingEpisodes(.success(resumeWatchingEpisodes)),
+                    animation: .easeInOut(duration: 0.25)
+                )
                 await send(.setLastWatchedAnimes(sortedAnimeStores.map { $0.eraseAsRepresentable() }))
             }
 
-        case .fetchedRecentlyUpdated(let result):
+        case let .fetchedRecentlyUpdated(result):
             state.recentlyUpdated = result
                 .map { list in
-                    list.map({
+                    list.map { updated in
                         .init(
-                            anime: $0.anime.eraseAsRepresentable(),
-                            episode: $0.episode.eraseAsRepresentable(),
+                            anime: updated.anime.eraseAsRepresentable(),
+                            episode: updated.episode.eraseAsRepresentable(),
                             episodeStore: nil
                         )
-                        
-                    })
+                    }
                 }
 
-        case .setResumeWatchingEpisodes(let episodes):
+        case let .setResumeWatchingEpisodes(episodes):
             state.resumeWatching = episodes
 
-        case .setLastWatchedAnimes(let animes):
+        case let .setLastWatchedAnimes(animes):
             state.lastWatchedAnime = .success(animes)
 
-        case .markAsWatched(let resumeWatching):
+        case let .markAsWatched(resumeWatching):
             if let episodeStore = resumeWatching.episodeStore {
                 return .run { _ in
                     try await self.databaseClient.update(episodeStore.id, \EpisodeStore.progress, 1.0)
@@ -300,8 +316,10 @@ extension HomeReducer {
     }
 }
 
-extension HomeReducer {
-    public struct AnyWatchAnimeEpisode: Equatable, Identifiable {
+// MARK: - HomeReducer.AnyWatchAnimeEpisode
+
+public extension HomeReducer {
+    struct AnyWatchAnimeEpisode: Equatable, Identifiable {
         public var id: String { "\(anime.id)-\(episode.number)" }
         public let anime: AnyAnimeRepresentable
         public let episode: AnyEpisodeRepresentable

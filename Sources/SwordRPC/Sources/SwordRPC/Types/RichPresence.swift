@@ -8,6 +8,8 @@
 
 import Foundation
 
+// MARK: - RichPresence
+
 public struct RichPresence: Encodable {
     public var state = ""
     public var details = ""
@@ -31,15 +33,15 @@ public struct RichPresence: Encodable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.assets, forKey: .assets)
-        try container.encode(self.details, forKey: .details)
-        try container.encode(self.instance, forKey: .instance)
-        try container.encode(self.party, forKey: .party)
-        try container.encode(self.state, forKey: .state)
-        try container.encode(self.timestamps, forKey: .timestamps)
+        try container.encode(assets, forKey: .assets)
+        try container.encode(details, forKey: .details)
+        try container.encode(instance, forKey: .instance)
+        try container.encode(party, forKey: .party)
+        try container.encode(state, forKey: .state)
+        try container.encode(timestamps, forKey: .timestamps)
 
-        if !buttons.isEmpty && buttons.first(where: { $0.label.isEmpty || $0.url.isEmpty }) == nil {
-            try container.encode(self.buttons, forKey: .buttons)
+        if !buttons.isEmpty, !buttons.contains(where: { $0.label.isEmpty || $0.url.isEmpty }) {
+            try container.encode(buttons, forKey: .buttons)
         }
     }
 }
@@ -90,7 +92,7 @@ public extension RichPresence {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encodeIfPresent(id, forKey: .id)
 
-            guard let max = self.max, let size = size else {
+            guard let max = self.max, let size else {
                 return
             }
 
@@ -102,6 +104,6 @@ public extension RichPresence {
         public var label: String = ""
         public var url: String = ""
 
-        public init() { }
+        public init() {}
     }
 }

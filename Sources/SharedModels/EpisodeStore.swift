@@ -7,17 +7,19 @@
 
 import Foundation
 
+// MARK: - EpisodeStore
+
 public struct EpisodeStore: EpisodeRepresentable, Hashable, Codable, Identifiable {
     public var id = UUID()
     public var number: Int = 0
     public var title: String = ""
-    public var thumbnail: ImageSize? = nil
+    public var thumbnail: ImageSize?
     public var isFiller: Bool { false }
     public var links: Set<EpisodeLink> { [] }
 
     // Database Only
 
-    public var progress: Double? = nil
+    public var progress: Double?
     public var lastUpdatedProgress: Date = .init()
 
     public init(
@@ -39,8 +41,8 @@ public struct EpisodeStore: EpisodeRepresentable, Hashable, Codable, Identifiabl
     public init() {}
 }
 
-extension EpisodeStore {
-    public static func findOrCreate(
+public extension EpisodeStore {
+    static func findOrCreate(
         _ episode: any EpisodeRepresentable,
         _ episodes: Set<EpisodeStore>
     ) -> EpisodeStore {
@@ -57,12 +59,12 @@ extension EpisodeStore {
     }
 }
 
-extension EpisodeStore {
-    public var almostFinished: Bool {
-        return (progress ?? 0) >= 0.9
+public extension EpisodeStore {
+    var almostFinished: Bool {
+        (progress ?? 0) >= 0.9
     }
 
-    public var finishedWatching: Bool {
-        return (progress ?? 0) >= 1.0
+    var finishedWatching: Bool {
+        (progress ?? 0) >= 1.0
     }
 }

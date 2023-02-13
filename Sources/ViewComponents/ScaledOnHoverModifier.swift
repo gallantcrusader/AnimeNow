@@ -1,15 +1,18 @@
-////  ScaledOnHoverModifier.swift
+//  ScaledOnHoverModifier.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/5/22.
-//  
+//
 //
 
 import SwiftUI
 
+// MARK: - ScaledOnHover
+
 struct ScaledOnHover: ViewModifier {
     let factor: CGFloat
-    @State private var isHovered = false
+    @State
+    private var isHovered = false
 
     func body(content: Content) -> some View {
         content
@@ -22,21 +25,23 @@ struct ScaledOnHover: ViewModifier {
             }
             .gesture(
                 DragGesture(minimumDistance: 0)
-                    .onChanged { event in
-                        guard !isHovered else { return }
+                    .onChanged { _ in
+                        guard !isHovered else {
+                            return
+                        }
                         withAnimation {
                             self.isHovered = true
                         }
                     }
-                    .onEnded { event in
+                    .onEnded { _ in
                         self.isHovered = false
                     }
-                )
+            )
     }
 }
 
 extension View {
     func scaleOnHover(factor: CGFloat = 1.1) -> some View {
-        self.modifier(ScaledOnHover(factor: factor))
+        modifier(ScaledOnHover(factor: factor))
     }
 }

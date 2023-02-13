@@ -1,19 +1,18 @@
-////  UIApplication+Extension.swift
+//  UIApplication+Extension.swift
 //  Anime Now! (iOS)
 //
 //  Created by ErrorErrorError on 11/3/22.
-//  
+//
 //
 
 #if os(iOS)
-import SwiftUI
 import Foundation
+import SwiftUI
 
 extension UIApplication {
     func endEditing(_ force: Bool) {
-        self.windows
-            .filter{ $0.isKeyWindow }
-            .first?
+        windows
+            .first(where: \.isKeyWindow)?
             .endEditing(force)
     }
 }

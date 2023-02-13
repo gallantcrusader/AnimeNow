@@ -15,6 +15,8 @@ public typealias PlatformView = NSView
 public typealias PlatformViewRepresentable = NSViewRepresentable
 #endif
 
+// MARK: - PlatformAgnosticViewRepresentable
+
 /// Implementers get automatic `UIViewRepresentable` conformance on iOS
 /// and `NSViewRepresentable` conformance on macOS.
 public protocol PlatformAgnosticViewRepresentable: PlatformViewRepresentable {
@@ -25,7 +27,7 @@ public protocol PlatformAgnosticViewRepresentable: PlatformViewRepresentable {
 }
 
 extension PlatformAgnosticViewRepresentable {
-    static func dismantlePlatformView(_ platformView: PlatformViewType, coordinator: Coordinator) { }
+    static func dismantlePlatformView(_: PlatformViewType, coordinator _: Coordinator) {}
 }
 
 #if os(iOS) || os(tvOS)

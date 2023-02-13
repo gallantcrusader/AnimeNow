@@ -5,8 +5,10 @@
 //  Created by ErrorErrorError on 9/12/22.
 //
 
-import Utilities
 import Foundation
+import Utilities
+
+// MARK: - Source
 
 public struct Source: Hashable, Identifiable {
     public var id: URL { url }
@@ -33,13 +35,13 @@ public struct Source: Hashable, Identifiable {
         }
 
         case onefourtyfourp = 0 // 144p
-        case twoseventyp        // 270p
-        case threesixtyp        // 360p
-        case foureightyp        // 480p
-        case seventwentyp       // 720p
-        case teneightyp         // 1080p
-        case autoalt            // auotoalt
-        case auto               // auto
+        case twoseventyp // 270p
+        case threesixtyp // 360p
+        case foureightyp // 480p
+        case seventwentyp // 720p
+        case teneightyp // 1080p
+        case autoalt // auotoalt
+        case auto // auto
 
         public var description: String {
             switch self {
@@ -72,11 +74,14 @@ public struct Source: Hashable, Identifiable {
     }
 }
 
+// MARK: CustomStringConvertible
+
 extension Source: CustomStringConvertible {
     public var description: String { quality.description }
 }
 
 extension Source {
+    // swiftlint:disable force_unwrapping
     static let mock = [
         Source(
             url: URL(string: "/")!,
@@ -84,6 +89,8 @@ extension Source {
         )
     ]
 }
+
+// MARK: - SourcesOptions
 
 public struct SourcesOptions: Hashable {
     public let sources: [Source]

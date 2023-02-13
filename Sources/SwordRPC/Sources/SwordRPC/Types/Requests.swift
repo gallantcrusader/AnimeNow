@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - AuthorizationRequest
+
 /// Describes the format needed for an authorization request.
 /// https://discord.com/developers/docs/topics/rpc#authenticating-rpc-authorize-example
 struct AuthorizationRequest: Encodable {
@@ -18,6 +20,8 @@ struct AuthorizationRequest: Encodable {
         case clientId = "client_id"
     }
 }
+
+// MARK: - RequestArg
 
 /// RequestArg permits a union-like type for arguments to encode.
 enum RequestArg: Encodable {
@@ -41,6 +45,7 @@ enum RequestArg: Encodable {
     }
 }
 
+// MARK: - Command
 
 /// A generic format for a payload with a command, possibly used for an event.
 struct Command: Encodable {
@@ -53,6 +58,8 @@ struct Command: Encodable {
     /// The event type this command pertains to, if needed.
     var evt: EventType?
 }
+
+// MARK: - Event
 
 struct Event: Decodable {
     /// The type of command issue by Discord.

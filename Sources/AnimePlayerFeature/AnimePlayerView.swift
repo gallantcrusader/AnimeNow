@@ -16,6 +16,8 @@ import SwiftUI
 import Utilities
 import ViewComponents
 
+// MARK: - AnimePlayerView
+
 public struct AnimePlayerView: View {
     let store: StoreOf<AnimePlayerReducer>
 
@@ -29,9 +31,9 @@ public struct AnimePlayerView: View {
         let pipActive: Bool
 
         init(_ state: AnimePlayerReducer.State) {
-            player = state.player
-            gravity = state.playerGravity
-            pipActive = state.playerPiPActive
+            self.player = state.player
+            self.gravity = state.playerGravity
+            self.pipActive = state.playerPiPActive
         }
     }
 
@@ -90,9 +92,9 @@ public struct AnimePlayerView: View {
         .ignoresSafeArea(edges: .vertical)
         .background(Color.black.edgesIgnoringSafeArea(.all))
         #if os(iOS)
-        .prefersHomeIndicatorAutoHidden(true)
-        .supportedOrientation(.landscape)
-        .statusBarHidden()
+            .prefersHomeIndicatorAutoHidden(true)
+            .supportedOrientation(.landscape)
+            .statusBarHidden()
         #endif
     }
 }
@@ -124,7 +126,7 @@ extension AnimePlayerView {
             observe: \.status
         ) { status in
             switch status.state {
-            case .some(.error(let description)):
+            case let .some(.error(description)):
                 buildErrorView(description)
             default:
                 EmptyView()
@@ -168,7 +170,9 @@ extension AnimePlayerView {
 
             if isMovie {
                 self.title = state.anime.title
-                self.header = (state.stream.streamingProvider?.episodes.count ?? 0) > 1 ? "E\(state.stream.selectedEpisode)" : nil
+                self
+                    .header = (state.stream.streamingProvider?.episodes.count ?? 0) > 1 ?
+                    "E\(state.stream.selectedEpisode)" : nil
             } else {
                 self.title = state.episode?.title ?? "Loading..."
                 self.header = "E\(state.stream.selectedEpisode) \u{2022} \(state.anime.title)"
@@ -215,7 +219,7 @@ extension AnimePlayerView {
 
         init(_ state: AnimePlayerReducer.State) {
             self.action = state.skipAction
-            self.canShowButton = state.selectedSidebar == nil && self.action != nil && state.playerDuration > 0.0
+            self.canShowButton = state.selectedSidebar == nil && action != nil && state.playerDuration > 0.0
         }
     }
 
@@ -228,9 +232,9 @@ extension AnimePlayerView {
             Group {
                 if viewState.state.canShowButton {
                     switch viewState.state.action {
-                    case .some(.skipRecap(to: let end)),
-                            .some(.skipOpening(to: let end)),
-                            .some(.skipEnding(to: let end)):
+                    case let .some(.skipRecap(to: end)),
+                         let .some(.skipOpening(to: end)),
+                         let .some(.skipEnding(to: end)):
 
                         actionButtonBase(
                             "forward.fill",
@@ -241,7 +245,7 @@ extension AnimePlayerView {
                             viewState.send(.seeking(to: end))
                         }
 
-                    case .some(.nextEpisode(let id)):
+                    case let .some(.nextEpisode(id)):
                         actionButtonBase(
                             "play.fill",
                             viewState.state.action?.title ?? "",
@@ -317,7 +321,7 @@ extension AnimePlayerView {
     }
 }
 
-// MARK: Progress
+// MARK: AnimePlayerView.ProgressViewState
 
 extension AnimePlayerView {
     struct ProgressViewState: Equatable {
@@ -347,7 +351,6 @@ extension AnimePlayerView {
 // MARK: Player Options Buttons
 
 extension AnimePlayerView {
-
     @ViewBuilder
     var settingsButton: some View {
         Image(systemName: "gearshape.fill")
@@ -517,7 +520,7 @@ extension AnimePlayerView {
             } content: { selectedSidebar in
                 VStack {
                     HStack(alignment: .center) {
-                        if case .settings(let options) = selectedSidebar.state,
+                        if case let .settings(options) = selectedSidebar.state,
                            let section = options.selectedSection {
                             Image(systemName: "chevron.backward")
                                 .font(.body.weight(.heavy))
@@ -567,6 +570,8 @@ extension AnimePlayerView {
     }
 }
 
+// MARK: AnimePlayerView.SettingsViewState
+
 // Settings Sidebar
 
 extension AnimePlayerView {
@@ -575,13 +580,13 @@ extension AnimePlayerView {
         let stream: AnimeStreamViewState
 
         init(_ state: AnimePlayerReducer.State) {
-            if case .settings(let item) = state.selectedSidebar {
+            if case let .settings(item) = state.selectedSidebar {
                 self.selectedSetting = item.selectedSection
             } else {
                 self.selectedSetting = nil
             }
 
-            stream = .init(state.stream)
+            self.stream = .init(state.stream)
         }
     }
 }
@@ -589,7 +594,6 @@ extension AnimePlayerView {
 // MARK: Settings Sidebar
 
 extension AnimePlayerView {
-
     @ViewBuilder
     var settingsSidebar: some View {
         WithViewStore(
@@ -640,7 +644,7 @@ extension AnimePlayerView {
                         SettingsRowView(
                             name: "Provider",
                             text: viewState.stream.availableProviders.item?.name ??
-                            (viewState.stream.availableProviders.items.isEmpty ? "Unavailable" : "Not Selected")
+                                (viewState.stream.availableProviders.items.isEmpty ? "Unavailable" : "Not Selected")
                         ) {
                             viewState.send(.selectSidebarSettings(.provider))
                         }
@@ -746,27 +750,24 @@ extension AnimePlayerView {
     }
 }
 
+// MARK: - VideoPlayerView_Previews
+
 struct VideoPlayerView_Previews: PreviewProvider {
     static var previews: some View {
-        if #available(iOS 15.0, macOS 12.0, *) {
-            AnimePlayerView(
-                store: .init(
-                    initialState: .init(
-                        player: .init(),
-                        anime: Anime.narutoShippuden,
-                        availableProviders: .init(items: []),
-                        streamingProvider: .init(
-                            name: "Offline",
-                            episodes: Episode.demoEpisodes
-                        ),
-                        selectedEpisode: Episode.demoEpisodes.first!.id
+        AnimePlayerView(
+            store: .init(
+                initialState: .init(
+                    player: .init(),
+                    anime: Anime.narutoShippuden,
+                    availableProviders: .init(items: []),
+                    streamingProvider: .init(
+                        name: "Offline",
+                        episodes: Episode.demoEpisodes
                     ),
-                    reducer: AnimePlayerReducer()
-                )
+                    selectedEpisode: Episode.demoEpisodes[0].id
+                ),
+                reducer: AnimePlayerReducer()
             )
-            .previewInterfaceOrientation(.landscapeLeft)
-        } else {
-            // Fallback on earlier versions
-        }
+        )
     }
 }

@@ -5,13 +5,15 @@
 //  Created by ErrorErrorError on 9/22/22.
 //
 
-import SwiftUI
-import SharedModels
 import DownloaderClient
+import SharedModels
+import SwiftUI
+
+// MARK: - ThumbnailItemBigView
 
 public struct ThumbnailItemBigView: View {
     public struct DownloadStatus {
-        var state: DownloaderClient.Status? = nil
+        var state: DownloaderClient.Status?
         var callback: (Action) -> Void = { _ in }
 
         public init(
@@ -30,11 +32,11 @@ public struct ThumbnailItemBigView: View {
     }
 
     let episode: any EpisodeRepresentable
-    var animeTitle: String? = nil
-    var progress: Double? = nil
+    var animeTitle: String?
+    var progress: Double?
     var nowPlaying = false
     var progressSize: CGFloat = 10
-    var downloadStatus: DownloadStatus? = nil
+    var downloadStatus: DownloadStatus?
 
     public init(
         episode: any EpisodeRepresentable,
@@ -82,7 +84,7 @@ public struct ThumbnailItemBigView: View {
                         .foregroundColor(nowPlaying ? Color.black : Color.white)
                         .padding(.horizontal, 12)
                         .frame(height: size)
-                        .background(nowPlaying ? Color(white: 0.9) :  Color(white: 0.15))
+                        .background(nowPlaying ? Color(white: 0.9) : Color(white: 0.15))
                         .clipShape(Capsule())
                         .animation(.linear, value: nowPlaying)
 
@@ -97,15 +99,15 @@ public struct ThumbnailItemBigView: View {
                                         .frame(width: size, height: size)
                                         .overlay(
                                             Group {
-                                                if case .downloading(let progress) = downloadStatus.state {
+                                                if case let .downloading(progress) = downloadStatus.state {
                                                     CircularProgressView(progress: progress)
                                                         .animation(.linear, value: progress)
                                                 } else {
                                                     CircularProgressView(progress: 0.0)
                                                 }
                                             }
-                                                .frame(width: 20, height: 20)
-                                                .foregroundColor(.black)
+                                            .frame(width: 20, height: 20)
+                                            .foregroundColor(.black)
                                         )
                                         .contentShape(Rectangle())
                                         .onTapGesture {
@@ -192,29 +194,32 @@ public struct ThumbnailItemBigView: View {
                         alignment: .leading
                     )
                 }
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .bottom
-                    )
-                    .padding(max(reader.size.width, reader.size.height) / 24)
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .bottom
+                )
+                .padding(max(reader.size.width, reader.size.height) / 24)
             )
             .cornerRadius(max(reader.size.width, reader.size.height) / 16)
             .transition(.opacity)
         }
-        .aspectRatio(16/9, contentMode: .fit)
+        .aspectRatio(16 / 9, contentMode: .fit)
         .clipped()
     }
 }
 
+// MARK: - EpisodeItemBigView_Previews
+
 struct EpisodeItemBigView_Previews: PreviewProvider {
     static var previews: some View {
-        let episode = Episode.demoEpisodes.first!
-        ThumbnailItemBigView(
-            episode: episode,
-            progress: 0.5,
-            downloadStatus: .init()
-        )
-        .frame(height: 200)
+        if let episode = Episode.demoEpisodes.first {
+            ThumbnailItemBigView(
+                episode: episode,
+                progress: 0.5,
+                downloadStatus: .init()
+            )
+            .frame(height: 200)
+        }
     }
 }

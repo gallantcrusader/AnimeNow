@@ -8,7 +8,7 @@
 import Foundation
 
 extension UserDefaultsClient {
-    static let mock = Self.init { _ in
+    static let mock = Self { _ in
         .none
     } boolForKey: { _ in
         false

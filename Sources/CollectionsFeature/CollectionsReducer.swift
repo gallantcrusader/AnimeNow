@@ -6,10 +6,12 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import ComposableArchitecture
+import DatabaseClient
 import Foundation
 import SharedModels
-import DatabaseClient
-import ComposableArchitecture
+
+// MARK: - CollectionsReducer
 
 public struct CollectionsReducer: ReducerProtocol {
     public struct State: Equatable {
@@ -38,9 +40,10 @@ public struct CollectionsReducer: ReducerProtocol {
         case deleteCollection(id: CollectionStore.ID)
     }
 
-    @Dependency(\.databaseClient) var databaseClient
+    @Dependency(\.databaseClient)
+    var databaseClient
 
-    public init() { }
+    public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
@@ -57,7 +60,9 @@ extension CollectionsReducer {
     func core(into state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
-            guard !state.hasInitialized else { break }
+            guard !state.hasInitialized else {
+                break
+            }
             state.hasInitialized = true
 
             return .merge(
@@ -79,25 +84,29 @@ extension CollectionsReducer {
                 }
             )
 
-        case .deleteCollection(id: let collectionId):
-            guard let collection = state.collections[id: collectionId] else { break }
+        case let .deleteCollection(id: collectionId):
+            guard let collection = state.collections[id: collectionId] else {
+                break
+            }
             return .run {
                 try await databaseClient.delete(collection)
             }
 
-        case .updatedFavorites(let favorites):
+        case let .updatedFavorites(favorites):
             state.favorites = favorites
 
-        case .updatedCollections(let collections):
+        case let .updatedCollections(collections):
             state.collections = collections
 
-        case .removeAnimeFromFavorites(let animeStore):
+        case let .removeAnimeFromFavorites(animeStore):
             return .run { [animeStore] in
                 try await databaseClient.update(animeStore.id, \AnimeStore.isFavorite, false)
             }
 
-        case .removeAnimeFromCollection(let collectionId, let animeStore):
-            guard var collection = state.collections[id: collectionId] else { break }
+        case let .removeAnimeFromCollection(collectionId, animeStore):
+            guard var collection = state.collections[id: collectionId] else {
+                break
+            }
             collection.animes.removeAll(where: { $0.id == animeStore.id })
 
             return .run { [collection] in

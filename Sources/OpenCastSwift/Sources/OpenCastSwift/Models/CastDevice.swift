@@ -8,8 +8,9 @@
 
 import Foundation
 
+// MARK: - DeviceCapabilities
 
-public struct DeviceCapabilities : OptionSet, Equatable {
+public struct DeviceCapabilities: OptionSet, Equatable {
     public let rawValue: Int
     public init(rawValue: Int) { self.rawValue = rawValue }
 
@@ -22,6 +23,8 @@ public struct DeviceCapabilities : OptionSet, Equatable {
     public static let masterVolume = DeviceCapabilities(rawValue: 1 << 11)
     public static let attenuationVolume = DeviceCapabilities(rawValue: 1 << 12)
 }
+
+// MARK: - CastDevice
 
 public struct CastDevice: Equatable, CustomStringConvertible {
     public private(set) var id: String

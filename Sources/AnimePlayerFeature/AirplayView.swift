@@ -11,7 +11,7 @@ import SwiftUI
 import ViewComponents
 
 public struct AirplayView: PlatformAgnosticViewRepresentable {
-    public init() { }
+    public init() {}
 
     public func makeCoordinator() -> Coordinator {
         .init()
@@ -32,13 +32,13 @@ public struct AirplayView: PlatformAgnosticViewRepresentable {
         return view
     }
 
-    public func updatePlatformView(_ view: AVRoutePickerView, context: Context) {}
+    public func updatePlatformView(_: AVRoutePickerView, context _: Context) {}
 
-    static func dismantlePlatformView(_ platformView: AVRoutePickerView, coordinator: Coordinator) {}
+    static func dismantlePlatformView(_: AVRoutePickerView, coordinator _: Coordinator) {}
 
     public class Coordinator: NSObject, AVRoutePickerViewDelegate {
-        public func routePickerViewDidEndPresentingRoutes(_ routePickerView: AVRoutePickerView) {}
+        public func routePickerViewDidEndPresentingRoutes(_: AVRoutePickerView) {}
 
-        public func routePickerViewWillBeginPresentingRoutes(_ routePickerView: AVRoutePickerView) {}
+        public func routePickerViewWillBeginPresentingRoutes(_: AVRoutePickerView) {}
     }
 }

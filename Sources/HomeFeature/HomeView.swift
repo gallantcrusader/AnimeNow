@@ -6,17 +6,20 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import SwiftUI
-import Utilities
-import SharedModels
-import ViewComponents
-import SwiftUINavigation
 import ComposableArchitecture
+import SharedModels
+import SwiftUI
+import SwiftUINavigation
+import Utilities
+import ViewComponents
+
+// MARK: - HomeView
 
 public struct HomeView: View {
     let store: StoreOf<HomeReducer>
 
-    @State private var animeHeroColors = [Int: Color]()
+    @State
+    private var animeHeroColors = [Int: Color]()
 
     public init(store: StoreOf<HomeReducer>) {
         self.store = store
@@ -115,7 +118,7 @@ public struct HomeView: View {
                         }
                         .placeholder(
                             active: viewStore.isLoading,
-                            duration:  2.0
+                            duration: 2.0
                         )
 
                         ExtraBottomSafeAreaInset()
@@ -206,7 +209,10 @@ extension HomeView {
                     items: animes
                 ) { anime in
                     FillAspectImage(
-                        url: (DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime.posterImage.largest)?.link
+                        url: (
+                            DeviceUtil.isPhone ? anime.posterImage.largest : anime.coverImage.largest ?? anime
+                                .posterImage.largest
+                        )?.link
                     )
                     .onAverageColor { color in
                         if let index = animes.firstIndex(of: anime) {
@@ -235,15 +241,11 @@ extension HomeView {
         isLoading: Bool,
         store: Store<HomeReducer.LoadableAnime, HomeReducer.Action>
     ) -> some View {
-        WithViewStore(
-            store,
-            observe: { $0 }
-        ) { viewStore in
+        WithViewStore(store) { state in
+            state
+        } content: { viewStore in
             if let items = isLoading ? Anime.placeholders(5) : viewStore.value, !items.isEmpty {
-                DynamicHStackScrollView(
-                    idealWidth: DeviceUtil.isPhone ? 140 : 190,
-                    items: items
-                ) { anime in
+                DynamicHStackScrollView(idealWidth: DeviceUtil.isPhone ? 140 : 190, items: items) { anime in
                     AnimeItemView(
                         anime: anime
                     )
@@ -264,15 +266,12 @@ extension HomeView {
         isLoading: Bool,
         store: Store<Loadable<[AnyAnimeRepresentable]>, HomeReducer.Action>
     ) -> some View {
-        WithViewStore(
-            store,
-            observe: { $0 }
-        ) { viewStore in
-            if let items = isLoading ? Anime.placeholders(5).map { $0.eraseAsRepresentable() } : viewStore.value, !items.isEmpty {
-                DynamicHStackScrollView(
-                    idealWidth: DeviceUtil.isPhone ? 140 : 190,
-                    items: items
-                ) { anime in
+        WithViewStore(store) { state in
+            state
+        } content: { viewStore in
+            if let items = isLoading ? Anime.placeholders(5).map({ anime in anime.eraseAsRepresentable() }) : viewStore.value,
+               !items.isEmpty {
+                DynamicHStackScrollView(idealWidth: DeviceUtil.isPhone ? 140 : 190, items: items) { anime in
                     AnimeItemView(
                         anime: anime
                     )
@@ -312,11 +311,8 @@ extension HomeView {
         LoadableViewStore(
             loadable: store
         ) { viewStore in
-            if !viewStore.isEmpty && !isLoading {
-                DynamicHStackScrollView(
-                    idealWidth: DeviceUtil.isPhone ? 260 : 400,
-                    items: viewStore.state
-                ) { item in
+            if !viewStore.isEmpty, !isLoading {
+                DynamicHStackScrollView(idealWidth: DeviceUtil.isPhone ? 260 : 400, items: viewStore.state) { item in
                     ThumbnailItemBigView(
                         episode: item.episode,
                         animeTitle: item.anime.title,
@@ -363,6 +359,8 @@ extension HomeView {
             .opacity(0.9)
     }
 }
+
+// MARK: - HomeView_Previews
 
 struct HomeView_Previews: PreviewProvider {
     static var previews: some View {

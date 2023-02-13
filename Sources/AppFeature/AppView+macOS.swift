@@ -10,13 +10,11 @@ import ComposableArchitecture
 import SwiftUI
 
 extension AppView {
-
     @ViewBuilder
     var tabBar: some View {
-        WithViewStore(
-            store,
-            observe: { $0.route }
-        ) { selected in
+        WithViewStore(store) { state in
+            state.route
+        } content: { selected in
             HStack(spacing: 32) {
                 Text("Anime Now!")
                     .font(.largeTitle.bold())
@@ -65,7 +63,7 @@ extension AppView {
                 }
             }
             .padding()
-            .padding(.horizontal, 40) // Required in order to consider arrow indicators 
+            .padding(.horizontal, 40) // Required in order to consider arrow indicators
             .frame(
                 maxWidth: .infinity,
                 alignment: .leading
@@ -80,7 +78,7 @@ extension AppView {
                         .init(
                             color: .clear,
                             location: 1.0
-                        ),
+                        )
                     ],
                     startPoint: .top,
                     endPoint: .bottom

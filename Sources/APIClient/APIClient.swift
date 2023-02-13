@@ -5,10 +5,12 @@
 //  Created by ErrorErrorError on 9/4/22.
 //
 
-import Logger
 import Combine
-import Foundation
 import ComposableArchitecture
+import Foundation
+import Logger
+
+// MARK: - APIClient
 
 public protocol APIClient {
     @discardableResult
@@ -18,30 +20,36 @@ public protocol APIClient {
     ) async throws -> O
 }
 
+// MARK: - APIClientKey
+
 private enum APIClientKey: DependencyKey {
     static var liveValue: any APIClient = APIClientLive()
 }
 
-extension DependencyValues {
-    public var apiClient: any APIClient {
-      get { self[APIClientKey.self] }
-      set { self[APIClientKey.self] = newValue }
+public extension DependencyValues {
+    var apiClient: any APIClient {
+        get { self[APIClientKey.self] }
+        set { self[APIClientKey.self] = newValue }
     }
 }
+
+// MARK: - APIBase
 
 public protocol APIBase {
     static var shared: Self { get }
     var base: URL { get }
 }
 
-extension APIBase {
-    public static var animeNowAPI: AnimeNowAPI { AnimeNowAPI.shared }
-    public static var aniListAPI: AniListAPI { AniListAPI.shared }
-    public static var aniSkipAPI: AniSkipAPI { AniSkipAPI.shared }
-    public static var consumetAPI: ConsumetAPI { ConsumetAPI.shared }
-    public static var kitsuAPI: KitsuAPI { KitsuAPI.shared }
-    public static var enimeAPI: EnimeAPI { EnimeAPI.shared }
+public extension APIBase {
+    static var animeNowAPI: AnimeNowAPI { AnimeNowAPI.shared }
+    static var aniListAPI: AniListAPI { AniListAPI.shared }
+    static var aniSkipAPI: AniSkipAPI { AniSkipAPI.shared }
+    static var consumetAPI: ConsumetAPI { ConsumetAPI.shared }
+    static var kitsuAPI: KitsuAPI { KitsuAPI.shared }
+    static var enimeAPI: EnimeAPI { EnimeAPI.shared }
 }
+
+// MARK: - EmptyResponse
 
 public struct EmptyResponse: Decodable {}
 
@@ -50,9 +58,9 @@ public typealias NoResponseRequest<Route: APIBase> = Request<Route, EmptyRespons
 typealias Query = URLQueryItem
 
 extension URLQueryItem {
-    init<C: CustomStringConvertible>(
+    init(
         name: String,
-        _ value: C
+        _ value: some CustomStringConvertible
     ) {
         self.init(
             name: name,
@@ -61,11 +69,13 @@ extension URLQueryItem {
     }
 }
 
+// MARK: - Request
+
 public struct Request<Route: APIBase, O: Decodable> {
     var path: [CustomStringConvertible] = []
-    var query: [URLQueryItem]? = nil
+    var query: [URLQueryItem]?
     var method: Method = .get
-    var headers: ((Route) -> [String: CustomStringConvertible])? = nil
+    var headers: ((Route) -> [String: CustomStringConvertible])?
     var decoder: JSONDecoder = .init()
 
     enum Method: CustomStringConvertible {
@@ -85,7 +95,7 @@ public struct Request<Route: APIBase, O: Decodable> {
             switch self {
             case .get:
                 return "GET"
-            case .post(let data):
+            case let .post(data):
                 return "POST: \(String(data: data, encoding: .utf8) ?? "Unknown")"
             }
         }

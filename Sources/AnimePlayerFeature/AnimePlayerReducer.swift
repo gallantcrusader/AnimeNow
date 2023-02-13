@@ -20,6 +20,8 @@ import Utilities
 import VideoPlayerClient
 import ViewComponents
 
+// MARK: - AnimePlayerReducer
+
 public struct AnimePlayerReducer: ReducerProtocol {
     typealias LoadableSourcesOptions = Loadable<SourcesOptions>
 
@@ -89,8 +91,10 @@ public struct AnimePlayerReducer: ReducerProtocol {
         var playerIsFullScreen = false
         var playerVolume: Double { player.isMuted ? 0.0 : Double(player.volume) }
         var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
-        @BindableState var playerPiPActive = false
-        @BindableState var playerGravity = VideoPlayer.Gravity.resizeAspect
+        @BindableState
+        var playerPiPActive = false
+        @BindableState
+        var playerGravity = VideoPlayer.Gravity.resizeAspect
 
         public init(
             player: AVPlayer,
@@ -111,7 +115,6 @@ public struct AnimePlayerReducer: ReducerProtocol {
     }
 
     public enum Action: BindableAction {
-
         // View Actions
 
         case onAppear
@@ -172,17 +175,22 @@ public struct AnimePlayerReducer: ReducerProtocol {
         case binding(BindingAction<State>)
     }
 
-    @Dependency(\.mainQueue) var mainQueue
-    @Dependency(\.mainRunLoop) var mainRunLoop
-    @Dependency(\.animeClient) var animeClient
-    @Dependency(\.databaseClient) var databaseClient
-    @Dependency(\.videoPlayerClient) var videoPlayerClient
-    @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.mainQueue)
+    var mainQueue
+    @Dependency(\.mainRunLoop)
+    var mainRunLoop
+    @Dependency(\.animeClient)
+    var animeClient
+    @Dependency(\.databaseClient)
+    var databaseClient
+    @Dependency(\.videoPlayerClient)
+    var videoPlayerClient
+    @Dependency(\.userDefaultsClient)
+    var userDefaultsClient
 
-    public init() { }
+    public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
-
         // Runs before changing video player state
 
         Reduce { state, action in
@@ -206,8 +214,8 @@ public struct AnimePlayerReducer: ReducerProtocol {
                 )
 
             case .stream(.selectProvider),
-                    .stream(.selectLink),
-                    .closeButtonTapped:
+                 .stream(.selectLink),
+                 .closeButtonTapped:
                 return .merge(
                     common(&state),
                     .run {
@@ -243,25 +251,24 @@ extension AnimePlayerReducer.State {
     }
 
     var status: Status? {
-
         // Error States
 
         if stream.availableProviders.items.isEmpty {
             return .error("There are no available streaming providers at this time. Please try again later.")
-//        } else if case .none = stream.availableProviders.item {
-//            return .error("Please select a valid streaming provider.")
+            //        } else if case .none = stream.availableProviders.item {
+            //            return .error("Please select a valid streaming provider.")
         } else if case .some(.failed) = stream.loadableStreamingProvider {
             return .error("There was an error retrieving episodes from selected streaming provider.")
-        } else if case .some(.success(let item)) = stream.loadableStreamingProvider, item.episodes.isEmpty {
+        } else if case let .some(.success(item)) = stream.loadableStreamingProvider, item.episodes.isEmpty {
             return .error("There are no available episodes as of this time. Please try again later.")
         } else if case .failed = stream.sourceOptions {
             return .error("There was an error trying to retrieve sources. Please try again later.")
-        } else if case .success(let sourcesOptions) = stream.sourceOptions, sourcesOptions.sources.isEmpty {
+        } else if case let .success(sourcesOptions) = stream.sourceOptions, sourcesOptions.sources.isEmpty {
             return .error("There are currently no sources available for this episode. Please try again later.")
         } else if case .error = playerStatus {
             return .error("There was an error starting video player. Please try again later.")
 
-        // Loading States
+            // Loading States
 
         } else if !(stream.loadableStreamingProvider?.finished ?? false) {
             return .loading
@@ -341,7 +348,7 @@ extension AnimePlayerReducer.State {
             case .ending, .mixedEnding:
                 return .skipEnding(to: skipTime.endTime)
             }
-        } else if almostEnding, let nextEpisode = nextEpisode {
+        } else if almostEnding, let nextEpisode {
             return .nextEpisode(nextEpisode.id)
         }
         return nil
@@ -360,7 +367,6 @@ extension AnimePlayerReducer {
     // swiftlint:disable cyclomatic_complexity function_body_length
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
-
         // View Actions
 
         case .onAppear:
@@ -387,7 +393,7 @@ extension AnimePlayerReducer {
                             await send(.fetchedAnimeInfoStore(animeStore))
                         }
                     }
-                        .cancellable(id: CancelAnimeStoreObservable.self)
+                    .cancellable(id: CancelAnimeStoreObservable.self)
                 )
 
                 #if os(macOS)
@@ -447,10 +453,10 @@ extension AnimePlayerReducer {
 
             var effects: [EffectTask<Action>] = [
                 .action(.showPlayerOverlay(showingOverlay))
-                .animation(AnimePlayerReducer.overlayVisibilityAnimation)
+                    .animation(AnimePlayerReducer.overlayVisibilityAnimation)
             ]
 
-            if showingOverlay && state.playerStatus == .playback(.playing) {
+            if showingOverlay, state.playerStatus == .playback(.playing) {
                 // Show overlay with timeout if the video is currently playing
                 effects.append(
                     hideOverlayAnimationDelay()
@@ -464,18 +470,18 @@ extension AnimePlayerReducer {
             return .concatenate(effects)
 
         // MacOS specific
-        case .isHoveringPlayer(let isHovering):
+        case let .isHoveringPlayer(isHovering):
             if isHovering {
                 // TODO: fix issue when trying to select router
-//                return .merge(
-//                    .run { send in
-//                        await send(
-//                            .showPlayerOverlay(true),
-//                            animation: AnimePlayerReducer.overlayVisibilityAnimation
-//                        )
-//                    },
-//                    hideOverlayAnimationDelay()
-//                )
+                //                return .merge(
+                //                    .run { send in
+                //                        await send(
+                //                            .showPlayerOverlay(true),
+                //                            animation: AnimePlayerReducer.overlayVisibilityAnimation
+                //                        )
+                //                    },
+                //                    hideOverlayAnimationDelay()
+                //                )
             } else {
                 return .merge(
                     .run { send in
@@ -565,11 +571,11 @@ extension AnimePlayerReducer {
                 animation: .easeInOut(duration: 0.25)
             )
 
-        case .selectSidebarSettings(let section):
+        case let .selectSidebarSettings(section):
             return .action(.sidebarSettingsSection(section))
                 .animation(.easeInOut(duration: 0.25))
 
-        case .showPlayerOverlay(let show):
+        case let .showPlayerOverlay(show):
             state.showPlayerOverlay = show
 
         // Internal Actions
@@ -578,12 +584,12 @@ extension AnimePlayerReducer {
             state.selectedSidebar = nil
             return .action(.showPlayerOverlay(true))
 
-        case .internalSetSidebar(let route):
+        case let .internalSetSidebar(route):
             state.selectedSidebar = route
 
             if route != nil {
                 return .merge(
-                    self.cancelHideOverlayAnimationDelay(),
+                    cancelHideOverlayAnimationDelay(),
                     .action(.showPlayerOverlay(false))
                 )
             }
@@ -593,14 +599,14 @@ extension AnimePlayerReducer {
 
         // Section actions
 
-        case .sidebarSettingsSection(let section):
+        case let .sidebarSettingsSection(section):
             if case .settings = state.selectedSidebar {
                 state.selectedSidebar = .settings(.init(selectedSection: section))
             }
 
         // Fetched Anime Store
 
-        case .fetchedAnimeInfoStore(let animeStores):
+        case let .fetchedAnimeInfoStore(animeStores):
             state.animeStore = .success(.findOrCreate(state.anime, animeStores))
 
         // Fetch Skip Times
@@ -620,7 +626,7 @@ extension AnimePlayerReducer {
             }
             .cancellable(id: FetchSkipTimesCancellable.self, cancelInFlight: true)
 
-        case .fetchedSkipTimes(let loadable):
+        case let .fetchedSkipTimes(loadable):
             state.skipTimes = loadable
 
         // Video Player Actions
@@ -639,7 +645,9 @@ extension AnimePlayerReducer {
             state.playerPiPActive.toggle()
 
         case .backwardsTapped:
-            guard state.playerDuration > 0.0 else { break }
+            guard state.playerDuration > 0.0 else {
+                break
+            }
             let progress = state.playerProgress - 15 / state.playerDuration
             let requestedTime = max(progress, .zero)
             state.playerProgress = requestedTime
@@ -648,7 +656,9 @@ extension AnimePlayerReducer {
             }
 
         case .forwardsTapped:
-            guard state.playerDuration > 0.0 else { break }
+            guard state.playerDuration > 0.0 else {
+                break
+            }
             let progress = state.playerProgress + 15 / state.playerDuration
             let requestedTime = min(progress, 1.0)
             state.playerProgress = requestedTime
@@ -691,7 +701,7 @@ extension AnimePlayerReducer {
                 await videoPlayerClient.execute(.pause)
             }
 
-        case .seeking(to: let to):
+        case let .seeking(to: to):
             let clamped = min(1.0, max(0.0, to))
             state.playerProgress = clamped
             return .run {
@@ -703,7 +713,7 @@ extension AnimePlayerReducer {
                 await videoPlayerClient.execute(.resume)
             }
 
-        case .volume(to: let volume):
+        case let .volume(to: volume):
             let clamped = min(1.0, max(0.0, volume))
 
             return .merge(
@@ -717,15 +727,15 @@ extension AnimePlayerReducer {
 
         case .playerStatus(.finished):
             state.playerStatus = .finished
-            return self.saveEpisodeState(state: state)
+            return saveEpisodeState(state: state)
 
-        case .playerStatus(.loaded(let duration)):
+        case let .playerStatus(.loaded(duration)):
             state.playerStatus = .loaded(duration: duration)
 
             // First time duration is set and is not zero, resume progress
             if let animeInfo = state.animeStore.value,
                let episode = state.episode,
-               let savedEpisodeProgress = animeInfo.episodes.first { $0.number == episode.number },
+               let savedEpisodeProgress = animeInfo.episodes.first(where: { $0.number == episode.number }),
                !savedEpisodeProgress.almostFinished {
                 state.playerProgress = savedEpisodeProgress.progress ?? .zero
                 return .run { _ in
@@ -740,10 +750,12 @@ extension AnimePlayerReducer {
                 }
             }
 
-        case .playerStatus(let status):
+        case let .playerStatus(status):
             state.playerStatus = status
 
-            guard !DeviceUtil.isMac else { break }
+            guard !DeviceUtil.isMac else {
+                break
+            }
 
             if case .playback(.playing) = status, state.showPlayerOverlay {
                 return hideOverlayAnimationDelay()
@@ -751,21 +763,21 @@ extension AnimePlayerReducer {
                 return cancelHideOverlayAnimationDelay()
             }
 
-        case .playerProgress(let progress):
+        case let .playerProgress(progress):
             state.playerProgress = progress
 
-        case .playerPiPStatus(let status):
+        case let .playerPiPStatus(status):
             state.playerPiPStatus = status
 
             if status == .willStop {
-                return self.saveEpisodeState(state: state)
+                return saveEpisodeState(state: state)
             }
 
-        case .playerIsFullScreen(let fullscreen):
+        case let .playerIsFullScreen(fullscreen):
             state.playerIsFullScreen = fullscreen
 
         case .saveState:
-            return self.saveEpisodeState(state: state)
+            return saveEpisodeState(state: state)
 
         case .stream(.selectSource), .stream(.fetchedSources(.success)):
             if let source = state.stream.source {

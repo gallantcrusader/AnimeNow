@@ -1,13 +1,15 @@
 //
 //  VideoPlayerItem.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/17/23.
-//  
+//
 //
 
-import Foundation
 import AVFoundation
+import Foundation
+
+// MARK: - VideoPlayerItem
 
 final class VideoPlayerItem: AVPlayerItem {
     static let dashCustomPlaylistScheme = "anime-now-mpd"
@@ -31,8 +33,8 @@ final class VideoPlayerItem: AVPlayerItem {
 
         if payload.source.format == .mpd {
             url = payload.source.url.change(scheme: Self.dashCustomPlaylistScheme)
-//        } else if payload.subtitles.count > 0 {
-//            url = payload.source.url.change(scheme: Self.hlsCustomPlaylistScheme)
+            //        } else if payload.subtitles.count > 0 {
+            //            url = payload.source.url.change(scheme: Self.hlsCustomPlaylistScheme)
         } else {
             url = payload.source.url
         }
@@ -43,23 +45,27 @@ final class VideoPlayerItem: AVPlayerItem {
         )
 
         super.init(asset: asset, automaticallyLoadedAssetKeys: ["duration"])
-        asset.resourceLoader.setDelegate(self, queue: self.resourceQueue)
+        asset.resourceLoader.setDelegate(self, queue: resourceQueue)
     }
 }
 
+// MARK: AVAssetResourceLoaderDelegate
+
 extension VideoPlayerItem: AVAssetResourceLoaderDelegate {
     func resourceLoader(
-        _ resourceLoader: AVAssetResourceLoader,
+        _: AVAssetResourceLoader,
         shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest
     ) -> Bool {
-        guard let url = loadingRequest.request.url else { return false }
+        guard let url = loadingRequest.request.url else {
+            return false
+        }
 
-        let callback: (Result<Data, Error>) -> Void = {
-            switch $0 {
-            case .success(let data):
+        let callback: (Result<Data, Error>) -> Void = { result in
+            switch result {
+            case let .success(data):
                 loadingRequest.dataRequest?.respond(with: data)
                 loadingRequest.finishLoading()
-            case .failure(let error):
+            case let .failure(error):
                 print(error.localizedDescription)
                 loadingRequest.finishLoading(with: error)
             }

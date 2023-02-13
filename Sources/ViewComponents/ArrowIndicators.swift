@@ -1,12 +1,14 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 2/7/23.
-//  
+//
 //
 
 import SwiftUI
+
+// MARK: - ArrowIndicatorsModifier
 
 public struct ArrowIndicatorsModifier: ViewModifier {
     let previous: () -> Void
@@ -15,7 +17,8 @@ public struct ArrowIndicatorsModifier: ViewModifier {
     var leftDisabled = false
     var rightDisabled = false
 
-    @State private var hovering = false
+    @State
+    private var hovering = false
 
     public init(
         previous: @escaping () -> Void,
@@ -24,7 +27,7 @@ public struct ArrowIndicatorsModifier: ViewModifier {
         self.previous = previous
         self.next = next
     }
-    
+
     public func body(content: Content) -> some View {
         HStack {
             buildArrow("chevron.compact.left") {
@@ -58,7 +61,7 @@ public struct ArrowIndicatorsModifier: ViewModifier {
     private func buildArrow(
         _ systemName: String,
         action: @escaping () -> Void
-    ) -> some View  {
+    ) -> some View {
         Button {
             action()
         } label: {
@@ -91,7 +94,7 @@ public extension View {
         _ position: Binding<Int>,
         count: Int
     ) -> some View {
-        self.modifier(
+        modifier(
             ArrowIndicatorsModifier(
                 previous: {
                     position.wrappedValue -= 1
@@ -109,7 +112,7 @@ public extension View {
         _ maxBounds: Range<I>,
         shiftBy count: I
     ) -> some View where I: AdditiveArithmetic {
-        self.modifier(
+        modifier(
             ArrowIndicatorsModifier {
                 range.wrappedValue = range.wrappedValue.shiftLeft(by: count, maxBounds: maxBounds)
             } next: {

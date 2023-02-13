@@ -1,15 +1,18 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 2/9/23.
-//  
+//
 //
 
-import SwiftUI
 import Foundation
+import SwiftUI
 
-@globalActor public actor ImageDatabase {
+// MARK: - ImageDatabase
+
+@globalActor
+public actor ImageDatabase {
     public static var shared = ImageDatabase()
 
     private let cache: URLCache = {
@@ -17,7 +20,7 @@ import Foundation
         let diskCacheURL = cachesURL.appendingPathComponent("ImageCaches", conformingTo: .directory)
         return .init(
             memoryCapacity: 0,
-            diskCapacity: 1024 * 1024 * 1024,
+            diskCapacity: 1_024 * 1_024 * 1_024,
             directory: diskCacheURL
         )
     }()
@@ -35,7 +38,6 @@ import Foundation
     }
 
     public func image(_ request: URLRequest) async throws -> PlatformImage {
-
         // Check an image is already in memory
 
         if let cached = cachedImages.object(forKey: request.id as NSString) {
@@ -64,19 +66,19 @@ import Foundation
         return image
     }
 
-    nonisolated public func cachedImage(_ request: URLRequest) -> PlatformImage? {
+    public nonisolated func cachedImage(_ request: URLRequest) -> PlatformImage? {
         cachedImages.object(forKey: request.id as NSString)
     }
 
-    nonisolated public func cachedImage(_ url: URL) -> PlatformImage? {
+    public nonisolated func cachedImage(_ url: URL) -> PlatformImage? {
         cachedImage(.init(url: url))
     }
 
-    nonisolated public func diskUsage() -> Int {
+    public nonisolated func diskUsage() -> Int {
         cache.currentDiskUsage
     }
 
-    nonisolated public func maxDiskCapacity() -> Int {
+    public nonisolated func maxDiskCapacity() -> Int {
         cache.diskCapacity
     }
 
@@ -86,11 +88,18 @@ import Foundation
     }
 }
 
-extension NSCache: @unchecked Sendable {}
+// MARK: - NSCache + Sendable
+
+extension NSCache: @unchecked
+Sendable {}
+
+// MARK: - URLRequest + Identifiable
 
 extension URLRequest: Identifiable {
     public var id: String { "\(hashValue)" }
 }
+
+// MARK: - String + Error
 
 extension String: Error {}
 
@@ -102,22 +111,26 @@ public typealias PlatformImage = UIImage
 
 public extension Image {
     init(_ platform: PlatformImage) {
-#if canImport(UIKit)
+        #if canImport(UIKit)
         self.init(uiImage: platform)
-#else
+        #else
         self.init(nsImage: platform)
-#endif
+        #endif
     }
 }
- 
+
 public extension PlatformImage {
     var averageColor: Color? {
         #if os(macOS)
-        var rect = NSRect(origin: .zero, size: self.size)
-        guard let cgImage = self.cgImage(forProposedRect: &rect, context: .current, hints: nil) else { return nil }
+        var rect = NSRect(origin: .zero, size: size)
+        guard let cgImage = cgImage(forProposedRect: &rect, context: .current, hints: nil) else {
+            return nil
+        }
         let inputImage = CIImage(cgImage: cgImage)
         #else
-        guard let inputImage = CIImage(image: self) else { return nil }
+        guard let inputImage = CIImage(image: self) else {
+            return nil
+        }
         #endif
 
         let extentVector = CIVector(
@@ -133,9 +146,13 @@ public extension PlatformImage {
                 kCIInputImageKey: inputImage,
                 kCIInputExtentKey: extentVector
             ]
-        ) else { return nil }
+        ) else {
+            return nil
+        }
 
-        guard let outputImage = filter.outputImage else { return nil }
+        guard let outputImage = filter.outputImage else {
+            return nil
+        }
 
         var bitmap = [UInt8](repeating: 0, count: 4)
         let context = CIContext(options: [.workingColorSpace: kCFNull as Any])

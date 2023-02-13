@@ -2,16 +2,18 @@
 //  Anime Now! (macOS)
 //
 //  Created by ErrorErrorError on 12/20/22.
-//  
+//
 //
 
-import OSLog
 import Foundation
+import OSLog
+
+// MARK: - Logger
 
 public enum Logger {
-    public static func log<M: CustomStringConvertible>(
+    public static func log(
         _ level: OSLogType = .debug,
-        _ message: M,
+        _ message: some CustomStringConvertible,
         fileName: String = #file,
         functionName: String = #function,
         lineNumber: Int = #line
@@ -25,6 +27,6 @@ public enum Logger {
     }
 }
 
-extension OSLog {
-    fileprivate static let base = OSLog(subsystem: Bundle.main.bundleIdentifier ?? "com.errorerrorerror.anime-now", category: "app")
+private extension OSLog {
+    static let base = OSLog(subsystem: Bundle.main.bundleIdentifier ?? "com.errorerrorerror.anime-now", category: "app")
 }

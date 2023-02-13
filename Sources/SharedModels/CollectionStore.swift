@@ -1,15 +1,17 @@
-////  CollectionStore.swift
+//  CollectionStore.swift
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 10/28/22.
-//  
+//
 //
 
 import Foundation
 import OrderedCollections
 
+// MARK: - CollectionStore
+
 public struct CollectionStore: Hashable, Identifiable {
-    public var id: Title { self.title }
+    public var id: Title { title }
     public var title: Title = .custom("")
     public var lastUpdated = Date()
     public var animes = OrderedSet<AnimeStore>()
@@ -24,15 +26,17 @@ public struct CollectionStore: Hashable, Identifiable {
         self.animes = animes
     }
 
-    public init() { }
+    public init() {}
 }
 
-extension CollectionStore {
-    public enum Title: Hashable, Codable, CaseIterable {
+// MARK: CollectionStore.Title
+
+public extension CollectionStore {
+    enum Title: Hashable, Codable, CaseIterable {
         public static var allCases: [CollectionStore.Title] {
             [.planning, .watching, .completed]
         }
-        
+
         case planning
         case watching
         case completed
@@ -46,7 +50,7 @@ extension CollectionStore {
                 return "Watching"
             case .completed:
                 return "Completed"
-            case .custom(let name):
+            case let .custom(name):
                 return name
             }
         }

@@ -2,7 +2,7 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/16/22.
-//  
+//
 //  Modified version of https://github.com/prisma-ai/Sworm
 
 import CoreData
@@ -14,7 +14,7 @@ public extension NSPersistentContainer {
     ) async throws -> T {
         try Task.checkCancellation()
 
-        let context = self.newBackgroundContext()
+        let context = newBackgroundContext()
 
         if #available(iOS 15.0, macOS 12.0, *) {
             return try await context.perform(schedule: .immediate) {
@@ -33,41 +33,41 @@ public extension NSPersistentContainer {
 public extension NSManagedObjectContext {
     @discardableResult
     func insert(entity name: String) -> NSManagedObject? {
-        self.persistentStoreCoordinator
+        persistentStoreCoordinator
             .flatMap { $0.managedObjectModel.entitiesByName[name] }
             .flatMap { .init(entity: $0, insertInto: self) }
     }
 
     @discardableResult
-    func fetch<T: ManagedObjectConvertible>(
-        _ request: Request<T>
+    func fetch(
+        _ request: Request<some ManagedObjectConvertible>
     ) throws -> [NSManagedObject] {
         let fetchRequest: NSFetchRequest<NSManagedObject> = request.makeFetchRequest()
-        return try self.fetch(fetchRequest)
+        return try fetch(fetchRequest)
     }
 
     @_optimize(none)
     @discardableResult
-    func fetchOne<T: ManagedObjectConvertible> (
-        _ request: Request<T>
+    func fetchOne(
+        _ request: Request<some ManagedObjectConvertible>
     ) throws -> NSManagedObject? {
-        try self.fetch(request.limit(1)).first
+        try fetch(request.limit(1)).first
     }
 
-    func delete<T: ManagedObjectConvertible>(
-        _ request: Request<T>
+    func delete(
+        _ request: Request<some ManagedObjectConvertible>
     ) throws {
-        let items = try self.fetch(request)
+        let items = try fetch(request)
 
         for item in items {
-            self.delete(item)
+            delete(item)
         }
     }
 }
 
 extension NSManagedObjectContext {
     func execute<T>(
-    _ action: @Sendable @escaping (NSManagedObjectContext) throws -> T
+        _ action: @Sendable @escaping (NSManagedObjectContext) throws -> T
     ) throws -> T {
         defer {
             self.reset()
@@ -76,7 +76,7 @@ extension NSManagedObjectContext {
         let value = try action(self)
 
         if hasChanges {
-            try self.save()
+            try save()
         }
 
         return value
@@ -85,11 +85,11 @@ extension NSManagedObjectContext {
 
 public extension NSManagedObject {
     func decode<T: ManagedObjectConvertible>() throws -> T {
-        try T.init(from: self)
+        try T(from: self)
     }
 
-    func update<T: ManagedObjectConvertible>(
-        _ item: T
+    func update(
+        _ item: some ManagedObjectConvertible
     ) throws {
         try item.encodeAttributes(to: self)
     }
@@ -116,7 +116,7 @@ extension NSManagedObject {
             willAccessValue(forKey: forKey)
             return primitiveValue(forKey: forKey)
         }
-        set (newValue) {
+        set(newValue) {
             defer { didChangeValue(forKey: forKey) }
             willChangeValue(forKey: forKey)
             setPrimitiveValue(newValue, forKey: forKey)

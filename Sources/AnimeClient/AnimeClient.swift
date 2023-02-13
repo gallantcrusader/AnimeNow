@@ -9,6 +9,8 @@ import ComposableArchitecture
 import Foundation
 import SharedModels
 
+// MARK: - AnimeClient
+
 public struct AnimeClient {
     public let getTopTrendingAnime: @Sendable () async throws -> [Anime]
     public let getTopUpcomingAnime: @Sendable () async throws -> [Anime]
@@ -25,12 +27,16 @@ public struct AnimeClient {
     public let getAnimeProviders: @Sendable () async throws -> [ProviderInfo]
 }
 
+// MARK: AnimeClient.Error
+
 extension AnimeClient {
     enum Error: Swift.Error {
         case providerNotAvailable
         case providerInvalidId
     }
 }
+
+// MARK: DependencyKey
 
 extension AnimeClient: DependencyKey {}
 

@@ -8,27 +8,33 @@
 import Foundation
 import SociableWeaver
 
+// MARK: - GraphQLArgument
+
 public protocol GraphQLArgument {
     func getValue() -> ArgumentValueRepresentable
     var description: String { get }
 }
+
+// MARK: - GraphQLQueryObject
 
 public protocol GraphQLQueryObject: Decodable {
     associatedtype Argument
     static func createQueryObject(_ name: String, _ arguments: [Argument]) -> Object
 }
 
-extension GraphQLQueryObject {
-    public static func createQueryObject(_ name: CodingKey, _ arguments: [Argument] = []) -> Object {
-        self.createQueryObject(name.stringValue, arguments)
+public extension GraphQLQueryObject {
+    static func createQueryObject(_ name: CodingKey, _ arguments: [Argument] = []) -> Object {
+        createQueryObject(name.stringValue, arguments)
     }
 }
 
-extension GraphQLQueryObject where Argument == Void {
-    public static func createQueryObject(_ name: String, _ arguments: [Void] = []) -> Object {
-        self.createQueryObject(name, arguments)
+public extension GraphQLQueryObject where Argument == Void {
+    static func createQueryObject(_ name: String, _ arguments: [Void] = []) -> Object {
+        createQueryObject(name, arguments)
     }
 }
+
+// MARK: - GraphQLQuery
 
 public protocol GraphQLQuery: Decodable {
     associatedtype QueryOptions
@@ -36,16 +42,18 @@ public protocol GraphQLQuery: Decodable {
     static func createQuery(_ options: QueryOptions) -> Weave
 }
 
+// MARK: - GraphQL
+
 public enum GraphQL {
     public struct Paylod: Codable, Equatable {
         let query: String
-        var operationName: String? = nil
+        var operationName: String?
         var variables: [String: String] = [:]
 
         public init(
             query: String,
             operationName: String? = nil,
-            variables: [String : String] = [:]
+            variables: [String: String] = [:]
         ) {
             self.query = query
             self.operationName = operationName
@@ -63,37 +71,39 @@ public enum GraphQL {
     }
 }
 
+// MARK: - DefaultArguments
+
 public protocol DefaultArguments {
     static var defaultArgs: [Self] { get }
 }
 
-extension Collection where Element: DefaultArguments {
-    public static var defaultArgs: [Element] { Element.defaultArgs }
+public extension Collection where Element: DefaultArguments {
+    static var defaultArgs: [Element] { Element.defaultArgs }
 }
 
-extension Weave {
-    public func format(removeOperation: Bool = true) -> String {
-        let weave = String("\(self.description)")
+public extension Weave {
+    func format(removeOperation: Bool = true) -> String {
+        let weave = String("\(description)")
 
-        if (removeOperation) {
+        if removeOperation {
             let output = String(weave.split(separator: "{", maxSplits: 1, omittingEmptySubsequences: true).last ?? "")
-            return  "{\(output)"
+            return "{\(output)"
         } else {
             return "{ \(weave) }"
         }
     }
 }
 
-extension Object {
-    public func argument<V: GraphQLArgument>(_ argument: V) -> Self {
+public extension Object {
+    func argument(_ argument: some GraphQLArgument) -> Self {
         let argumentKey = argument.description
         let value = argument.getValue()
         return self.argument(key: argumentKey, value: value)
     }
 }
 
-extension Field {
-    public func argument<V: GraphQLArgument>(_ argument: V) -> Self {
+public extension Field {
+    func argument(_ argument: some GraphQLArgument) -> Self {
         let argumentKey = argument.description
         let value = argument.getValue()
         return self.argument(key: argumentKey, value: value)

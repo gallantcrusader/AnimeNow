@@ -1,7 +1,7 @@
 import Combine
 
-extension Publisher where Failure == Never {
-    public var stream: AsyncStream<Output> {
+public extension Publisher where Failure == Never {
+    var stream: AsyncStream<Output> {
         .init { continuation in
             let cancellable = self
                 .eraseToAnyPublisher()
@@ -9,7 +9,7 @@ extension Publisher where Failure == Never {
                     switch completion {
                     case .finished:
                         continuation.finish()
-                    case .failure(let never):
+                    case let .failure(never):
                         continuation.yield(with: .failure(never))
                     }
                 } receiveValue: { output in
@@ -23,8 +23,8 @@ extension Publisher where Failure == Never {
     }
 }
 
-extension Publisher where Failure == Error {
-    public var throwingStream: AsyncThrowingStream<Output, Failure> {
+public extension Publisher where Failure == Error {
+    var throwingStream: AsyncThrowingStream<Output, Failure> {
         .init { continuation in
             let cancellable = self
                 .eraseToAnyPublisher()
@@ -32,7 +32,7 @@ extension Publisher where Failure == Error {
                     switch completion {
                     case .finished:
                         continuation.finish()
-                    case .failure(let error):
+                    case let .failure(error):
                         continuation.finish(throwing: error)
                     }
                 } receiveValue: { output in

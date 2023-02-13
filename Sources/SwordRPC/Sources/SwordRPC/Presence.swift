@@ -7,19 +7,21 @@
 
 import Foundation
 
-extension SwordRPC {
+public extension SwordRPC {
     /// Sets the presence for this RPC connection.
     ///
     /// If the presence is set before RPC is connected, it is discarded.
     ///
     /// - Parameter presence: The presence to display.
-    public func setPresence(_ presence: RichPresence?) {
+    func setPresence(_ presence: RichPresence?) {
         Task.detached { [weak self] in
-            guard let `self` = self else { return }
+            guard let self else {
+                return
+            }
 
-            var args = [String : RequestArg]()
+            var args = [String: RequestArg]()
             args["pid"] = .int(.init(self.pid))
-            args["activity"] = presence != nil ? .activity(presence!) : nil
+            args["activity"] = presence.flatMap { presence in .activity(presence) }
 
             try? await self.discordSocket?.write(
                 Command(

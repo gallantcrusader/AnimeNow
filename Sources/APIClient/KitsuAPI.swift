@@ -5,23 +5,25 @@
 //  Created by ErrorErrorError on 9/29/22.
 //
 
-import Utilities
 import Foundation
 import SharedModels
 import SociableWeaver
+import Utilities
 
-// MARK: - Kitsu API Endpoints
+// MARK: - KitsuAPI
 
 public final class KitsuAPI: APIBase {
     public static let shared: KitsuAPI = .init()
-    private init() { }
 
+    // swiftlint:disable force_unwrapping
     public let base = URL(string: "https://kitsu.io/api")!
+
+    private init() {}
 }
 
 // MARK: - Kitsu Queries
 
-//extension KitsuAPI {
+// extension KitsuAPI {
 //    struct GlobalTrending: GraphQLQuery {
 //        let globalTrending: GraphQL.NodeList<Anime, PageInfo>
 //
@@ -192,7 +194,7 @@ public final class KitsuAPI: APIBase {
 //            }
 //        }
 //    }
-//}
+// }
 
 // MARK: - Kitsu GraphQL Models
 
@@ -203,6 +205,7 @@ extension KitsuAPI {
         let hasPreviousPage: Bool
         let startCursor: String?
 
+        // swiftlint:disable prefer_self_in_static_references
         static func createQueryObject(
             _ name: CodingKey
         ) -> Object {
@@ -347,7 +350,7 @@ extension KitsuAPI {
     }
 
     struct MappingConnection: Decodable {
-        let nodes: [Mapping]  // Stub
+        let nodes: [Mapping] // Stub
 
         static func createQueryObject(
             _ name: CodingKey
@@ -397,7 +400,6 @@ extension KitsuAPI {
     }
 
     struct Anime: Decodable {
-
         // Media
 
         let id: String
@@ -492,27 +494,27 @@ extension KitsuAPI {
 
 extension KitsuAPI {
     static func sortBasedOnAvgRank(animes: [KitsuAPI.Anime]) -> [KitsuAPI.Anime] {
-        animes.sorted(by: { lhs, rhs in
+        animes.sorted { lhs, rhs in
             if let lhsRank = lhs.averageRatingRank, let rhsRank = rhs.averageRatingRank {
                 return lhsRank < rhsRank
-            } else if lhs.averageRatingRank != nil && rhs.averageRatingRank == nil {
+            } else if lhs.averageRatingRank != nil, rhs.averageRatingRank == nil {
                 return true
             } else {
                 return false
             }
-        })
+        }
     }
 
     static func sortBasedOnUserRank(animes: [KitsuAPI.Anime]) -> [KitsuAPI.Anime] {
-        animes.sorted(by: { lhs, rhs in
+        animes.sorted { lhs, rhs in
             if let lhsRank = lhs.userCountRank, let rhsRank = rhs.userCountRank {
                 return lhsRank < rhsRank
-            } else if lhs.userCountRank != nil && rhs.userCountRank == nil {
+            } else if lhs.userCountRank != nil, rhs.userCountRank == nil {
                 return true
             } else {
                 return false
             }
-        })
+        }
     }
 
     static func convert(from animes: [KitsuAPI.Anime]) -> [SharedModels.Anime] {
@@ -547,12 +549,13 @@ extension KitsuAPI {
             return SharedModels.Anime(
                 id: 0,
                 malId: 0,
-                title: anime.titles.translated ?? anime.titles.romanized ?? anime.titles.canonical ?? anime.titles.original ?? "Untitled",
+                title: anime.titles.translated ?? anime.titles.romanized ?? anime.titles.canonical ?? anime.titles
+                    .original ?? "Untitled",
                 description: anime.description.en ?? "Anime description is not available.",
                 posterImage: .init(posterImageSizes),
                 coverImage: .init(coverImageSizes),
-                categories: anime.categories.nodes.compactMap { $0.title.en },
-                status: .init(rawValue: anime.status.rawValue.lowercased())!,
+                categories: anime.categories.nodes.compactMap(\.title.en),
+                status: .init(rawValue: anime.status.rawValue.lowercased()) ?? .upcoming,
                 format: anime.subtype == .MOVIE ? .movie : .tv,
                 releaseYear: Int(dateFormatter.date(from: anime.startDate ?? "")?.getYear() ?? ""),
                 avgRating: nil
@@ -561,7 +564,9 @@ extension KitsuAPI {
     }
 
     static func convert(from imageView: KitsuAPI.ImageView) -> SharedModels.ImageSize? {
-        guard let url = URL(string: imageView.url) else { return nil }
+        guard let url = URL(string: imageView.url) else {
+            return nil
+        }
 
         let name = imageView.name
 

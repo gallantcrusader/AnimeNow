@@ -6,13 +6,15 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import Logger
-import Utilities
-import Foundation
 import AnimeClient
+import ComposableArchitecture
+import Foundation
+import Logger
 import SharedModels
 import UserDefaultsClient
-import ComposableArchitecture
+import Utilities
+
+// MARK: - SearchReducer
 
 public struct SearchReducer: ReducerProtocol {
     public struct State: Equatable {
@@ -40,11 +42,14 @@ public struct SearchReducer: ReducerProtocol {
         case onAnimeTapped(Anime)
     }
 
-    @Dependency(\.mainQueue) var mainQueue
-    @Dependency(\.animeClient) var animeClient
-    @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.mainQueue)
+    var mainQueue
+    @Dependency(\.animeClient)
+    var animeClient
+    @Dependency(\.userDefaultsClient)
+    var userDefaultsClient
 
-    public init() { }
+    public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
@@ -61,10 +66,10 @@ extension SearchReducer {
                 await send(.searchHistory(userDefaultsClient.get(.searchedItems)))
             }
 
-        case .searchHistory(let items):
+        case let .searchHistory(items):
             state.searched = items
 
-        case .searchQueryChanged(let query):
+        case let .searchQueryChanged(query):
             state.query = query
 
             guard !query.isEmpty else {
@@ -80,7 +85,7 @@ extension SearchReducer {
                 }
             }
 
-        case .searchResult(let loadable):
+        case let .searchResult(loadable):
             state.loadable = loadable
 
         case .clearSearchHistory:

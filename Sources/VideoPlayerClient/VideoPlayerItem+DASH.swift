@@ -1,14 +1,16 @@
 //
 //  VideoPlayerItem+DASH.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/17/23.
-//  
+//
 //
 
-import XMLCoder
-import Foundation
 import AVFoundation
+import Foundation
+import XMLCoder
+
+// MARK: - MPD
 
 private struct MPD: Codable {
     // swiftlint:disable identifier_name
@@ -16,15 +18,18 @@ private struct MPD: Codable {
     var mediaPresentationDuration: String
 
     func hlsAttributes(audio: Bool) -> [String] {
+        // swiftformat:disable redundantSelf
         self.Period.AdaptationSet
-            .flatMap {
-                $0.Representation
-                    .filter({ $0.mimeType.contains(audio ? "audio" : "video") })
+            .flatMap { adaption in
+                adaption.Representation
+                    .filter { $0.mimeType.contains(audio ? "audio" : "video") }
                     .filter { Int($0.bandwidth) ?? .zero < 14_000_000 }
-                    .map { $0.hlsAttribute }
+                    .map(\.hlsAttribute)
             }
     }
 }
+
+// MARK: MPD.Period
 
 extension MPD {
     struct Period: Codable {
@@ -33,7 +38,9 @@ extension MPD {
     }
 }
 
-fileprivate extension MPD.Period {
+// MARK: - MPD.Period.AdaptationSet
+
+private extension MPD.Period {
     struct AdaptationSet: Codable {
         let id: String?
         let group: String
@@ -44,7 +51,9 @@ fileprivate extension MPD.Period {
     }
 }
 
-fileprivate extension MPD.Period.AdaptationSet {
+// MARK: - MPD.Period.AdaptationSet.Representation
+
+private extension MPD.Period.AdaptationSet {
     struct Representation: Codable {
         // swiftlint:disable identifier_name
         let BaseURL: String
@@ -59,7 +68,6 @@ fileprivate extension MPD.Period.AdaptationSet {
         var segmentBase: SegmentBase?
 
         var hlsAttribute: String {
-
             if mimeType.contains("audio") {
                 return [
                     "#EXT-X-MEDIA:TYPE=AUDIO",
@@ -69,24 +77,30 @@ fileprivate extension MPD.Period.AdaptationSet {
                     "AUTOSELECT=YES",
                     "URI=\"\(id).m3u8#\(BaseURL)\""
                 ]
-                    .joined(separator: ",")
+                .joined(separator: ",")
             } else {
+                var resolutionString = ""
+                if let width, let height {
+                    resolutionString = "RESOLUTION=\(width)x\(height)"
+                }
                 return [
                     "#EXT-X-STREAM-INF:PROGRAM-ID=1",
                     "BANDWIDTH=\(bandwidth)",
-                    self.width != nil && self.height != nil ? "RESOLUTION=\(width!)x\(height!)" : "",
+                    resolutionString,
                     "CODECS=\"\(codecs)\"",
                     "AUDIO=\"audio\""
                 ]
-                    .filter({ !$0.isEmpty })
-                    .joined(separator: ",")
-                    .appending("\n\(id).m3u8#\(mimeType)#\(BaseURL)")
+                .filter { !$0.isEmpty }
+                .joined(separator: ",")
+                .appending("\n\(id).m3u8#\(mimeType)#\(BaseURL)")
             }
         }
     }
 }
 
-fileprivate extension MPD.Period.AdaptationSet.Representation {
+// MARK: - MPD.Period.AdaptationSet.Representation.SegmentBase
+
+private extension MPD.Period.AdaptationSet.Representation {
     struct SegmentBase: Codable {
         let indexRangeExact: String
         let indexRange: String
@@ -100,14 +114,16 @@ fileprivate extension MPD.Period.AdaptationSet.Representation {
 
 private extension String {
     var toMPDDuration: TimeInterval? {
-        guard var timeValue = self.components(separatedBy: "PT").last,
-              !timeValue.isEmpty else { return nil }
+        guard var timeValue = components(separatedBy: "PT").last,
+              !timeValue.isEmpty else {
+            return nil
+        }
 
         var duration: TimeInterval = .zero
         if timeValue.contains("H"),
            let value = timeValue.components(separatedBy: "H").first,
            let integer = Int(value) {
-            duration += TimeInterval(integer * 3600)
+            duration += TimeInterval(integer * 3_600)
             timeValue = timeValue.components(separatedBy: "H").last ?? ""
         }
 
@@ -138,14 +154,14 @@ extension VideoPlayerItem {
         if url.absoluteString.localizedCaseInsensitiveContains("m3u8") {
             makeMediaM3U8(url, completion)
         } else if url.absoluteString.contains(Self.dashCustomPlaylistScheme) {
-            URLSession.shared.dataTask(with: url.recoveryScheme) { [weak self] (data, response, error) in
+            URLSession.shared.dataTask(with: url.recoveryScheme) { [weak self] data, response, error in
                 if let error {
                     completion(.failure(error))
                     return
                 }
 
                 guard (response as? HTTPURLResponse)?.statusCode != nil,
-                      let data = data else {
+                      let data else {
                     completion(.failure(ResourceLoaderError.emptyData))
                     return
                 }
@@ -182,15 +198,14 @@ extension VideoPlayerItem {
 
         let id = url.lastPathComponent.components(separatedBy: ".").first
 
-        
         guard let representation = mpd.Period.AdaptationSet
-              .flatMap(\.Representation)
-              .first(where: { $0.id == id || (id == nil) }) else {
+            .flatMap(\.Representation)
+            .first(where: { $0.id == id || (id == nil) }) else {
             completion(.failure(ResourceLoaderError.failedToCreateM3U8))
             return
         }
 
-        var lines: [String] = ["#EXTM3U"]
+        var lines = ["#EXTM3U"]
         let mediaDuration = mpd.mediaPresentationDuration.toMPDDuration ?? 0
 
         lines.append(contentsOf: [
@@ -200,7 +215,10 @@ extension VideoPlayerItem {
             "#EXT-X-PLAYLIST-TYPE:VOD"
         ])
 
-        lines.append("#EXTINF:\(String(format: "%.3f", mediaDuration)),\(representation.mimeType.contains("video") ? "video" : "audio"),")
+        lines
+            .append(
+                "#EXTINF:\(String(format: "%.3f", mediaDuration)),\(representation.mimeType.contains("video") ? "video" : "audio"),"
+            )
         lines.append(representation.BaseURL)
         lines.append("#EXT-X-ENDLIST")
 
@@ -212,11 +230,12 @@ extension VideoPlayerItem {
         }
     }
 
+    // swiftlint:disable inclusive_language
     private func makeMasterM3U8(
         _ mpd: MPD,
         _ completion: @escaping (Result<Data, Error>) -> Void
     ) {
-        var lines: [String] = ["#EXTM3U"]
+        var lines = ["#EXTM3U"]
         lines.append(contentsOf: mpd.hlsAttributes(audio: true))
         lines.append(contentsOf: mpd.hlsAttributes(audio: false))
 

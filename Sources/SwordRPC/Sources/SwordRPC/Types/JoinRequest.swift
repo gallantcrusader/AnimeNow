@@ -7,7 +7,8 @@
 //
 
 /// Used to represent a partial user given by Discord.
-/// For example: https://discord.com/developers/docs/topics/rpc#activityjoinrequest-example-activity-join-request-dispatch-payload
+/// For example:
+/// https://discord.com/developers/docs/topics/rpc#activityjoinrequest-example-activity-join-request-dispatch-payload
 public struct PartialUser: Decodable {
     let avatar: String
     let discriminator: String

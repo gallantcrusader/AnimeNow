@@ -1,54 +1,50 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 12/30/22.
-//  
+//
 //
 
 #if os(macOS)
 
-import SwordRPC
 import APIClient
-import Foundation
 import ComposableArchitecture
+import Foundation
+import SwordRPC
 
-extension DiscordClient {
-    public static let liveValue: Self = {
+public extension DiscordClient {
+    static let liveValue: Self = {
         let sword = SwordRPC(
             appId: AnimeNowAPI.discordClientKey,
             maxRetryCount: 0
         )
 
-        return .init(
-            status: {
-                .init { continuation in
-                    let task = Task.detached {
-                        while true {
-                            if sword.isRunning {
-                                if sword.isConnected {
-                                    continuation.yield(.connected)
-                                } else {
-                                    continuation.yield(.failed)
-                                }
+        return .init(isActive: sword.isRunning, isConnected: sword.isConnected) {
+            .init { continuation in
+                let task = Task.detached {
+                    while true {
+                        if sword.isRunning {
+                            if sword.isConnected {
+                                continuation.yield(.connected)
                             } else {
-                                continuation.yield(.offline)
+                                continuation.yield(.failed)
                             }
-                            try? await Task.sleep(nanoseconds: 1000000000 * 5)
+                        } else {
+                            continuation.yield(.offline)
                         }
-                    }
-
-                    continuation.onTermination = { _ in
-                        task.cancel()
+                        try? await Task.sleep(nanoseconds: 1_000_000_000 * 5)
                     }
                 }
-            },
-            isActive: sword.isRunning,
-            isConnected: sword.isConnected
-        ) { active in
-            if active && !sword.isRunning {
+
+                continuation.onTermination = { _ in
+                    task.cancel()
+                }
+            }
+        } setActive: { active in
+            if active, !sword.isRunning {
                 sword.start()
-            } else if !active && sword.isRunning {
+            } else if !active, sword.isRunning {
                 sword.stop()
             }
         } setActivity: { activity in
@@ -56,7 +52,7 @@ extension DiscordClient {
             case .none:
                 sword.setPresence(nil)
 
-            case .some(.watching(let info)):
+            case let .some(.watching(info)):
                 var presence = RichPresence()
                 presence.state = info.name
                 presence.details = info.episode

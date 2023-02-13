@@ -4,11 +4,11 @@
 //  Created by ErrorErrorError on 11/20/22.
 //
 
+import ComposableArchitecture
+import DownloadOptionsFeature
+import EditCollectionFeature
 import Foundation
 import NewCollectionFeature
-import EditCollectionFeature
-import DownloadOptionsFeature
-import ComposableArchitecture
 
 public struct ModalOverlayReducer: ReducerProtocol {
     public enum State: Equatable {
@@ -23,8 +23,8 @@ public struct ModalOverlayReducer: ReducerProtocol {
         case editCollection(EditCollectionReducer.Action)
         case onClose
     }
-    
-    public init() { }
+
+    public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
@@ -39,7 +39,7 @@ public struct ModalOverlayReducer: ReducerProtocol {
             }
     }
 
-    func core(_ state: inout State, _ action: Action) -> EffectTask<Action> {
-        return .none
+    func core(_: inout State, _: Action) -> EffectTask<Action> {
+        .none
     }
 }

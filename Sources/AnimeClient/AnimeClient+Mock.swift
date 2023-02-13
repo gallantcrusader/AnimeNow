@@ -8,8 +8,8 @@
 import ComposableArchitecture
 import SharedModels
 
-extension AnimeClient {
-    public static let previewValue = Self {
+public extension AnimeClient {
+    static let previewValue = Self {
         []
     } getTopUpcomingAnime: {
         []
@@ -32,7 +32,7 @@ extension AnimeClient {
     } getSources: { _, _ in
         .init([])
     } getSkipTimes: { _, _ in
-            .init()
+        .init()
     } getAnimeProviders: {
         []
     }

@@ -2,16 +2,18 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/24/22.
-//  
+//
 //
 
 import SwiftUI
 import Utilities
 
+// MARK: - SettingsListView
+
 public struct SettingsListView<I: Identifiable & CustomStringConvertible>: View {
-    var items: [I]? = nil
-    var selected: I.ID? = nil
-    var selectedItem: ((I.ID) -> Void)? = nil
+    var items: [I]?
+    var selected: I.ID?
+    var selectedItem: ((I.ID) -> Void)?
 
     public init(
         items: [I]? = nil,
@@ -24,7 +26,7 @@ public struct SettingsListView<I: Identifiable & CustomStringConvertible>: View 
     }
 
     public var body: some View {
-        if let items = items {
+        if let items {
             VStack {
                 ForEach(items, id: \.id) { item in
                     Text(item.description)
@@ -41,7 +43,7 @@ public struct SettingsListView<I: Identifiable & CustomStringConvertible>: View 
             }
             .transition(
                 .move(edge: .trailing)
-                .combined(with: .opacity)
+                    .combined(with: .opacity)
             )
             .frame(
                 maxWidth: .infinity,
@@ -51,13 +53,15 @@ public struct SettingsListView<I: Identifiable & CustomStringConvertible>: View 
     }
 }
 
+// MARK: - SettingsListView_Previews
+
 struct SettingsListView_Previews: PreviewProvider {
     private enum Setting: String, Identifiable, CustomStringConvertible {
         case about
         case discord
 
-        var id: String { self.rawValue }
-        var description: String { self.rawValue }
+        var id: String { rawValue }
+        var description: String { rawValue }
     }
 
     static var previews: some View {

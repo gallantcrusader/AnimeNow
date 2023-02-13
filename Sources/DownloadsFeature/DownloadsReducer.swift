@@ -6,10 +6,12 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import SharedModels
+import ComposableArchitecture
 import DatabaseClient
 import DownloaderClient
-import ComposableArchitecture
+import SharedModels
+
+// MARK: - DownloadsReducer
 
 public struct DownloadsReducer: ReducerProtocol {
     public struct State: Equatable {
@@ -30,10 +32,12 @@ public struct DownloadsReducer: ReducerProtocol {
         case onAnimes([DownloaderClient.AnimeStorage])
     }
 
-    @Dependency(\.downloaderClient) var downloaderClient
-    @Dependency(\.databaseClient) var databaseClient
+    @Dependency(\.downloaderClient)
+    var downloaderClient
+    @Dependency(\.databaseClient)
+    var databaseClient
 
-    public init() { }
+    public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
         Reduce(self.core)
@@ -52,15 +56,15 @@ extension DownloadsReducer {
                 }
             }
 
-        case .onAnimes(let animes):
+        case let .onAnimes(animes):
             state.animes = animes
 
-        case .deleteEpisode(let animeId, let episodeNumber):
+        case let .deleteEpisode(animeId, episodeNumber):
             return .run {
                 await downloaderClient.delete(animeId, episodeNumber)
             }
 
-        case .cancelDownload(let animeId, let episodeNumber):
+        case let .cancelDownload(animeId, episodeNumber):
             return .run {
                 await downloaderClient.cancel(animeId, episodeNumber)
             }

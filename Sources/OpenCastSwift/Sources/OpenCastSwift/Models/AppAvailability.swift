@@ -9,16 +9,18 @@
 import Foundation
 import SwiftyJSON
 
+// MARK: - AppAvailability
+
 public class AppAvailability: NSObject {
-  public var availability = [String: Bool]()
+    public var availability = [String: Bool]()
 }
 
 extension AppAvailability {
-  convenience init(json: JSON) {
-    self.init()
-    
-    if let availability = json[CastJSONPayloadKeys.availability].dictionaryObject as? [String: String] {
-      self.availability = availability.mapValues { $0 == "APP_AVAILABLE" }
+    convenience init(json: JSON) {
+        self.init()
+
+        if let availability = json[CastJSONPayloadKeys.availability].dictionaryObject as? [String: String] {
+            self.availability = availability.mapValues { $0 == "APP_AVAILABLE" }
+        }
     }
-  }
 }

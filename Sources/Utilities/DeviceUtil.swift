@@ -5,8 +5,8 @@
 //  Created by ErrorErrorError on 10/15/22.
 //
 
-import SwiftUI
 import Foundation
+import SwiftUI
 
 public enum DeviceUtil {
     public static var isPad: Bool {
@@ -31,9 +31,12 @@ public enum DeviceUtil {
 
     public static var hasBottomIndicator: Bool {
         #if os(iOS)
-        if let keyWindow = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).flatMap({ $0.windows }).first(where: { $0.isKeyWindow }),
+        if let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap(\.windows)
+            .first(where: { $0.isKeyWindow }),
             keyWindow.safeAreaInsets.bottom > 0 {
-                return true
+            return true
         }
         #endif
         return false

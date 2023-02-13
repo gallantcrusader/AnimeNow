@@ -12,7 +12,7 @@ let package = Package(
         .library(
             name: "SwordRPC",
             targets: ["SwordRPC"]
-        ),
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/swhitty/FlyingFox.git", .upToNextMajor(from: "0.10.0"))
@@ -23,6 +23,6 @@ let package = Package(
             dependencies: [
                 .product(name: "FlyingFox", package: "FlyingFox")
             ]
-        ),
+        )
     ]
 )

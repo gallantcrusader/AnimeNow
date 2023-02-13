@@ -2,7 +2,7 @@
 //  Anime Now! (iOS)
 //
 //  Created by ErrorErrorError on 11/9/22.
-//  
+//
 //
 
 import CoreData
@@ -12,7 +12,7 @@ import SharedModels
 class CollectionStoreModel4ToModel5: NSEntityMigrationPolicy {
     override func createDestinationInstances(
         forSource sInstance: NSManagedObject,
-        in mapping: NSEntityMapping,
+        in _: NSEntityMapping,
         manager: NSMigrationManager
     ) throws {
         if sInstance.entity.name == "CDCollectionStore" {
@@ -30,7 +30,7 @@ class CollectionStoreModel4ToModel5: NSEntityMigrationPolicy {
                 if !userRemovable {
                     if title == "Watchlist" {
                         newCollection.setValue(
-                           try  CollectionStore.Title.planning.toData(), forKey: "title"
+                            try CollectionStore.Title.planning.toData(), forKey: "title"
                         )
                     } else {
                         newCollection.setValue(try CollectionStore.Title.custom(title).toData(), forKey: "title")

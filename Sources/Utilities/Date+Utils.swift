@@ -7,8 +7,8 @@
 
 import Foundation
 
-extension Date {
-    public func getYear() -> String {
+public extension Date {
+    func getYear() -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy"
         return dateFormatter.string(from: self)

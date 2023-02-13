@@ -2,12 +2,14 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/16/22.
-//  
+//
 //  Modified version of https://github.com/prisma-ai/Sworm
 
 import CoreData
 import Foundation
 import OrderedCollections
+
+// MARK: - AttributeError
 
 enum AttributeError: Swift.Error {
     case failedToDecode(for: String, model: String)
@@ -16,8 +18,9 @@ enum AttributeError: Swift.Error {
     case badInput(Any?)
 }
 
-public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
+// MARK: - Attribute
 
+public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
     // MARK: Primitive Values
 
     public init<Value: ConvertableValue>(
@@ -92,8 +95,8 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
 
             // Adding and updating existing elements
             for object in objects {
-                var managed = try managedObjects.compactMap({ $0 as? NSManagedObject })
-                    .first(where: { try Relation(from: $0)[keyPath: Relation.idKeyPath] == object[keyPath: Relation.idKeyPath] })
+                var managed = try managedObjects.compactMap { $0 as? NSManagedObject }
+                    .first { try Relation(from: $0)[keyPath: Relation.idKeyPath] == object[keyPath: Relation.idKeyPath] }
 
                 if managed == nil {
                     managed = try managedObject.managedObjectContext?
@@ -113,14 +116,16 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
             }
 
             // Remove elements not in array
-            let copiedManagedObjects = (managedObjects.copy() as? NSSet)?.compactMap({ $0 as? NSManagedObject }) ?? .init()
+            let copiedManagedObjects = (managedObjects.copy() as? NSSet)?
+                .compactMap { $0 as? NSManagedObject } ?? .init()
 
             for managed in copiedManagedObjects {
                 guard let wrapped = try? Relation(from: managed) else {
                     continue
                 }
 
-                if !objects.contains(where: { wrapped[keyPath: Relation.idKeyPath] == $0[keyPath: Relation.idKeyPath] }) {
+                if !objects
+                    .contains(where: { wrapped[keyPath: Relation.idKeyPath] == $0[keyPath: Relation.idKeyPath] }) {
                     managedObjects.remove(managed)
                 }
             }
@@ -149,11 +154,12 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
 
             // Adding and updating existing elements
             for (index, object) in objects.enumerated() {
-                var managed = try managedObjects.compactMap({ $0 as? NSManagedObject })
-                    .first(where: { try Relation(from: $0)[keyPath: Relation.idKeyPath] == object[keyPath: Relation.idKeyPath] })
+                var managed = try managedObjects.compactMap { $0 as? NSManagedObject }
+                    .first { try Relation(from: $0)[keyPath: Relation.idKeyPath] == object[keyPath: Relation.idKeyPath] }
 
                 if managed == nil {
-                    managed = try managedObject.managedObjectContext?.fetchOne(Relation.all.where(Relation.idKeyPath == object[keyPath: Relation.idKeyPath]))
+                    managed = try managedObject.managedObjectContext?
+                        .fetchOne(Relation.all.where(Relation.idKeyPath == object[keyPath: Relation.idKeyPath]))
                 }
 
                 if managed == nil {
@@ -174,14 +180,16 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
             }
 
             // Remove elements not in array
-            let copiedManagedObjects = (managedObjects.copy() as? NSSet)?.compactMap({ $0 as? NSManagedObject }) ?? .init()
+            let copiedManagedObjects = (managedObjects.copy() as? NSOrderedSet)?
+                .compactMap { $0 as? NSManagedObject } ?? .init()
 
             for managed in copiedManagedObjects {
                 guard let wrapped = try? Relation(from: managed) else {
                     continue
                 }
 
-                if !objects.contains(where: { wrapped[keyPath: Relation.idKeyPath] == $0[keyPath: Relation.idKeyPath] }) {
+                if !objects
+                    .contains(where: { wrapped[keyPath: Relation.idKeyPath] == $0[keyPath: Relation.idKeyPath] }) {
                     managedObjects.remove(managed)
                 }
             }
@@ -191,7 +199,10 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
                 throw AttributeError.failedToDecode(for: name, model: PlainObject.entityName)
             }
 
-            plainObject[keyPath: keyPath] = try OrderedSet(objects.compactMap({ $0 as? NSManagedObject }).compactMap { try Relation(from: $0 ) })
+            plainObject[keyPath: keyPath] = try OrderedSet(
+                objects.compactMap { $0 as? NSManagedObject }
+                    .compactMap { try Relation(from: $0) }
+            )
         }
         self.keyPath = keyPath
         self.isRelation = true
@@ -202,38 +213,42 @@ public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
-        self.name.hash(into: &hasher)
+        name.hash(into: &hasher)
     }
 
     let name: String
     let encode: (PlainObject, NSManagedObject) throws -> Void
     let decode: (inout PlainObject, NSManagedObject) throws -> Void
     let keyPath: PartialKeyPath<PlainObject>
-    private(set) var isRelation: Bool = false
+    private(set) var isRelation = false
 }
 
 extension ManagedObjectConvertible {
-    static func attribute<Value>(_ keyPath: KeyPath<Self, Value>) -> Attribute<Self> {
-        self.attributes.first(where: { $0.keyPath == keyPath }).unsafelyUnwrapped
+    static func attribute(_ keyPath: KeyPath<Self, some Any>) -> Attribute<Self> {
+        attributes.first { $0.keyPath == keyPath }.unsafelyUnwrapped
     }
 
     @discardableResult
     func encodeAttributes(to managedObject: NSManagedObject) throws -> NSManagedObject {
-        try Self.attributes.forEach {
-            try $0.encode(self, managedObject)
+        try Self.attributes.forEach { attribute in
+            try attribute.encode(self, managedObject)
         }
         return managedObject
     }
 
     public init(from managedObject: NSManagedObject) throws {
         self.init()
-        try Self.attributes.forEach {
-            try $0.decode(&self, managedObject)
+        try Self.attributes.forEach { attribute in
+            try attribute.decode(&self, managedObject)
         }
     }
 }
 
+// MARK: - PrimitiveType
+
 public protocol PrimitiveType {}
+
+// MARK: - ConvertableValue
 
 public protocol ConvertableValue {
     associatedtype ValueType: PrimitiveType
@@ -257,15 +272,15 @@ extension ConvertableValue {
 
 extension Optional where Wrapped: ConvertableValue {
     static func decode(_ anyValue: Any?) throws -> Wrapped? {
-        try anyValue.flatMap {
-            try Wrapped.decode($0)
+        try anyValue.flatMap { value in
+            try Wrapped.decode(value)
         }
     }
 }
 
 public extension RawRepresentable where RawValue: ConvertableValue {
     func encode() -> RawValue.ValueType {
-        self.rawValue.encode()
+        rawValue.encode()
     }
 
     static func decode(value: RawValue.ValueType) throws -> Self {
@@ -277,18 +292,54 @@ public extension RawRepresentable where RawValue: ConvertableValue {
     }
 }
 
+// MARK: - Int + PrimitiveType, ConvertableValue
+
 extension Int: PrimitiveType, ConvertableValue {}
+
+// MARK: - Int16 + PrimitiveType, ConvertableValue
+
 extension Int16: PrimitiveType, ConvertableValue {}
+
+// MARK: - Int32 + PrimitiveType, ConvertableValue
+
 extension Int32: PrimitiveType, ConvertableValue {}
+
+// MARK: - Int64 + PrimitiveType, ConvertableValue
+
 extension Int64: PrimitiveType, ConvertableValue {}
 
+// MARK: - Float + PrimitiveType, ConvertableValue
+
 extension Float: PrimitiveType, ConvertableValue {}
+
+// MARK: - Double + PrimitiveType, ConvertableValue
+
 extension Double: PrimitiveType, ConvertableValue {}
+
+// MARK: - Decimal + PrimitiveType, ConvertableValue
+
 extension Decimal: PrimitiveType, ConvertableValue {}
 
+// MARK: - Bool + PrimitiveType, ConvertableValue
+
 extension Bool: PrimitiveType, ConvertableValue {}
+
+// MARK: - Date + PrimitiveType, ConvertableValue
+
 extension Date: PrimitiveType, ConvertableValue {}
+
+// MARK: - String + PrimitiveType, ConvertableValue
+
 extension String: PrimitiveType, ConvertableValue {}
+
+// MARK: - Data + PrimitiveType, ConvertableValue
+
 extension Data: PrimitiveType, ConvertableValue {}
+
+// MARK: - UUID + PrimitiveType, ConvertableValue
+
 extension UUID: PrimitiveType, ConvertableValue {}
+
+// MARK: - URL + PrimitiveType, ConvertableValue
+
 extension URL: PrimitiveType, ConvertableValue {}

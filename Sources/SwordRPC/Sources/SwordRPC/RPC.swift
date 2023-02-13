@@ -6,8 +6,8 @@
 //  Copyright © 2017 Alejandro Alonso. All rights reserved.
 //
 
-import Foundation
 import FlyingSocks
+import Foundation
 
 extension SwordRPC {
     func connect() async {
@@ -114,10 +114,14 @@ extension SwordRPC {
     }
 }
 
+// MARK: - DiscordResponse
+
 struct DiscordResponse {
     let opCode: OpCode
     let payload: Data
 }
+
+// MARK: - AsyncDiscordResponses
 
 struct AsyncDiscordResponses: AsyncSequence, AsyncIteratorProtocol {
     typealias AsyncIterator = Self
@@ -159,7 +163,7 @@ extension AsyncSocket {
         .init(socket: self)
     }
 
-    func write<O: Encodable>(_ request: O, type: OpCode) async throws {
+    func write(_ request: some Encodable, type: OpCode) async throws {
         var payload = try request.toData()
         var opRaw = type.rawValue
         var buffer = Data()

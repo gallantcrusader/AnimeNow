@@ -11,15 +11,23 @@ import Foundation
 extension CastDevice {
     init(service: NetService, info: [String: String]) {
         var ipAddress: String?
-        
+
         if let address = service.addresses?.first {
             ipAddress = address.withUnsafeBytes { pointer -> String? in
                 var hostName = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                
-                return getnameinfo(pointer, socklen_t(address.count), &hostName, socklen_t(NI_MAXHOST), nil, 0, NI_NUMERICHOST) == 0 ? String.init(cString: hostName) : nil
+
+                return getnameinfo(
+                    pointer,
+                    socklen_t(address.count),
+                    &hostName,
+                    socklen_t(NI_MAXHOST),
+                    nil,
+                    0,
+                    NI_NUMERICHOST
+                ) == 0 ? String(cString: hostName) : nil
             }
         }
-        
+
         self.init(
             id: info["id"] ?? "",
             name: info["fn"] ?? service.name,
@@ -27,109 +35,117 @@ extension CastDevice {
             hostName: service.hostName!,
             ipAddress: ipAddress ?? "",
             port: service.port,
-            capabilitiesMask: info["ca"].flatMap(Int.init) ?? 0 ,
+            capabilitiesMask: info["ca"].flatMap(Int.init) ?? 0,
             status: info["rs"] ?? "",
             iconPath: info["ic"] ?? ""
         )
     }
 }
 
+// MARK: - CastDeviceScanner
+
 public final class CastDeviceScanner: NSObject {
     public weak var delegate: CastDeviceScannerDelegate?
-    
+
     public static let deviceListDidChange = Notification.Name(rawValue: "DeviceScannerDeviceListDidChangeNotification")
-    
+
     private lazy var browser: NetServiceBrowser = configureBrowser()
-    
+
     public var isScanning = false
-    
+
     fileprivate var services = [NetService]()
-    
+
     public fileprivate(set) var devices = [CastDevice]() {
         didSet {
             NotificationCenter.default.post(name: CastDeviceScanner.deviceListDidChange, object: self)
         }
     }
-    
+
     private func configureBrowser() -> NetServiceBrowser {
         let b = NetServiceBrowser()
-        
+
         b.includesPeerToPeer = true
         b.delegate = self
-        
+
         return b
     }
-    
+
     public func startScanning() {
-        guard !isScanning else { return }
-        
+        guard !isScanning else {
+            return
+        }
+
         browser.stop()
         browser.searchForServices(ofType: "_googlecast._tcp", inDomain: "local")
-        
+
         #if DEBUG
         NSLog("Started scanning")
         #endif
     }
-    
+
     public func stopScanning() {
-        guard isScanning else { return }
-        
+        guard isScanning else {
+            return
+        }
+
         browser.stop()
-        
+
         #if DEBUG
         NSLog("Stopped scanning")
         #endif
     }
-    
+
     public func reset() {
         stopScanning()
         devices.removeAll()
     }
-    
+
     deinit {
         stopScanning()
     }
-    
 }
 
+// MARK: NetServiceBrowserDelegate
+
 extension CastDeviceScanner: NetServiceBrowserDelegate {
-    
-    public func netServiceBrowserWillSearch(_ browser: NetServiceBrowser) {
+    public func netServiceBrowserWillSearch(_: NetServiceBrowser) {
         isScanning = true
     }
-    
-    public func netServiceBrowserDidStopSearch(_ browser: NetServiceBrowser) {
+
+    public func netServiceBrowserDidStopSearch(_: NetServiceBrowser) {
         isScanning = false
     }
-    
-    public func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
+
+    public func netServiceBrowser(_: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
         removeService(service)
-        
+
         service.delegate = self
         service.resolve(withTimeout: 30.0)
         services.append(service)
-        
+
         #if DEBUG
         NSLog("Did find service: \(service) more: \(moreComing)")
         #endif
     }
-    
-    public func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
-        guard let service = removeService(service) else { return }
-        
+
+    public func netServiceBrowser(_: NetServiceBrowser, didRemove service: NetService, moreComing _: Bool) {
+        guard let service = removeService(service) else {
+            return
+        }
+
         #if DEBUG
         NSLog("Did remove service: \(service)")
         #endif
-        
+
         guard let deviceId = service.id,
               let index = devices.firstIndex(where: { $0.id == deviceId }) else {
             #if DEBUG
             NSLog("No device")
             #endif
-            
+
             return
         }
-        
+
         #if DEBUG
         NSLog("Removing device: \(devices[index])")
         #endif
@@ -137,23 +153,26 @@ extension CastDeviceScanner: NetServiceBrowserDelegate {
         delegate?.deviceDidGoOffline(device)
     }
 
-    @discardableResult func removeService(_ service: NetService) -> NetService? {
+    @discardableResult
+    func removeService(_ service: NetService) -> NetService? {
         if let index = services.firstIndex(of: service) {
             return services.remove(at: index)
         }
-        
+
         return nil
     }
 
     func addDevice(_ device: CastDevice) {
         if let index = devices.firstIndex(where: { $0.id == device.id }) {
             let existing = devices[index]
-            
-            guard existing.name != device.name ||  existing.hostName != device.hostName else { return }
-            
+
+            guard existing.name != device.name || existing.hostName != device.hostName else {
+                return
+            }
+
             devices.remove(at: index)
             devices.insert(device, at: index)
-            
+
             delegate?.deviceDidChange(device)
         } else {
             devices.append(device)
@@ -162,8 +181,9 @@ extension CastDeviceScanner: NetServiceBrowserDelegate {
     }
 }
 
+// MARK: NetServiceDelegate
+
 extension CastDeviceScanner: NetServiceDelegate {
-    
     public func netServiceDidResolveAddress(_ sender: NetService) {
         guard let infoDict = sender.infoDict else {
             #if DEBUG
@@ -171,12 +191,12 @@ extension CastDeviceScanner: NetServiceDelegate {
             #endif
             return
         }
-        
+
         #if DEBUG
         NSLog("Did resolve service: \(sender)")
         NSLog("\(infoDict)")
         #endif
-        
+
         guard infoDict["id"] != nil else {
             #if DEBUG
             NSLog("No id for device \(sender), skipping")
@@ -186,10 +206,10 @@ extension CastDeviceScanner: NetServiceDelegate {
 
         addDevice(CastDevice(service: sender, info: infoDict))
     }
-    
-    public func netService(_ sender: NetService, didNotResolve errorDict: [String : NSNumber]) {
+
+    public func netService(_ sender: NetService, didNotResolve errorDict: [String: NSNumber]) {
         removeService(sender)
-        
+
         #if DEBUG
         NSLog("!! Failed to resolve service: \(sender) - \(errorDict) !!")
         #endif
@@ -201,17 +221,19 @@ extension NetService {
         guard let data = txtRecordData() else {
             return nil
         }
-        
+
         var dict = [String: String]()
-        NetService.dictionary(fromTXTRecord: data).forEach({ dict[$0.key] = String(data: $0.value, encoding: .utf8)! })
-        
+        NetService.dictionary(fromTXTRecord: data).forEach { dict[$0.key] = String(data: $0.value, encoding: .utf8)! }
+
         return dict
     }
-    
+
     var id: String? {
-        return infoDict?["id"]
+        infoDict?["id"]
     }
 }
+
+// MARK: - CastDeviceScannerDelegate
 
 public protocol CastDeviceScannerDelegate: AnyObject {
     func deviceDidComeOnline(_ device: CastDevice)

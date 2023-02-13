@@ -10,9 +10,9 @@ import Foundation
 extension Double {
     var hmsPrettifyString: String {
         let length = self
-        let hours = length / 3600
-        let minutes = (length.truncatingRemainder(dividingBy: 3600)) / 60
-        let seconds = length.truncatingRemainder(dividingBy: 3600).truncatingRemainder(dividingBy: 60)
+        let hours = length / 3_600
+        let minutes = (length.truncatingRemainder(dividingBy: 3_600)) / 60
+        let seconds = length.truncatingRemainder(dividingBy: 3_600).truncatingRemainder(dividingBy: 60)
 
         var retVal: [String] = []
 
@@ -24,7 +24,7 @@ extension Double {
             retVal += ["\(minutes) m"]
         }
 
-        if seconds > 0 && minutes == 0 {
+        if seconds > 0, minutes == 0 {
             retVal += ["\(seconds) s"]
         }
 
@@ -32,10 +32,10 @@ extension Double {
     }
 
     public var timeFormatted: String {
-        let length = Int(self.rounded())
-        let hours = length / 3600
-        let minutes = (length % 3600) / 60
-        let seconds = (length % 3600) % 60
+        let length = Int(rounded())
+        let hours = length / 3_600
+        let minutes = (length % 3_600) / 60
+        let seconds = (length % 3_600) % 60
 
         var array: [String] = []
 
@@ -49,13 +49,13 @@ extension Double {
     }
 }
 
-extension String {
-    public func trimHTMLTags() -> String? {
-        guard let htmlStringData = self.data(using: String.Encoding.utf8) else {
+public extension String {
+    func trimHTMLTags() -> String? {
+        guard let htmlStringData = data(using: String.Encoding.utf8) else {
             return nil
         }
 
-        let options: [NSAttributedString.DocumentReadingOptionKey : Any] = [
+        let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
             .documentType: NSAttributedString.DocumentType.html,
             .characterEncoding: String.Encoding.utf8.rawValue
         ]
@@ -64,4 +64,3 @@ extension String {
         return attributedString?.string
     }
 }
-

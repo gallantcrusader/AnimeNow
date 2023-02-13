@@ -1,19 +1,22 @@
 //
 //  ContextButton.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/8/23.
-//  
+//
 //
 
-import SwiftUI
 import Foundation
+import ImageDatabaseClient
+import SwiftUI
 
 #if os(macOS)
 import AppKit
 #endif
 
 private let iconSize = CGSize(width: 18, height: 18)
+
+// MARK: - ContextButtonItem
 
 public struct ContextButtonItem: Equatable {
     let name: String
@@ -28,18 +31,21 @@ public struct ContextButtonItem: Equatable {
     }
 }
 
+// MARK: - ContextButton
+
 public struct ContextButton<Label: View>: View {
     #if os(macOS)
-    @StateObject private var menu = MenuObservable()
+    @StateObject
+    private var menu = MenuObservable()
     #endif
 
     let items: [ContextButtonItem]
     let label: () -> Label
-    let action: ((String) -> ())?
+    let action: ((String) -> Void)?
 
     public init(
         items: [ContextButtonItem],
-        action: ((String) -> ())? = nil,
+        action: ((String) -> Void)? = nil,
         @ViewBuilder label: @escaping () -> Label
     ) {
         self.items = items
@@ -55,8 +61,8 @@ public struct ContextButton<Label: View>: View {
                     action?(item.name)
                 } label: {
                     Text(item.name)
-                    CachedAsyncImage(url: item.image) {
-                        $0.resizable()
+                    CachedAsyncImage(url: item.image) { image in
+                        image.resizable()
                     } placeholder: {
                         EmptyView()
                     }
@@ -65,7 +71,7 @@ public struct ContextButton<Label: View>: View {
                 }
             }
         }, label: label)
-        .foregroundColor(.white)
+            .foregroundColor(.white)
         #else
         label()
             .background(
@@ -79,8 +85,8 @@ public struct ContextButton<Label: View>: View {
             .onTapGesture {
                 menu.showMenu.toggle()
             }
-            .onChange(of: items) {
-                menu.populateMenu(items: $0)
+            .onChange(of: items) { items in
+                menu.populateMenu(items: items)
             }
             .onAppear {
                 menu.callback = action
@@ -93,12 +99,13 @@ public struct ContextButton<Label: View>: View {
 #if os(macOS)
 
 private class MenuObservable: NSObject, ObservableObject, NSMenuDelegate {
-    @Published var showMenu = false {
+    @Published
+    var showMenu = false {
         didSet { showMenuPopup(showMenu) }
     }
 
     var frame: CGRect = .zero
-    var callback: ((String) -> ())? = nil
+    var callback: ((String) -> Void)?
 
     private let menu = NSMenu()
 
@@ -114,13 +121,10 @@ private class MenuObservable: NSObject, ObservableObject, NSMenuDelegate {
             let menuItem = NSMenuItem(title: item.name, action: #selector(handlePress), keyEquivalent: "")
             menuItem.representedObject = item
             menuItem.target = self
-            if let _ = item.image {
-                // TODO: Work on seeing if I can retrieve caching image
-//                if let image = ImageCache.shared.get(forKey: imageURL.absoluteString) {
-//                    menuItem.image = image
-//                }
-                menuItem.image?.size = iconSize
+            if let url = item.image, let image = ImageDatabase.shared.cachedImage(url) {
+                menuItem.image = image
             }
+            menuItem.image?.size = iconSize
             menu.addItem(menuItem)
         }
     }
@@ -142,11 +146,12 @@ private class MenuObservable: NSObject, ObservableObject, NSMenuDelegate {
         }
     }
 
-    func menuDidClose(_ menu: NSMenu) {
+    func menuDidClose(_: NSMenu) {
         showMenu = false
     }
 
-    @objc func handlePress(_ sender: Any?) {
+    @objc
+    func handlePress(_ sender: Any?) {
         guard let menuItem = sender as? NSMenuItem else {
             return
         }

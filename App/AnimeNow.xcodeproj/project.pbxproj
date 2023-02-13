@@ -117,7 +117,7 @@
 				13C3535E28C308A000A54E7E /* Sources */,
 				13C3535F28C308A000A54E7E /* Frameworks */,
 				13C3536028C308A000A54E7E /* Resources */,
-				139C775F2998112B00145B96 /* Run Script */,
+				139C775F2998112B00145B96 /* Run SwiftLint Script */,
 			);
 			buildRules = (
 			);
@@ -178,7 +178,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		139C775F2998112B00145B96 /* Run Script */ = {
+		139C775F2998112B00145B96 /* Run SwiftLint Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -188,7 +188,7 @@
 			);
 			inputPaths = (
 			);
-			name = "Run Script";
+			name = "Run SwiftLint Script";
 			outputFileListPaths = (
 			);
 			outputPaths = (

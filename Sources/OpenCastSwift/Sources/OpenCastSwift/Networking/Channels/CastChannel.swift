@@ -10,22 +10,22 @@ import Foundation
 import SwiftyJSON
 
 open class CastChannel {
-  let namespace: String
-  weak var requestDispatcher: RequestDispatchable!
-  
-  init(namespace: String) {
-    self.namespace = namespace
-  }
-  
-  open func handleResponse(_ json: JSON, sourceId: String) {
-//    print(json)
-  }
-  
-  open func handleResponse(_ data: Data, sourceId: String) {
-    print("\n--Binary response--\n")
-  }
-  
-  public func send(_ request: CastRequest, response: CastResponseHandler? = nil) {
-    requestDispatcher.send(request, response: response)
-  }
+    let namespace: String
+    weak var requestDispatcher: RequestDispatchable!
+
+    init(namespace: String) {
+        self.namespace = namespace
+    }
+
+    open func handleResponse(_: JSON, sourceId _: String) {
+        //    print(json)
+    }
+
+    open func handleResponse(_: Data, sourceId _: String) {
+        print("\n--Binary response--\n")
+    }
+
+    public func send(_ request: CastRequest, response: CastResponseHandler? = nil) {
+        requestDispatcher.send(request, response: response)
+    }
 }

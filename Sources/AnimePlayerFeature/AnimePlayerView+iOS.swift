@@ -125,16 +125,16 @@ extension AnimePlayerView {
                 case .some(.loading):
                     loadingView
                 case .some(.playing), .some(.paused):
-                        if viewState.showingPlayerControls {
-                            Image(systemName: viewState.status == .playing ? "pause.fill" : "play.fill")
-                                .font(.title.bold())
-                                .frame(width: 48, height: 48)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    viewState.send(.togglePlayback)
-                                }
-                                .foregroundColor(Color.white)
-                        }
+                    if viewState.showingPlayerControls {
+                        Image(systemName: viewState.status == .playing ? "pause.fill" : "play.fill")
+                            .font(.title.bold())
+                            .frame(width: 48, height: 48)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                viewState.send(.togglePlayback)
+                            }
+                            .foregroundColor(Color.white)
+                    }
                 case .some(.replay):
                     Image(systemName: "arrow.counterclockwise")
                         .frame(width: 48, height: 48)
@@ -223,7 +223,8 @@ extension AnimePlayerView {
                                         ForEach(viewState.episodes) { episode in
                                             ThumbnailItemBigView(
                                                 episode: episode,
-                                                progress: viewState.episodesStore.first { $0.number == episode.number }?.progress,
+                                                progress: viewState.episodesStore.first { $0.number == episode.number }?
+                                                    .progress,
                                                 nowPlaying: episode.id == viewState.selectedEpisode,
                                                 progressSize: 8
                                             )
@@ -330,8 +331,8 @@ extension AnimePlayerView {
                     ),
                     buffered: viewState.state.buffered,
                     padding: 6
-                ) {
-                    viewState.send($0 ? .startSeeking : .stopSeeking)
+                ) { isEditing in
+                    viewState.send(isEditing ? .startSeeking : .stopSeeking)
                 }
                 .frame(height: 20)
 
@@ -361,7 +362,7 @@ struct VideoPlayerViewiOS_Previews: PreviewProvider {
                         player: .init(),
                         anime: Anime.narutoShippuden,
                         availableProviders: .init(items: []),
-                        selectedEpisode: Episode.demoEpisodes.first!.id
+                        selectedEpisode: Episode.demoEpisodes[0].id
                     ),
                     reducer: AnimePlayerReducer()
                 )

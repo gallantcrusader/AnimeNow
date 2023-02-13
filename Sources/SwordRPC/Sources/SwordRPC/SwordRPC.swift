@@ -6,11 +6,10 @@
 //  Copyright © 2017 Alejandro Alonso. All rights reserved.
 //
 
-import Foundation
 import FlyingSocks
+import Foundation
 
 public class SwordRPC {
-
     // MARK: Public
 
     public var isRunning: Bool { taskRunner != nil }
@@ -19,7 +18,7 @@ public class SwordRPC {
     // MARK: Internal
 
     let appId: String
-    var pid: Int32 = { ProcessInfo.processInfo.processIdentifier }()
+    var pid: Int32 = ProcessInfo.processInfo.processIdentifier
     var discordSocket: AsyncSocket?
 
     // MARK: Private
@@ -27,7 +26,7 @@ public class SwordRPC {
     private let maxRetryCount: Int
     private let retryDuration: Int
     private var retryCount = 0
-    private var taskRunner: Task<Void, Error>? = nil
+    private var taskRunner: Task<Void, Error>?
 
     public init(
         appId: String,
@@ -42,7 +41,9 @@ public class SwordRPC {
     public func start() {
         stop()
         taskRunner = Task.detached { [weak self] in
-            guard let `self` = self else { return }
+            guard let self else {
+                return
+            }
             await self.connect()
 
             while self.retryCount < self.maxRetryCount || self.maxRetryCount == 0 {

@@ -6,12 +6,14 @@
 //  Copyright © 2022. All rights reserved.
 //
 
-import SwiftUI
-import Utilities
-import SharedModels
-import ViewComponents
 import ComposableArchitecture
+import SharedModels
+import SwiftUI
 import SwiftUINavigation
+import Utilities
+import ViewComponents
+
+// MARK: - SearchView
 
 public struct SearchView: View {
     let store: StoreOf<SearchReducer>
@@ -27,10 +29,9 @@ public struct SearchView: View {
             ExtraTopSafeAreaInset()
                 .fixedSize()
 
-            WithViewStore(
-                store,
-                observe: { $0 }
-            ) { viewStore in
+            WithViewStore(store) { state in
+                state
+            } content: { viewStore in
                 HStack {
                     searchBar
 
@@ -62,7 +63,7 @@ public struct SearchView: View {
                     waitingForTyping
                 case .loading:
                     loadingSearches
-                case .success(let animes):
+                case let .success(animes):
                     presentAnimes(animes)
                 case .failed:
                     failedToRetrieve
@@ -71,7 +72,7 @@ public struct SearchView: View {
         }
         .padding(.top)
         #if os(macOS)
-        .padding(.horizontal, 40)
+            .padding(.horizontal, 40)
         #endif
     }
 }
@@ -138,7 +139,7 @@ extension SearchView {
                             ForEach(
                                 Array(zip(viewStore.state.indices, viewStore.state)),
                                 id: \.0
-                            ) { index, search in
+                            ) { _, search in
                                 ChipView(text: search)
                                     .onTapGesture {
                                         viewStore.send(.searchQueryChanged(search))
@@ -199,9 +200,8 @@ extension SearchView {
                                         #if os(iOS)
                                         UIApplication.shared
                                             .windows
-                                                .filter { $0.isKeyWindow }
-                                                .first?
-                                                .endEditing(true)
+                                            .first(where: \.isKeyWindow)?
+                                            .endEditing(true)
                                         #endif
                                     }
                             }
@@ -217,12 +217,11 @@ extension SearchView {
                         Color.clear
                             .onChange(
                                 of: reader.frame(in: .named("scroll")).minY
-                            ) { newValue in
+                            ) { _ in
                                 UIApplication.shared
                                     .windows
-                                        .filter{ $0.isKeyWindow }
-                                        .first?
-                                        .endEditing(true)
+                                    .first(where: \.isKeyWindow)?
+                                    .endEditing(true)
                             }
                     }
                     #endif
@@ -268,6 +267,8 @@ extension SearchView {
     }
 }
 
+// MARK: - SearchView_Previews
+
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
@@ -300,13 +301,15 @@ struct SearchView_Previews: PreviewProvider {
     }
 }
 
+// MARK: - FocusOnAppearTextField
+
 @available(iOS 15.0, macOS 12.0, *)
 struct FocusOnAppearTextField: View {
-
     let title: any StringProtocol
     let text: Binding<String>
 
-    @FocusState private var focused: Bool
+    @FocusState
+    private var focused: Bool
 
     var body: some View {
         TextField(title, text: text)

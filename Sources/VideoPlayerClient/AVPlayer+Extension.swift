@@ -1,33 +1,30 @@
 //  AVPlayer+Extension.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 12/24/22.
-//  
+//
 //
 
-import Foundation
 import AVFoundation
+import Foundation
 
 // MARK: AVPlayerItem + Extension
 
 public extension AVPlayerItem {
     var bufferProgress: Double {
-        guard totalDuration > 0 else { return 0}
-        return currentBufferDuration / totalDuration
+        totalDuration > 0 ? currentBufferDuration / totalDuration : 0
     }
-    
+
     var currentBufferDuration: Double {
-        guard let range = loadedTimeRanges.first else { return 0 }
-        return range.timeRangeValue.end.seconds
+        loadedTimeRanges.first?.timeRangeValue.end.seconds ?? 0
     }
-    
+
     var currentDuration: Double {
         currentTime().seconds
     }
-    
+
     var playProgress: Double {
-        guard totalDuration > 0 else { return 0 }
-        return currentDuration / totalDuration
+        totalDuration > 0 ? currentDuration / totalDuration : 0
     }
 
     var totalDuration: Double {
@@ -39,29 +36,31 @@ public extension AVPlayerItem {
 
 public extension AVPlayer {
     var bufferProgress: Double {
-        return currentItem?.bufferProgress ?? 0
+        currentItem?.bufferProgress ?? 0
     }
-    
+
     var currentBufferDuration: Double {
-        return currentItem?.currentBufferDuration ?? 0
+        currentItem?.currentBufferDuration ?? 0
     }
-    
+
     var currentDuration: Double {
-        return currentItem?.currentDuration ?? 0
+        currentItem?.currentDuration ?? 0
     }
 
     var playProgress: Double {
-        return currentItem?.playProgress ?? 0
+        currentItem?.playProgress ?? 0
     }
-    
+
     var totalDuration: Double {
-        return currentItem?.totalDuration ?? 0
+        currentItem?.totalDuration ?? 0
     }
-    
+
     convenience init(asset: AVURLAsset) {
         self.init(playerItem: AVPlayerItem(asset: asset))
     }
 }
+
+// MARK: - AVPlayerItem.Status + CustomStringConvertible, CustomDebugStringConvertible
 
 extension AVPlayerItem.Status: CustomStringConvertible, CustomDebugStringConvertible {
     public var debugDescription: String {
@@ -82,6 +81,8 @@ extension AVPlayerItem.Status: CustomStringConvertible, CustomDebugStringConvert
     }
 }
 
+// MARK: - AVPlayer.Status + CustomStringConvertible, CustomDebugStringConvertible
+
 extension AVPlayer.Status: CustomStringConvertible, CustomDebugStringConvertible {
     public var debugDescription: String {
         description
@@ -100,6 +101,8 @@ extension AVPlayer.Status: CustomStringConvertible, CustomDebugStringConvertible
         }
     }
 }
+
+// MARK: - AVPlayer.TimeControlStatus + CustomStringConvertible, CustomDebugStringConvertible
 
 extension AVPlayer.TimeControlStatus: CustomStringConvertible, CustomDebugStringConvertible {
     public var debugDescription: String {

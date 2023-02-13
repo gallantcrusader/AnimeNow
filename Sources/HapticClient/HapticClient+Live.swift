@@ -13,13 +13,11 @@ import UIKit
 #endif
 
 extension HapticClient {
-    static let live = HapticClient(
-        play: {
-            #if os(iOS)
-            let generator = UISelectionFeedbackGenerator()
-            generator.prepare()
-            generator.selectionChanged()
-            #endif
-        }
-    )
+    static let live = HapticClient {
+        #if os(iOS)
+        let generator = UISelectionFeedbackGenerator()
+        generator.prepare()
+        generator.selectionChanged()
+        #endif
+    }
 }

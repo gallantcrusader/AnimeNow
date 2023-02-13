@@ -2,15 +2,17 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 12/22/22.
-//  
+//
 //
 
 import SwiftUI
 import Utilities
 
+// MARK: - SettingsRowView
+
 public struct SettingsRowView<Accessory: View>: View {
     let name: String
-    var tapped: (() -> Void)? = nil
+    var tapped: (() -> Void)?
     let accessory: (() -> Accessory)?
 
     private var loading = false
@@ -33,7 +35,7 @@ public struct SettingsRowView<Accessory: View>: View {
                     .foregroundColor(multiSelection ? nil : .gray)
             }
 
-            if !loading && multiSelection {
+            if !loading, multiSelection {
                 Image(systemName: "chevron.up.chevron.down")
                     .foregroundColor(.gray)
             }
@@ -51,8 +53,11 @@ public struct SettingsRowView<Accessory: View>: View {
     }
 }
 
+// MARK: - SettingsSwitch
+
 public struct SettingsSwitch: View {
-    @Binding var on: Bool
+    @Binding
+    var on: Bool
 
     public var body: some View {
         Toggle(isOn: $on) {
@@ -63,8 +68,8 @@ public struct SettingsSwitch: View {
     }
 }
 
-extension SettingsRowView {
-    public init(
+public extension SettingsRowView {
+    init(
         name: String,
         tapped: (() -> Void)? = nil
     ) where Accessory == EmptyView {
@@ -75,7 +80,7 @@ extension SettingsRowView {
         )
     }
 
-    public init(
+    init(
         name: String,
         tapped: @escaping () -> Void
     ) where Accessory == Image {
@@ -87,7 +92,7 @@ extension SettingsRowView {
         }
     }
 
-    public init(
+    init(
         name: String,
         text: String,
         tapped: (() -> Void)? = nil
@@ -101,25 +106,22 @@ extension SettingsRowView {
         }
     }
 
-    public init(
+    init(
         name: String,
         active: Binding<Bool>
     ) where Accessory == SettingsSwitch {
-        self.init(
-            name: name,
-            tapped: {
-                withAnimation {
-                    active.wrappedValue.toggle()
-                }
+        self.init(name: name) {
+            withAnimation {
+                active.wrappedValue.toggle()
             }
-        ) {
+        } accessory: {
             SettingsSwitch(on: active)
         }
     }
 
-    public static func views<V: View>(
+    static func views(
         name: String,
-        @ViewBuilder views: @escaping () -> V
+        @ViewBuilder views: @escaping () -> some View
     ) -> some View where Accessory == EmptyView {
         VStack(spacing: 0) {
             SettingsRowView(name: name, accessory: nil)
@@ -135,7 +137,8 @@ extension SettingsRowView {
         let onSelected: (T.ID) -> Void
         let itemView: (T) -> I
 
-        @State private var expand = false
+        @State
+        private var expand = false
 
         func body(content: Content) -> some View {
             LazyVStack(spacing: 0) {
@@ -179,19 +182,19 @@ extension SettingsRowView {
         }
     }
 
-    public static func listSelection<T: Equatable & Identifiable & CustomStringConvertible, I: View>(
+    public static func listSelection<T: Equatable & Identifiable & CustomStringConvertible>(
         name: String,
         selectable: Selectable<T>,
         loading: Bool = false,
         onSelectedItem: @escaping (T.ID) -> Void,
-        @ViewBuilder itemView: @escaping (T) -> I
+        @ViewBuilder itemView: @escaping (T) -> some View
     ) -> some View where Accessory == Text {
         let view = SettingsRowView(
             name: name,
             text: selectable.item?.description ?? ((selectable.items.isEmpty) ? "Unavailable" : "Not Selected")
         )
-            .multiSelection(selectable.items.count > 1)
-            .loading(loading)
+        .multiSelection(selectable.items.count > 1)
+        .loading(loading)
 
         return view
             .modifier(
@@ -204,31 +207,33 @@ extension SettingsRowView {
     }
 }
 
-extension SettingsRowView {
-    public func onTapped(_ callback: @escaping () -> Void) -> Self {
+public extension SettingsRowView {
+    func onTapped(_ callback: @escaping () -> Void) -> Self {
         var view = self
         view.tapped = callback
         return view
     }
 
-    public func multiSelection(_ multiSelection: Bool) -> Self {
+    func multiSelection(_ multiSelection: Bool) -> Self {
         var view = self
         view.multiSelection = multiSelection
         return view
     }
 
-    public func loading(_ isLoading: Bool) -> Self {
+    func loading(_ isLoading: Bool) -> Self {
         var view = self
         view.loading = isLoading
         return view
     }
 
-    public func cornerRadius(_ cornerRadius: CGFloat = 12.0) -> Self {
+    func cornerRadius(_ cornerRadius: CGFloat = 12.0) -> Self {
         var view = self
         view.cornerRadius = cornerRadius
         return view
     }
 }
+
+// MARK: - SettingsRowViewV2Previes
 
 struct SettingsRowViewV2Previes: PreviewProvider {
     static var previews: some View {

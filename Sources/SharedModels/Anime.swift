@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - AnimeRepresentable
+
 public protocol AnimeRepresentable: Hashable, Identifiable {
     var id: Int { get }
     var malId: Int? { get }
@@ -23,11 +25,14 @@ public extension AnimeRepresentable where Self: Equatable {
         (item as? Self) == self
     }
 }
+
 public extension AnimeRepresentable {
     func eraseAsRepresentable() -> AnyAnimeRepresentable {
         .init(self)
     }
 }
+
+// MARK: - AnyAnimeRepresentable
 
 public struct AnyAnimeRepresentable: AnimeRepresentable {
     private let anime: any AnimeRepresentable
@@ -57,15 +62,19 @@ public struct AnyAnimeRepresentable: AnimeRepresentable {
     }
 }
 
+// MARK: Hashable
+
 extension AnyAnimeRepresentable: Hashable {
     public static func == (lhs: AnyAnimeRepresentable, rhs: AnyAnimeRepresentable) -> Bool {
         lhs.anime.isEqualTo(rhs.anime)
     }
 
     public func hash(into hasher: inout Hasher) {
-        self.anime.hash(into: &hasher)
+        anime.hash(into: &hasher)
     }
 }
+
+// MARK: - Anime
 
 public struct Anime: AnimeRepresentable {
     public let id: Int
@@ -78,7 +87,7 @@ public struct Anime: AnimeRepresentable {
     public let status: Status
     public let format: Format
     public let releaseYear: Int?
-    public let avgRating: Double?  /// 0...1
+    public let avgRating: Double? /// 0...1
 
     public enum Format: String, Codable {
         case tv = "TV"
@@ -125,6 +134,7 @@ public struct Anime: AnimeRepresentable {
 }
 
 public extension Anime {
+    // swiftlint:disable force_unwrapping
     static let narutoShippuden = Anime(
         id: 0,
         malId: 0,
@@ -186,8 +196,8 @@ public extension Anime {
             malId: 0,
             title: "Placeholder",
             description: """
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                """,
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            """,
             posterImage: [],
             coverImage: [],
             categories: ["One", "Two", "Three"],

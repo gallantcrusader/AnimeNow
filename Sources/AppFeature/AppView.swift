@@ -5,16 +5,18 @@
 //  Created by ErrorErrorError on 9/2/22.
 //
 
-import SwiftUI
-import HomeFeature
-import SearchFeature
-import SettingsFeature
-import CollectionsFeature
-import DownloadsFeature
 import AnimeDetailFeature
 import AnimePlayerFeature
-import ModalOverlayFeature
+import CollectionsFeature
 import ComposableArchitecture
+import DownloadsFeature
+import HomeFeature
+import ModalOverlayFeature
+import SearchFeature
+import SettingsFeature
+import SwiftUI
+
+// MARK: - AppView
 
 public struct AppView: View {
     let store: StoreOf<AppReducer>
@@ -24,7 +26,6 @@ public struct AppView: View {
     }
 
     public var body: some View {
-
         // MARK: Content View
 
         ZStack {
@@ -85,7 +86,7 @@ public struct AppView: View {
         #else
         .topSafeAreaInset(tabBar)
         .frame(
-            minWidth: 1000,
+            minWidth: 1_000,
             minHeight: 650
         )
         #endif
@@ -97,8 +98,8 @@ public struct AppView: View {
                     state: \.animeDetail,
                     action: AppReducer.Action.animeDetail
                 )
-            ) {
-                AnimeDetailView(store: $0)
+            ) { store in
+                AnimeDetailView(store: store)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         )
@@ -123,6 +124,8 @@ public struct AppView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
+
+// MARK: - AppView_Previews
 
 struct AppView_Previews: PreviewProvider {
     static var previews: some View {

@@ -2,18 +2,20 @@
 //  Anime Now!
 //
 //  Created by ErrorErrorError on 11/16/22.
-//  
+//
 //  Modified version of https://github.com/prisma-ai/Sworm
 
 import CoreData
 import Foundation
 
+// MARK: - Request
+
 public struct Request<PlainObject: ManagedObjectConvertible> {
-    var fetchLimit: Int? = nil
-    var predicate: NSPredicate? = nil
+    var fetchLimit: Int?
+    var predicate: NSPredicate?
     var sortDescriptors: [SortDescriptor] = []
 
-    fileprivate init() { }
+    fileprivate init() {}
 }
 
 public extension Request {
@@ -25,8 +27,8 @@ public extension Request {
         return obj
     }
 
-    func sort<Value: Comparable>(
-        _ keyPath: KeyPath<PlainObject, Value>,
+    func sort(
+        _ keyPath: KeyPath<PlainObject, some Comparable>,
         ascending: Bool = true
     ) -> Self {
         var obj = self
@@ -51,31 +53,31 @@ extension Request {
         ofType resultType: NSFetchRequestResultType = .managedObjectResultType,
         attributesToFetch: Set<Attribute<PlainObject>> = PlainObject.attributes
     ) -> NSFetchRequest<ResultType> {
-        let properties = attributesToFetch.filter({ !$0.isRelation }).map(\.name)
+        let properties = attributesToFetch.filter { !$0.isRelation }.map(\.name)
 
         let fetchRequest = NSFetchRequest<ResultType>(entityName: PlainObject.entityName)
         fetchRequest.resultType = resultType
         fetchRequest.propertiesToFetch = properties
         fetchRequest.includesPropertyValues = !properties.isEmpty
 
-        self.fetchLimit.flatMap {
-            fetchRequest.fetchLimit = $0
+        fetchLimit.flatMap { limit in
+            fetchRequest.fetchLimit = limit
         }
 
         if let predicate {
             fetchRequest.predicate = predicate
         }
 
-        if !self.sortDescriptors.isEmpty {
-            fetchRequest.sortDescriptors = self.sortDescriptors.map(\.object)
+        if !sortDescriptors.isEmpty {
+            fetchRequest.sortDescriptors = sortDescriptors.map(\.object)
         }
 
         return fetchRequest
     }
 }
 
-extension ManagedObjectConvertible {
-    public static var all: Request<Self> {
+public extension ManagedObjectConvertible {
+    static var all: Request<Self> {
         .init()
     }
 }

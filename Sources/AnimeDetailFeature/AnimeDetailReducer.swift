@@ -17,8 +17,9 @@ import SharedModels
 import UserDefaultsClient
 import Utilities
 
-public struct AnimeDetailReducer: ReducerProtocol {
+// MARK: - AnimeDetailReducer
 
+public struct AnimeDetailReducer: ReducerProtocol {
     public struct State: Equatable {
         public let animeId: Anime.ID
         public var anime: Loadable<Anime> = .idle
@@ -71,13 +72,18 @@ public struct AnimeDetailReducer: ReducerProtocol {
         case stream(AnimeStreamLogic.Action)
     }
 
-    @Dependency(\.mainQueue) var mainQueue
-    @Dependency(\.animeClient) var animeClient
-    @Dependency(\.downloaderClient) var downloaderClient
-    @Dependency(\.databaseClient) var databaseClient
-    @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.mainQueue)
+    var mainQueue
+    @Dependency(\.animeClient)
+    var animeClient
+    @Dependency(\.downloaderClient)
+    var downloaderClient
+    @Dependency(\.databaseClient)
+    var databaseClient
+    @Dependency(\.userDefaultsClient)
+    var userDefaultsClient
 
-    public init() { }
+    public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
         Scope(state: \.stream, action: /Action.stream) {
@@ -87,8 +93,8 @@ public struct AnimeDetailReducer: ReducerProtocol {
     }
 }
 
-extension AnimeDetailReducer.State {
-    public init(
+public extension AnimeDetailReducer.State {
+    init(
         anime: some AnimeRepresentable,
         availableProviders: Selectable<ProviderInfo>
     ) {
@@ -143,7 +149,7 @@ extension AnimeDetailReducer {
     struct FavoritesDebouce: Hashable {}
     struct CancelObservingDownloadState: Hashable {}
 
-    // swiftlint:disable cyclomatic_complexity function_body_length
+    // swiftlint:disable cyclomatic_complexity
     func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
@@ -157,20 +163,29 @@ extension AnimeDetailReducer {
             }
 
         case .tappedFavorite:
-            guard var animeStore = state.animeStore.value else { break }
+            guard var animeStore = state.animeStore.value else {
+                break
+            }
             animeStore.isFavorite.toggle()
 
             return .run { [animeStore] _ in
                 try await withTaskCancellation(id: FavoritesDebouce.self, cancelInFlight: true) {
-                    if !(try await databaseClient.update(animeStore.id, \AnimeStore.isFavorite, animeStore.isFavorite)) {
+                    if !(
+                        try await databaseClient
+                            .update(animeStore.id, \AnimeStore.isFavorite, animeStore.isFavorite)
+                    ) {
                         try await databaseClient.insert(animeStore)
                     }
                 }
             }
 
         case .addToCollectionToggle:
-            guard let animeStore = state.animeStore.value else { break }
-            guard let collectionStores = state.collectionStores.value else { break }
+            guard let animeStore = state.animeStore.value else {
+                break
+            }
+            guard let collectionStores = state.collectionStores.value else {
+                break
+            }
 
             return .run { _ in
                 try await withTaskCancellation(
@@ -190,8 +205,10 @@ extension AnimeDetailReducer {
                 }
             }
 
-        case .selectedEpisode(let episodeId):
-            guard let anime = state.anime.value, let streamingProvider = state.streamingProvider?.value else { break }
+        case let .selectedEpisode(episodeId):
+            guard let anime = state.anime.value, let streamingProvider = state.streamingProvider?.value else {
+                break
+            }
             return .init(
                 value: .play(
                     anime: anime,
@@ -200,7 +217,7 @@ extension AnimeDetailReducer {
                 )
             )
 
-        case .markEpisodeAsWatched(let episodeNumber):
+        case let .markEpisodeAsWatched(episodeNumber):
             guard var animeStore = state.animeStore.value,
                   let episode = state.episodes.value?[id: episodeNumber] else {
                 break
@@ -212,8 +229,10 @@ extension AnimeDetailReducer {
                 try await databaseClient.insert(animeStore)
             }
 
-        case .markEpisodeAsUnwatched(let episodeNumber):
-            guard let episodeStore = state.animeStore.value?.episodes.first(where: { $0.number == episodeNumber }) else { break }
+        case let .markEpisodeAsUnwatched(episodeNumber):
+            guard let episodeStore = state.animeStore.value?.episodes.first(where: { $0.number == episodeNumber }) else {
+                break
+            }
 
             return .run { [episodeStore] in
                 try await databaseClient.update(episodeStore.id, \EpisodeStore.progress, nil)
@@ -224,17 +243,19 @@ extension AnimeDetailReducer {
                 return fetchAnime(&state)
             }
 
-        case .fetchedAnime(let loaded):
+        case let .fetchedAnime(loaded):
             state.anime = loaded
             if case .success = loaded {
                 return startObservations(&state)
             }
 
-        case .fetchedAnimeFromDB(let animesMatched):
-            guard let anime = state.anime.value else { break }
+        case let .fetchedAnimeFromDB(animesMatched):
+            guard let anime = state.anime.value else {
+                break
+            }
             state.animeStore = .success(.findOrCreate(anime, animesMatched))
 
-        case .fetchedCollectionStores(let collectionStores):
+        case let .fetchedCollectionStores(collectionStores):
             state.collectionStores = .success(collectionStores)
 
         case .toggleCompactEpisodes:
@@ -282,20 +303,20 @@ extension AnimeDetailReducer {
         case .downloadEpisode:
             break
 
-        case .episodesStatus(let hm):
+        case let .episodesStatus(hm):
             state.episodesStatus = hm
 
-        case .removeDownload(let episodeNumber):
+        case let .removeDownload(episodeNumber):
             return .run { [state] in
                 await downloaderClient.delete(state.animeId, episodeNumber)
             }
 
-        case .retryDownload(let episodeNumber):
+        case let .retryDownload(episodeNumber):
             return .run { [state] in
                 await downloaderClient.retry(state.animeId, episodeNumber)
             }
 
-        case .cancelDownload(let episodeNumber):
+        case let .cancelDownload(episodeNumber):
             let animeId = state.animeId
             return .run {
                 await downloaderClient.cancel(animeId, episodeNumber)
@@ -362,7 +383,7 @@ extension AnimeDetailReducer {
                         await send(.fetchedAnimeFromDB(animeStores))
                     }
                 }
-                    .cancellable(id: CancelObservingAnimeDB.self)
+                .cancellable(id: CancelObservingAnimeDB.self)
             )
         }
 
@@ -379,7 +400,7 @@ extension AnimeDetailReducer {
                         await send(.fetchedCollectionStores(collection))
                     }
                 }
-                    .cancellable(id: CancelObservingCollections.self)
+                .cancellable(id: CancelObservingCollections.self)
             )
         }
 

@@ -6,11 +6,13 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import ComposableArchitecture
+import SharedModels
 import SwiftUI
 import Utilities
-import SharedModels
 import ViewComponents
-import ComposableArchitecture
+
+// MARK: - CollectionsView
 
 public struct CollectionsView: View {
     let store: StoreOf<CollectionsReducer>
@@ -82,9 +84,7 @@ extension CollectionsView {
             store,
             observe: \.favorites
         ) { viewState in
-            StackNavigationLink(
-                title: "Favorites"
-            ) {
+            StackNavigationLink(title: "Favorites") {
                 AnyView(
                     folderView(
                         "Favorites",
@@ -106,7 +106,7 @@ extension CollectionsView {
 extension CollectionsView {
     @ViewBuilder
     func collectionsPage(
-        title: String,
+        title _: String,
         _ animes: [AnimeStore],
         collectionId: CollectionStore.ID? = nil
     ) -> some View {
@@ -141,7 +141,7 @@ extension CollectionsView {
                 }
             }
             .padding([.top, .horizontal])
-            
+
             ExtraBottomSafeAreaInset()
             Spacer(minLength: 32)
         }
@@ -159,23 +159,21 @@ extension CollectionsView {
             observe: \.collections
         ) { collections in
             ForEach(collections.state) { collection in
-                StackNavigationLink(
-                    title: collection.title.value
-                ) {
-                        folderView(
-                            collection.title.value,
-                            collection.animes
-                                .prefix(3)
-                                .compactMap(\.posterImage.largest?.link),
-                            collection.animes.count
-                        )
+                StackNavigationLink(title: collection.title.value) {
+                    folderView(
+                        collection.title.value,
+                        collection.animes
+                            .prefix(3)
+                            .compactMap(\.posterImage.largest?.link),
+                        collection.animes.count
+                    )
                 } destination: {
-                        collectionsPage(
-                            title: collection.title.value,
-                            Array(collection.animes),
-                            collectionId: collection.id
-                        )
-                            .id(collection.title)
+                    collectionsPage(
+                        title: collection.title.value,
+                        Array(collection.animes),
+                        collectionId: collection.id
+                    )
+                    .id(collection.title)
                 }
                 .contextMenu {
                     if collection.title.canDelete {
@@ -225,7 +223,7 @@ extension CollectionsView {
                     ForEach(
                         Array(zip(images.indices, images)),
                         id: \.0
-                    ) { (index, url) in
+                    ) { index, url in
                         FillAspectImage(
                             url: url
                         )
@@ -259,8 +257,8 @@ extension CollectionsView {
 extension CollectionsView {
     @ViewBuilder
     func collectionView(
-        _ title: String,
-        _ animes: [AnimeStore]
+        _: String,
+        _: [AnimeStore]
     ) -> some View {
         EmptyView()
     }
@@ -289,6 +287,8 @@ extension CollectionsView {
         )
     }
 }
+
+// MARK: - LibraryView_Previews
 
 struct LibraryView_Previews: PreviewProvider {
     static var previews: some View {

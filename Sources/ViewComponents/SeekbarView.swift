@@ -7,16 +7,20 @@
 
 import SwiftUI
 
+// MARK: - SeekbarView
+
 public struct SeekbarView: View {
     public typealias EditingChanged = (Bool) -> Void
 
-    @Binding var progress: Double
+    @Binding
+    var progress: Double
     var buffered = Double.zero
 
     var padding: Double = 8
     var onEditingCallback: EditingChanged?
 
-    @State var isDragging = false
+    @State
+    var isDragging = false
 
     public init(
         progress: Binding<Double>,
@@ -24,7 +28,7 @@ public struct SeekbarView: View {
         padding: Double = 8,
         onEditingCallback: EditingChanged? = nil
     ) {
-        self._progress = progress
+        _progress = progress
         self.buffered = buffered
         self.padding = padding
         self.onEditingCallback = onEditingCallback
@@ -75,7 +79,7 @@ public struct SeekbarView: View {
                     let percentage = locationX / reader.size.width
                     progress = max(0, min(1.0, percentage))
                 }
-                .onEnded { value in
+                .onEnded { _ in
                     onEditingCallback?(false)
                     isDragging = false
                 }
@@ -85,9 +89,12 @@ public struct SeekbarView: View {
     }
 }
 
+// MARK: - SeekbarView_Previews
+
 struct SeekbarView_Previews: PreviewProvider {
     struct BindingProvider: View {
-        @State var progress = 0.25
+        @State
+        var progress = 0.25
 
         var body: some View {
             SeekbarView(progress: $progress, buffered: 0.5)

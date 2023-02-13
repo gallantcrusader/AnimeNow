@@ -4,11 +4,11 @@
 //  Created by ErrorErrorError on 12/9/22.
 //
 
-import Logger
-import Combine
-import Utilities
-import Foundation
 import AVFoundation
+import Combine
+import Foundation
+import Logger
+import Utilities
 
 extension DownloaderClient {
     private struct TaskData {
@@ -29,15 +29,14 @@ extension DownloaderClient {
     }()
 
     private static var videoStorageDirectoryURL: URL? {
-        guard var cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
-        cachesDir = cachesDir.appendingPathComponent("com.apple.nsurlsessiond", conformingTo: .directory)
-        cachesDir = cachesDir.appendingPathComponent("Downloads", conformingTo: .directory)
-        cachesDir = cachesDir.appendingPathComponent(Bundle.main.bundleIdentifier ?? "", conformingTo: .directory)
-        return cachesDir
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("com.apple.nsurlsessiond", conformingTo: .directory)
+            .appendingPathComponent("Downloads", conformingTo: .directory)
+            .appendingPathComponent(Bundle.main.bundleIdentifier ?? "", conformingTo: .directory)
     }
 
     private static let downloadedContent: CurrentValueSubject<Set<AnimeStorage>, Never> = .init([])
-    private static let downloadsStatus = CurrentValueSubject<[URLSessionTask.ID : TaskData], Never>([:])
+    private static let downloadsStatus = CurrentValueSubject<[URLSessionTask.ID: TaskData], Never>([:])
 
     private static let downloadedContentQueue = OperationQueue()
 
@@ -46,14 +45,14 @@ extension DownloaderClient {
 
         let delegate = DownloaderDelegate { task, status in
             if let data = downloadsStatus.value[task] {
-                if case .downloaded(let location) = status {
+                if case let .downloaded(location) = status {
                     syncDownloadedEpisodeToDisk(location: location, data.request)
                     downloadsStatus.value[task] = nil
                 } else {
                     downloadsStatus.value[task]?.status = status
                 }
             } else {
-                if case .downloaded(let location) = status {
+                if case let .downloaded(location) = status {
                     try? FileManager.default.removeItem(at: location)
                 }
             }
@@ -67,7 +66,7 @@ extension DownloaderClient {
 
         return .init { animeId in
             let mappablePublisher = Publishers.CombineLatest(downloadedContent, downloadsStatus.map(\.values))
-                .map({ downloaded, downloads in
+                .map { downloaded, downloads in
                     var allAnimes = downloaded
 
                     for task in downloads {
@@ -101,18 +100,18 @@ extension DownloaderClient {
                     }
 
                     if let animeId {
-                        return allAnimes.filter {
-                            animeId == $0.id
+                        return allAnimes.filter { anime in
+                            animeId == anime.id
                         }
                     } else {
                         return allAnimes
                     }
-                })
+                }
                 .eraseToAnyPublisher()
 
             return .init { continuation in
-                let cancellable = mappablePublisher.sink {
-                    continuation.yield($0)
+                let cancellable = mappablePublisher.sink { value in
+                    continuation.yield(value)
                 }
 
                 continuation.onTermination = { _ in
@@ -139,7 +138,7 @@ extension DownloaderClient {
             downloadedContentQueue.addOperation {
                 if var anime = downloadedContent.value.first(where: { $0.id == animeId }) {
                     if let episode = anime.episodes.first(where: { $0.number == episodeNumber }) {
-                        if case .offline(let url) = episode.links.first {
+                        if case let .offline(url) = episode.links.first {
                             try? FileManager.default.removeItem(at: url)
                         }
 
@@ -156,10 +155,10 @@ extension DownloaderClient {
                 }
             }
         } count: {
-            return .init { continuation in
+            .init { continuation in
                 let cancellable = downloadsStatus
-                    .map {
-                        $0.filter { element in
+                    .map { status in
+                        status.filter { element in
                             switch element.value.status {
                             case .pending, .downloading:
                                 return true
@@ -169,8 +168,8 @@ extension DownloaderClient {
                         }
                         .count
                     }
-                    .sink {
-                        continuation.yield($0)
+                    .sink { value in
+                        continuation.yield(value)
                     }
 
                 continuation.onTermination = { _ in
@@ -178,24 +177,24 @@ extension DownloaderClient {
                 }
             }
         } cancel: { animeId, episodeNumber in
-            let downloads = downloadsStatus.value.filter { $0.value.request.anime.id == animeId && $0.value.request.episode.number == episodeNumber }.map(\.key)
+            let downloads = downloadsStatus.value
+                .filter { $0.value.request.anime.id == animeId && $0.value.request.episode.number == episodeNumber }
+                .map(\.key)
             let tasks = await downloadSession.allTasks
 
-            for task in tasks {
-                if downloads.contains(task.taskIdentifier) {
-                    downloadsStatus.value[task.taskIdentifier] = nil
-                    task.cancel()
-                }
+            for task in tasks where downloads.contains(task.taskIdentifier) {
+                downloadsStatus.value[task.taskIdentifier] = nil
+                task.cancel()
             }
         } retry: { animeId, episodeNumber in
-            let downloads = downloadsStatus.value.filter { $0.value.request.anime.id == animeId && $0.value.request.episode.number == episodeNumber }.map(\.key)
+            let downloads = downloadsStatus.value
+                .filter { $0.value.request.anime.id == animeId && $0.value.request.episode.number == episodeNumber }
+                .map(\.key)
             let tasks = await downloadSession.allTasks
 
-            for task in tasks {
-                if downloads.contains(task.taskIdentifier) {
-                    downloadsStatus.value[task.taskIdentifier]?.status = .pending
-                    task.resume()
-                }
+            for task in tasks where downloads.contains(task.taskIdentifier) {
+                downloadsStatus.value[task.taskIdentifier]?.status = .pending
+                task.resume()
             }
         } reset: {
             Task {
@@ -220,7 +219,10 @@ extension DownloaderClient {
     }()
 
     private static func fetchFromDisk() {
-        guard let storeURL else { return }
+        guard let storeURL else {
+            return
+        }
+
         do {
             let savedData = try Data(contentsOf: storeURL)
             downloadedContent.value = try savedData.toObject() ?? .init()
@@ -234,7 +236,7 @@ extension DownloaderClient {
         _ request: Request
     ) {
         downloadedContentQueue.addOperation {
-            var anime = downloadedContent.value.first(where: { $0.id == request.anime.id }) ?? .init(
+            var anime = downloadedContent.value.first { $0.id == request.anime.id } ?? .init(
                 id: request.anime.id,
                 title: request.anime.title,
                 format: request.anime.format,
@@ -259,7 +261,9 @@ extension DownloaderClient {
     }
 
     private static func syncToDisk() {
-        guard let storeURL else { return }
+        guard let storeURL else {
+            return
+        }
 
         do {
             let data = try downloadedContent.value.toData()
@@ -269,12 +273,12 @@ extension DownloaderClient {
         }
     }
 
-    private static func removeUnusedVideos() {
-        
-    }
+    private static func removeUnusedVideos() {}
 }
 
-fileprivate class DownloaderDelegate: NSObject, AVAssetDownloadDelegate {
+// MARK: - DownloaderDelegate
+
+private class DownloaderDelegate: NSObject, AVAssetDownloadDelegate {
     let callback: (Int, DownloaderClient.Status) -> Void
 
     init(_ callback: @escaping (Int, DownloaderClient.Status) -> Void) {
@@ -282,28 +286,29 @@ fileprivate class DownloaderDelegate: NSObject, AVAssetDownloadDelegate {
     }
 
     func urlSession(
-        _ session: URLSession,
+        _: URLSession,
         assetDownloadTask: AVAssetDownloadTask,
-        didLoad timeRange: CMTimeRange,
+        didLoad _: CMTimeRange,
         totalTimeRangesLoaded loadedTimeRanges: [NSValue],
         timeRangeExpectedToLoad: CMTimeRange
     ) {
         callback(
             assetDownloadTask.taskIdentifier,
             .downloading(
-                progress: (loadedTimeRanges.reduce(0.0) { $0 + $1.timeRangeValue.duration.seconds }) / timeRangeExpectedToLoad.duration.seconds
+                progress: (loadedTimeRanges.reduce(0.0) { $0 + $1.timeRangeValue.duration.seconds }) /
+                    timeRangeExpectedToLoad.duration.seconds
             )
         )
     }
 
-    func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
+    func urlSession(_: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
         callback(
             assetDownloadTask.taskIdentifier,
             .downloaded(location: location)
         )
     }
 
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    func urlSession(_: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if error != nil {
             callback(
                 task.taskIdentifier,
@@ -312,6 +317,8 @@ fileprivate class DownloaderDelegate: NSObject, AVAssetDownloadDelegate {
         }
     }
 }
+
+// MARK: - URLSessionTask + Identifiable
 
 extension URLSessionTask: Identifiable {
     public var id: Int {

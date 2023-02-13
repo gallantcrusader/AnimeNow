@@ -8,16 +8,19 @@
 import Foundation
 import SharedModels
 
+// MARK: - ConsumetAPI
+
 public final class ConsumetAPI: APIBase {
     public static let shared: ConsumetAPI = .init()
 
+    // swiftlint:disable force_unwrapping
     public let base = URL(string: "https://api.consumet.org")!
 
-    private init() { }
+    private init() {}
 }
 
-extension Request where Route == ConsumetAPI {
-    public static func anilistEpisodes(
+public extension Request where Route == ConsumetAPI {
+    static func anilistEpisodes(
         animeId: Int,
         dub: Bool,
         provider: String,
@@ -33,7 +36,7 @@ extension Request where Route == ConsumetAPI {
         )
     }
 
-    public static func anilistWatch(
+    static func anilistWatch(
         episodeId: String,
         dub: Bool,
         provider: String
@@ -42,12 +45,12 @@ extension Request where Route == ConsumetAPI {
             path: ["meta", "anilist", "watch", episodeId],
             query: [
                 .init(name: "dub", dub),
-                .init(name: "provider", provider),
+                .init(name: "provider", provider)
             ]
         )
     }
 
-    public static func listProviders(
+    static func listProviders(
         of type: ConsumetAPI.ProviderType = .ANIME
     ) -> Request<Route, [ProviderInfo]> {
         .init(
@@ -59,23 +62,25 @@ extension Request where Route == ConsumetAPI {
     }
 }
 
-extension ConsumetAPI {
-    public enum ProviderType: String {
+// swiftlint:disable discouraged_optional_boolean
+public extension ConsumetAPI {
+    enum ProviderType: String {
         case ANIME
         case MANGA
     }
 
-    public struct Anime: Equatable, Decodable {
+    struct Anime: Equatable, Decodable {
         let id: String
         let subOrDub: AudioType
         let episodes: [Episode]
 
         enum AudioType: String, Equatable, Decodable {
-            case sub, dub
+            case sub
+            case dub
         }
     }
 
-    public struct Episode: Equatable, Decodable {
+    struct Episode: Equatable, Decodable {
         public let id: String
         public let number: Int
         public let title: String?
@@ -85,33 +90,33 @@ extension ConsumetAPI {
         public let isFiller: Bool?
     }
 
-    public struct StreamingLinksPayload: Decodable {
+    struct StreamingLinksPayload: Decodable {
         let sources: [StreamingLink]
         let subtitles: [Subtitle]?
         let intro: Intro?
         let headers: [String: String]?
     }
 
-    public struct StreamingLink: Decodable {
+    struct StreamingLink: Decodable {
         let url: String
         let isM3U8: Bool?
         let isDASH: Bool?
         let quality: String?
     }
 
-    public struct Subtitle: Decodable {
+    struct Subtitle: Decodable {
         let url: String
         let lang: String
     }
 
-    public struct Intro: Decodable {
+    struct Intro: Decodable {
         let start: Int
         let end: Int
     }
 }
 
-extension Source.Quality {
-    fileprivate init?(
+private extension Source.Quality {
+    init?(
         _ quality: String
     ) {
         if let matched = Self.allCases.first(where: { $0.description.localizedCaseInsensitiveContains(quality) }) {
@@ -132,8 +137,8 @@ extension Source.Quality {
 
 // MARK: - Converters
 
-extension ConsumetAPI {
-    public static func convert(from payload: StreamingLinksPayload) -> SharedModels.SourcesOptions {
+public extension ConsumetAPI {
+    static func convert(from payload: StreamingLinksPayload) -> SharedModels.SourcesOptions {
         var sources: [SharedModels.Source] = []
 
         payload.sources.forEach { link in
@@ -141,11 +146,13 @@ extension ConsumetAPI {
                 return
             }
 
-            guard let url = URL(string: link.url) else { return }
+            guard let url = URL(string: link.url) else {
+                return
+            }
 
             if let source = sources.first(where: { $0.url.absoluteString == link.url }) {
                 if source.quality <= quality {
-                    sources.removeAll(where: { $0.url.absoluteString == link.url })
+                    sources.removeAll { $0.url.absoluteString == link.url }
                 } else {
                     return
                 }
@@ -170,7 +177,9 @@ extension ConsumetAPI {
         let subtitles: [SharedModels.SourcesOptions.Subtitle] = (payload.subtitles ?? [])
             .compactMap { subtitle in
                 guard let url = URL(string: subtitle.url),
-                        subtitle.lang != "Thumbnails" else { return nil }
+                      subtitle.lang != "Thumbnails" else {
+                    return nil
+                }
                 return SharedModels.SourcesOptions.Subtitle(
                     url: url,
                     lang: subtitle.lang
@@ -180,11 +189,11 @@ extension ConsumetAPI {
         return .init(sources.sorted(by: \.quality), subtitles: subtitles)
     }
 
-    public static func convert(from episodes: [ConsumetAPI.Episode]) -> [SharedModels.Episode] {
+    static func convert(from episodes: [ConsumetAPI.Episode]) -> [SharedModels.Episode] {
         episodes.compactMap(convert(from:))
     }
 
-    public static func convert(from episode: ConsumetAPI.Episode) -> SharedModels.Episode {
+    static func convert(from episode: ConsumetAPI.Episode) -> SharedModels.Episode {
         let thumbnail: ImageSize?
 
         if let thumbnailString = episode.image, let thumbnailURL = URL(string: thumbnailString) {
@@ -193,7 +202,8 @@ extension ConsumetAPI {
             thumbnail = nil
         }
 
-        let title = (episode.title?.isEmpty ?? true) ? "Episode \(episode.number)" : episode.title ?? "Episode \(episode.number)"
+        let title = (episode.title?.isEmpty ?? true) ? "Episode \(episode.number)" : episode
+            .title ?? "Episode \(episode.number)"
 
         return SharedModels.Episode(
             title: title,

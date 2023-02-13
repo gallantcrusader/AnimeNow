@@ -14,10 +14,10 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
     override var prefersHomeIndicatorAutoHidden: Bool { homeIndicatorAutoHidden }
 
     var homeIndicatorAutoHidden = false {
-       didSet {
+        didSet {
             setNeedsUpdateOfHomeIndicatorAutoHidden()
-       }
-   }
+        }
+    }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { interfaceOrientations }
 
@@ -32,7 +32,8 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
                     if interfaceOrientations.contains(.portrait) {
                         UIDevice.current.setValue(UIDeviceOrientation.portrait.rawValue, forKey: "orientation")
                     } else if interfaceOrientations.contains(.landscape) {
-                        let orientation: UIDeviceOrientation = UIDevice.current.orientation == .landscapeRight ? .landscapeRight : .landscapeLeft
+                        let orientation: UIDeviceOrientation = UIDevice.current
+                            .orientation == .landscapeRight ? .landscapeRight : .landscapeLeft
                         UIDevice.current.setValue(orientation.rawValue, forKey: "orientation")
                     }
                     UIViewController.attemptRotationToDeviceOrientation()
@@ -43,26 +44,27 @@ class AnimeNowHostingController: UIHostingController<AnyView> {
 
     override var shouldAutorotate: Bool { true }
 
-    init<V: View>(wrappedView: V) {
+    init(wrappedView: some View) {
         let box = Box()
 
         super.init(
             rootView:
-                AnyView(
-                    wrappedView
-                        .onPreferenceChange(HomeIndicatorAutoHiddenPreferenceKey.self) { value in
-                            box.delegate?.homeIndicatorAutoHidden = value
-                        }
-                        .onPreferenceChange(SupportedOrientationPreferenceKey.self) { value in
-                            box.delegate?.interfaceOrientations = value
-                        }
-                )
+            AnyView(
+                wrappedView
+                    .onPreferenceChange(HomeIndicatorAutoHiddenPreferenceKey.self) { value in
+                        box.delegate?.homeIndicatorAutoHidden = value
+                    }
+                    .onPreferenceChange(SupportedOrientationPreferenceKey.self) { value in
+                        box.delegate?.interfaceOrientations = value
+                    }
+            )
         )
 
         box.delegate = self
     }
 
-    @objc dynamic required init?(coder aDecoder: NSCoder) {
+    @objc
+    dynamic required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 }

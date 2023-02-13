@@ -5,8 +5,10 @@
 //  Created by ErrorErrorError on 11/19/22.
 //
 
-import SwiftUI
 import ComposableArchitecture
+import SwiftUI
+
+// MARK: - NewCollectionView
 
 public struct NewCollectionView: View {
     let store: StoreOf<NewCollectionReducer>
@@ -29,8 +31,8 @@ public struct NewCollectionView: View {
                     .foregroundColor(.gray.opacity(0.85))
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                WithViewStore(store) {
-                    TextField("Collection Name", text: $0.binding(\.$title))
+                WithViewStore(store) { viewStore in
+                    TextField("Collection Name", text: viewStore.binding(\.$title))
                         .textFieldStyle(.plain)
                         .padding(12)
                         .background(Color.gray.opacity(0.2))
@@ -63,6 +65,8 @@ public struct NewCollectionView: View {
         }
     }
 }
+
+// MARK: - AddNewCollectionView_Previews
 
 struct AddNewCollectionView_Previews: PreviewProvider {
     static var previews: some View {

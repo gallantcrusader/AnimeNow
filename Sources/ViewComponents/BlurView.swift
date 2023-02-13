@@ -25,20 +25,20 @@ public var `default` = BlurStyle.fullScreenUI
 
 #endif
 
+// MARK: - BlurView
 
 public struct BlurView: PlatformAgnosticViewRepresentable {
-
     public init(_ style: BlurStyle = `default`) {
         self.style = style
     }
 
     var style: BlurStyle = `default`
 
-    public func makePlatformView(context: Context) -> BlurEffectView {
+    public func makePlatformView(context _: Context) -> BlurEffectView {
         BlurEffectView()
     }
 
-    public func updatePlatformView(_ view: BlurEffectView, context: Context) {
+    public func updatePlatformView(_ view: BlurEffectView, context _: Context) {
         #if os(iOS)
         view.effect = UIBlurEffect(style: style)
         #else
@@ -49,6 +49,7 @@ public struct BlurView: PlatformAgnosticViewRepresentable {
     }
 }
 
+// MARK: - BlurredButtonStyle
 
 public struct BlurredButtonStyle: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {

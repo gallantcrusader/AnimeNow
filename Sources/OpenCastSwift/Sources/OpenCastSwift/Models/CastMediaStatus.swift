@@ -9,6 +9,8 @@
 import Foundation
 import SwiftyJSON
 
+// MARK: - CastMediaPlayerState
+
 public enum CastMediaPlayerState: String {
     case buffering = "BUFFERING"
     case playing = "PLAYING"
@@ -16,12 +18,16 @@ public enum CastMediaPlayerState: String {
     case stopped = "STOPPED"
 }
 
+// MARK: - CastMediaStatus
+
 public final class CastMediaStatus: NSObject {
     public struct MediaStatusMedia {
         public let duration: Double
 
-        init?(mediaOptions: JSON){
-            guard let duration = mediaOptions["duration"].double else { return nil }
+        init?(mediaOptions: JSON) {
+            guard let duration = mediaOptions["duration"].double else {
+                return nil
+            }
             self.duration = duration
         }
     }
@@ -35,38 +41,39 @@ public final class CastMediaStatus: NSObject {
     public let media: MediaStatusMedia?
 
     private let createdDate = Date()
-    
+
     public var adjustedCurrentTime: Double {
-        return currentTime - Double(playbackRate)*createdDate.timeIntervalSinceNow
+        currentTime - Double(playbackRate) * createdDate.timeIntervalSinceNow
     }
-    
+
     public var state: String {
-        return playerState.rawValue
+        playerState.rawValue
     }
-    
-    public override var description: String {
-        return "MediaStatus(mediaSessionId: \(mediaSessionId), playbackRate: \(playbackRate), playerState: \(playerState.rawValue), currentTime: \(currentTime))"
+
+    override public var description: String {
+        "MediaStatus(mediaSessionId: \(mediaSessionId), playbackRate: \(playbackRate), playerState: \(playerState.rawValue), currentTime: \(currentTime))"
     }
-    
+
     init(json: JSON) {
-        mediaSessionId = json[CastJSONPayloadKeys.mediaSessionId].int ?? 0
-        
-        playbackRate = json[CastJSONPayloadKeys.playbackRate].int ?? 1
-        
-        playerState = json[CastJSONPayloadKeys.playerState].string.flatMap(CastMediaPlayerState.init) ?? .buffering
-        
-        currentTime = json[CastJSONPayloadKeys.currentTime].double ?? 0
-        
-        metadata = json[CastJSONPayloadKeys.media][CastJSONPayloadKeys.metadata]
+        self.mediaSessionId = json[CastJSONPayloadKeys.mediaSessionId].int ?? 0
 
-        media = MediaStatusMedia(mediaOptions: json[CastJSONPayloadKeys.media])
+        self.playbackRate = json[CastJSONPayloadKeys.playbackRate].int ?? 1
 
-        if let contentID = json[CastJSONPayloadKeys.media][CastJSONPayloadKeys.contentId].string, let data = contentID.data(using: .utf8) {
+        self.playerState = json[CastJSONPayloadKeys.playerState].string.flatMap(CastMediaPlayerState.init) ?? .buffering
+
+        self.currentTime = json[CastJSONPayloadKeys.currentTime].double ?? 0
+
+        self.metadata = json[CastJSONPayloadKeys.media][CastJSONPayloadKeys.metadata]
+
+        self.media = MediaStatusMedia(mediaOptions: json[CastJSONPayloadKeys.media])
+
+        if let contentID = json[CastJSONPayloadKeys.media][CastJSONPayloadKeys.contentId].string,
+           let data = contentID.data(using: .utf8) {
             self.contentID = (try? JSON(data: data))?[CastJSONPayloadKeys.contentId].string ?? contentID
         } else {
-            contentID = nil
+            self.contentID = nil
         }
-        
+
         super.init()
     }
 }

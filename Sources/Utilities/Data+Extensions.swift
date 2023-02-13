@@ -7,14 +7,14 @@
 
 import Foundation
 
-extension Encodable {
-    public func toData() throws -> Data {
+public extension Encodable {
+    func toData() throws -> Data {
         try JSONEncoder().encode(self)
     }
 }
 
-extension Data {
-    public func toObject<D: Decodable>() throws -> D {
+public extension Data {
+    func toObject<D: Decodable>() throws -> D {
         try JSONDecoder().decode(D.self, from: self)
     }
 }

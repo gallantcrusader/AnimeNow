@@ -5,15 +5,17 @@
 //  Created by ErrorErrorError on 11/24/22.
 //
 
-import Utilities
 import AnimeClient
-import SharedModels
 import AnimeStreamLogic
-import DownloaderClient
 import ComposableArchitecture
+import DownloaderClient
+import SharedModels
+import Utilities
+
+// MARK: - DownloadOptionsReducer
 
 public struct DownloadOptionsReducer: ReducerProtocol {
-    public init() { }
+    public init() {}
 
     public struct State: Equatable {
         public let anime: Anime
@@ -47,8 +49,10 @@ public struct DownloadOptionsReducer: ReducerProtocol {
         Reduce(self.core)
     }
 
-    @Dependency(\.downloaderClient) var downloaderClient
-    @Dependency(\.animeClient) var animeClient
+    @Dependency(\.downloaderClient)
+    var downloaderClient
+    @Dependency(\.animeClient)
+    var animeClient
 }
 
 extension DownloadOptionsReducer.State {
@@ -58,7 +62,7 @@ extension DownloadOptionsReducer.State {
 }
 
 extension DownloadOptionsReducer {
-    func core(_ state: inout State, _ action: Action) -> EffectTask<Action> {
+    func core(_: inout State, _ action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
             return .action(.animeStream(.initialize))

@@ -1,20 +1,20 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/18/23.
-//  
+//
 //
 
-import Foundation
 import ComposableArchitecture
+import Foundation
 
-extension TaskResult {
-    public var loadable: Loadable<Success> {
+public extension TaskResult {
+    var loadable: Loadable<Success> {
         switch self {
-        case .success(let success):
+        case let .success(success):
             return .success(success)
-        case .failure(let error):
+        case let .failure(error):
             return .failed(error)
         }
     }

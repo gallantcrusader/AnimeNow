@@ -5,13 +5,15 @@
 //  Created by ErrorErrorError on 9/22/22.
 //
 
-import SwiftUI
 import SharedModels
+import SwiftUI
+
+// MARK: - ThumbnailItemCompactView
 
 public struct ThumbnailItemCompactView: View {
     let episode: any EpisodeRepresentable
-    var progress: Double? = nil
-    var downloadStatus: ThumbnailItemBigView.DownloadStatus? = nil
+    var progress: Double?
+    var downloadStatus: ThumbnailItemBigView.DownloadStatus?
 
     public init(
         episode: any EpisodeRepresentable,
@@ -31,7 +33,7 @@ public struct ThumbnailItemCompactView: View {
             FillAspectImage(
                 url: episode.thumbnail?.link
             )
-            .aspectRatio(16/9, contentMode: .fit)
+            .aspectRatio(16 / 9, contentMode: .fit)
             .cornerRadius(12)
             .overlay(
                 Group {
@@ -98,7 +100,7 @@ public struct ThumbnailItemCompactView: View {
                     switch downloadStatus.state {
                     case .some(.pending), .some(.downloading):
                         Group {
-                            if case .downloading(let percentage) = downloadStatus.state {
+                            if case let .downloading(percentage) = downloadStatus.state {
                                 CircularProgressView(progress: percentage)
                             } else {
                                 CircularProgressView(progress: 0.0)
@@ -144,6 +146,8 @@ public struct ThumbnailItemCompactView: View {
         .frame(maxWidth: .infinity)
     }
 }
+
+// MARK: - EpisodeItemCompactView_Previews
 
 struct EpisodeItemCompactView_Previews: PreviewProvider {
     static var previews: some View {

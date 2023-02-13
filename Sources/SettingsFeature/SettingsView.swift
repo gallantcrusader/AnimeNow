@@ -2,24 +2,28 @@
 //  SettingsView.swift
 //  Anime Now!
 //
-//  Created by ErrorErrorError on 12/15/22.  
+//  Created by ErrorErrorError on 12/15/22.
 //
 
 import Awesome
-import SwiftUI
-import DiscordClient
-import ViewComponents
 import ComposableArchitecture
+import DiscordClient
+import SwiftUI
+import ViewComponents
+
+// MARK: - SettingsView
 
 public struct SettingsView: View {
-    @Environment(\.openURL) var openURL
-    
+    @Environment(\.openURL)
+    var openURL
+
     let store: StoreOf<SettingsReducer>
-    @ObservedObject var viewStore: ViewStoreOf<SettingsReducer>
+    @ObservedObject
+    var viewStore: ViewStoreOf<SettingsReducer>
 
     public init(store: StoreOf<SettingsReducer>) {
         self.store = store
-        self.viewStore = .init(store, observe: { $0 })
+        self.viewStore = .init(store) { $0 }
     }
 
     public var body: some View {
@@ -27,13 +31,10 @@ public struct SettingsView: View {
             ScrollView {
                 LazyVStack(spacing: 24) {
                     SettingsGroupView(title: "General") {
-                        SettingsRowView.listSelection(
-                            name: "Provider",
-                            selectable: viewStore.selectableAnimeProviders
-                        ) {
+                        SettingsRowView.listSelection(name: "Provider", selectable: viewStore.selectableAnimeProviders) { provider in
                             viewStore.send(
                                 .binding(
-                                    .set(\.$userSettings.preferredProvider, $0)
+                                    .set(\.$userSettings.preferredProvider, provider)
                                 )
                             )
                         } itemView: { item in
@@ -66,7 +67,7 @@ public struct SettingsView: View {
                     SettingsGroupView(title: "About") {
                         SettingsRowView(
                             name: "Image Cache Utilized",
-                            text: "\(viewStore.imageCacheUsage / (1024 * 1024)) Mb / \(viewStore.imageCacheCapacity / (1024 * 1024)) Mb"
+                            text: "\(viewStore.imageCacheUsage / (1_024 * 1_024)) Mb / \(viewStore.imageCacheCapacity / (1_024 * 1_024)) Mb"
                         )
                         .onLongPressGesture {
                             viewStore.send(.resetImageCache)
@@ -77,13 +78,14 @@ public struct SettingsView: View {
                         ) {
                             VStack(spacing: 12) {
                                 Button {
+                                    // swiftlint:disable force_unwrapping
                                     openURL(.init(string: "https://github.com/AnimeNow-Team/AnimeNow")!)
                                 } label: {
                                     HStack {
                                         Awesome.Brand.github.image
                                             .foregroundColor(.white)
                                             .size(24)
-                                        
+
                                         Text("GitHub")
                                             .font(.body.weight(.bold))
                                             .foregroundColor(.white)
@@ -106,13 +108,14 @@ public struct SettingsView: View {
                                 .buttonStyle(.plain)
 
                                 Button {
+                                    // swiftlint:disable force_unwrapping
                                     openURL(.init(string: "https://discord.gg/R5v8Sa3WHE")!)
                                 } label: {
                                     HStack {
                                         Awesome.Brand.discord.image
                                             .foregroundColor(.white)
                                             .size(24)
-                                        
+
                                         Text("Join our Discord")
                                             .font(.body.weight(.bold))
                                             .foregroundColor(.white)
@@ -126,16 +129,17 @@ public struct SettingsView: View {
                                         .foregroundColor(
                                             .init(
                                                 .sRGB,
-                                                red: 0.447058823529412,
-                                                green: 0.537254901960784,
-                                                blue: 0.854901960784314
+                                                red: 0.447_0,
+                                                green: 0.537_2,
+                                                blue: 0.854_9
                                             )
                                         )
                                     )
                                 }
                                 .buttonStyle(.plain)
-                                
+
                                 Button {
+                                    // swiftlint:disable force_unwrapping
                                     openURL(.init(string: "https://www.buymeacoffee.com/animenow")!)
                                 } label: {
                                     Text("☕ Buy me a coffee")
@@ -174,6 +178,8 @@ public struct SettingsView: View {
         }
     }
 }
+
+// MARK: - SettingsView_Previews
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {

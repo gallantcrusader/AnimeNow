@@ -6,11 +6,13 @@
 //  Copyright © 2022. All rights reserved.
 //
 
+import ComposableArchitecture
+import DownloaderClient
 import SwiftUI
 import Utilities
 import ViewComponents
-import DownloaderClient
-import ComposableArchitecture
+
+// MARK: - DownloadsView
 
 public struct DownloadsView: View {
     let store: StoreOf<DownloadsReducer>
@@ -85,27 +87,25 @@ extension DownloadsView {
     ) -> some View {
         LazyVStack(spacing: 12) {
             ForEach(animes) { anime in
-                StackNavigationLink(
-                    title: anime.title
-                ) {
+                StackNavigationLink(title: anime.title) {
                     HStack(spacing: 12) {
                         FillAspectImage(url: anime.posterImage.first?.link)
-                            .aspectRatio(2/3, contentMode: .fit)
+                            .aspectRatio(2 / 3, contentMode: .fit)
                             .frame(width: 100)
                             .cornerRadius(12)
-                        
+
                         VStack(alignment: .leading) {
                             Text(anime.title)
                                 .font(.title3.bold())
                                 .foregroundColor(Color.white)
-                            
+
                             Text(
                                 "\(anime.episodes.count) Item\(anime.episodes.count > 1 ? "s" : "")".uppercased()
                             )
                             .font(.footnote.bold())
                             .foregroundColor(Color.gray)
                         }
-                        
+
                         Spacer()
                     }
                     .contentShape(Rectangle())
@@ -119,11 +119,11 @@ extension DownloadsView {
                                     .background(Capsule().foregroundColor(.secondaryAccent))
                             }
                         }
-                            .frame(
-                                maxWidth: .infinity,
-                                maxHeight: .infinity,
-                                alignment: .topTrailing
-                            )
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .topTrailing
+                        )
                     )
                 } destination: {
                     episodesView(anime)
@@ -147,9 +147,7 @@ extension DownloadsView {
             spacing: 12
         ) {
             ForEach(animes) { anime in
-                StackNavigationLink(
-                    title: anime.title
-                ) {
+                StackNavigationLink(title: anime.title) {
                     VStack(
                         alignment: .leading,
                         spacing: 16
@@ -162,18 +160,18 @@ extension DownloadsView {
                                         Circle()
                                             .foregroundColor(.secondaryAccent)
                                             .frame(width: 24, height: 24)
-                                        
+
                                         Text("\(anime.downloadingCount)")
                                             .font(.caption.bold())
                                             .foregroundColor(.white)
                                     }
                                 }
-                                    .padding(8)
-                                    .frame(
-                                        maxWidth: .infinity,
-                                        maxHeight: .infinity,
-                                        alignment: .topTrailing
-                                    )
+                                .padding(8)
+                                .frame(
+                                    maxWidth: .infinity,
+                                    maxHeight: .infinity,
+                                    alignment: .topTrailing
+                                )
                             )
                         Text(
                             "\(anime.episodes.count) EPISODE\(anime.episodes.count > 1 ? "S" : "")"
@@ -213,20 +211,17 @@ extension DownloadsView {
             ForEach(anime.episodes.sorted(by: \.number)) { episode in
                 ThumbnailItemCompactView(
                     episode: episode,
-                    downloadStatus: episode.downloaded ? nil : .init(
-                        state: episode.status,
-                        callback: { action in
-                            let viewStore = ViewStore(store)
-                            switch action {
-                            case .download:
-                                break
-                            case .cancel:
-                                viewStore.send(.cancelDownload(anime.id, episode.number))
-                            case .retry:
-                                break
-                            }
+                    downloadStatus: episode.downloaded ? nil : .init(state: episode.status) { action in
+                        let viewStore = ViewStore(store)
+                        switch action {
+                        case .download:
+                            break
+                        case .cancel:
+                            viewStore.send(.cancelDownload(anime.id, episode.number))
+                        case .retry:
+                            break
                         }
-                    )
+                    }
                 )
                 .frame(height: 84)
                 .frame(maxWidth: .infinity)
@@ -274,17 +269,16 @@ extension DownloadsView {
                 ThumbnailItemBigView(
                     episode: episode,
                     downloadStatus: episode.downloaded ? nil : .init(
-                        state: episode.status,
-                        callback: { action in
-                            let viewStore = ViewStore(store)
-                            switch action {
-                            case .cancel:
-                                viewStore.send(.cancelDownload(anime.id, episode.number))
-                            default:
-                                break
-                            }
+                        state: episode.status
+                    ) { action in
+                        let viewStore = ViewStore(store)
+                        switch action {
+                        case .cancel:
+                            viewStore.send(.cancelDownload(anime.id, episode.number))
+                        default:
+                            break
                         }
-                    )
+                    }
                 )
                 .animation(.linear, value: episode.status)
                 .onTapGesture {
@@ -323,6 +317,8 @@ private extension DownloaderClient.EpisodeStorage {
         }
     }
 }
+
+// MARK: - DownloadsView_Previews
 
 struct DownloadsView_Previews: PreviewProvider {
     static var previews: some View {

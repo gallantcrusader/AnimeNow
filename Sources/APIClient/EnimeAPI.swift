@@ -1,24 +1,27 @@
 //
 //  EnimeAPI.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/18/23.
-//  
+//
 //
 
 import Foundation
 import SharedModels
 
+// MARK: - EnimeAPI
+
 public final class EnimeAPI: APIBase {
     public static let shared: EnimeAPI = .init()
 
+    // swiftlint:disable force_unwrapping
     public let base = URL(string: "https://api.enime.moe")!
 
-    private init() { }
+    private init() {}
 }
 
-extension Request where Route == EnimeAPI {
-    public static func recentEpisodes(
+public extension Request where Route == EnimeAPI {
+    static func recentEpisodes(
         page: Int = 1,
         perPage: Int = 25
     ) -> Request<Route, EnimeAPI.Response> {
@@ -32,13 +35,13 @@ extension Request where Route == EnimeAPI {
     }
 }
 
-extension EnimeAPI {
-    public struct Response: Decodable {
+public extension EnimeAPI {
+    struct Response: Decodable {
         public let data: [RecentItem]
     }
 
-    public struct RecentItem: Decodable {
-        let id: String  // EpisodeId
+    struct RecentItem: Decodable {
+        let id: String // EpisodeId
         let number: Int
         let image: String?
         let updatedAt: String?
@@ -48,7 +51,7 @@ extension EnimeAPI {
         let description: String?
     }
 
-    public struct Anime: Decodable {
+    struct Anime: Decodable {
         let id: String
         let anilistId: Int
         let coverImage: String?
@@ -60,15 +63,15 @@ extension EnimeAPI {
         let genre: [String]?
     }
 
-    public struct Title: Decodable {
+    struct Title: Decodable {
         let native: String?
         let romaji: String?
         let english: String?
     }
 }
 
-extension EnimeAPI {
-    public static func convert(from item: RecentItem) -> SharedModels.UpdatedAnimeEpisode {
+public extension EnimeAPI {
+    static func convert(from item: RecentItem) -> SharedModels.UpdatedAnimeEpisode {
         var posterImage = [SharedModels.ImageSize]()
         var coverImage = [SharedModels.ImageSize]()
 
@@ -121,10 +124,8 @@ extension EnimeAPI {
         }
 
         let thumbnail = item.image
-            .flatMap({
-                URL(string: $0)
-                    .flatMap({ ImageSize.original($0) })
-            })
+            .flatMap { URL(string: $0) }
+            .flatMap { ImageSize.original($0) }
 
         return .init(
             anime: .init(

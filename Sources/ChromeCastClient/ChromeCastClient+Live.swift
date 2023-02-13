@@ -1,16 +1,16 @@
 //
 //  ChromeCastClient+Live.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/2/23.
-//  
+//
 //
 
 import Foundation
 import OpenCastSwift
 
-extension ChromeCastClient {
-    public static let liveValue: Self = {
+public extension ChromeCastClient {
+    static let liveValue: Self = {
         var scanner = CastDeviceScanner()
 
         return .init(
@@ -50,6 +50,6 @@ private extension CastDevice {
     }
 }
 
-private class Delegate: CastClientDelegate {
-    
-}
+// MARK: - Delegate
+
+private class Delegate: CastClientDelegate {}

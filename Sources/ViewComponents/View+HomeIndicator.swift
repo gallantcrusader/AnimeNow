@@ -1,15 +1,15 @@
 //  View+HomeIndicator.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 12/26/22.
-//  
+//
 //
 
 #if os(iOS)
 import SwiftUI
 
 public struct HomeIndicatorAutoHiddenPreferenceKey: PreferenceKey {
-    public static var defaultValue: Bool = false
+    public static var defaultValue = false
 
     public static func reduce(
         value: inout Bool,

@@ -6,9 +6,9 @@
 //
 
 import CoreData
-import Utilities
 import Foundation
 import OrderedCollections
+import Utilities
 
 final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
     static let shared = DatabaseClientLive()
@@ -28,9 +28,9 @@ final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
             fatalError("Failed to create model from file: \(databaseURL)")
         }
 
-        pc = NSPersistentContainer(name: database, managedObjectModel: managedObjectModel)
+        self.pc = NSPersistentContainer(name: database, managedObjectModel: managedObjectModel)
         pc.loadPersistentStores { [unowned self] description, error in
-            if let error = error {
+            if let error {
                 fatalError("Unable to load persistent stores: \(error)")
             }
 
@@ -43,7 +43,7 @@ final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
     func insert<T: ManagedObjectConvertible>(
         _ item: T
     ) async throws {
-        try await self.pc.schedule { ctx in
+        try await pc.schedule { ctx in
             let object: NSManagedObject?
 
             if let objectFound = try ctx.fetchOne(T.all.where(T.idKeyPath == item[keyPath: T.idKeyPath])) {
@@ -61,7 +61,7 @@ final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
         _ keyPath: WritableKeyPath<T, V?>,
         _ value: V?
     ) async throws -> Bool {
-        try await self.pc.schedule { ctx in
+        try await pc.schedule { ctx in
             if let managed = try ctx.fetchOne(T.all.where(T.idKeyPath == id)) {
                 try managed.update(keyPath, value)
                 return true
@@ -76,7 +76,7 @@ final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
         _ keyPath: WritableKeyPath<T, V>,
         _ value: V
     ) async throws -> Bool {
-        try await self.pc.schedule { ctx in
+        try await pc.schedule { ctx in
             if let managed = try ctx.fetchOne(T.all.where(T.idKeyPath == id)) {
                 try managed.update(keyPath, value)
                 return true
@@ -89,7 +89,7 @@ final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
     func delete<T: ManagedObjectConvertible>(
         _ item: T
     ) async throws {
-        try await self.pc.schedule { ctx in
+        try await pc.schedule { ctx in
             try ctx.delete(T.all.where(T.idKeyPath == item[keyPath: T.idKeyPath]))
         }
     }

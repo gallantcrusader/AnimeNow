@@ -7,20 +7,21 @@
 //
 
 import Build
-import Utilities
-import FileClient
-import SharedModels
-import DiscordClient
-import ViewComponents
-import UserDefaultsClient
-import ImageDatabaseClient
 import ComposableArchitecture
+import DiscordClient
+import FileClient
+import ImageDatabaseClient
+import SharedModels
+import UserDefaultsClient
+import Utilities
+import ViewComponents
+
+// MARK: - SettingsReducer
 
 public struct SettingsReducer: ReducerProtocol {
     public init() {}
 
     public struct State: Equatable {
-
         // MARK: Anime Providers
 
         public var animeProviders = Loadable<[ProviderInfo]>.idle
@@ -39,7 +40,8 @@ public struct SettingsReducer: ReducerProtocol {
 
         // MARK: User Settings
 
-        @BindableState public var userSettings = UserSettings()
+        @BindableState
+        public var userSettings = UserSettings()
 
         public init() {}
     }
@@ -52,10 +54,14 @@ public struct SettingsReducer: ReducerProtocol {
         case binding(BindingAction<State>)
     }
 
-    @Dependency(\.build) var build
-    @Dependency(\.fileClient) var fileClient
-    @Dependency(\.discordClient) var discordClient
-    @Dependency(\.userDefaultsClient) var userDefaultsClient
+    @Dependency(\.build)
+    var build
+    @Dependency(\.fileClient)
+    var fileClient
+    @Dependency(\.discordClient)
+    var discordClient
+    @Dependency(\.userDefaultsClient)
+    var userDefaultsClient
 
     public var body: some ReducerProtocol<State, Action> {
         CombineReducers {
@@ -74,8 +80,8 @@ public struct SettingsReducer: ReducerProtocol {
     }
 }
 
-extension SettingsReducer.State {
-    public var selectableAnimeProviders: Selectable<ProviderInfo> {
+public extension SettingsReducer.State {
+    var selectableAnimeProviders: Selectable<ProviderInfo> {
         .init(
             items: animeProviders.value ?? [],
             selected: userSettings.preferredProvider
@@ -84,18 +90,18 @@ extension SettingsReducer.State {
 }
 
 extension SettingsReducer {
-    struct DiscordClientStatusCancellable: Hashable { }
+    struct DiscordClientStatusCancellable: Hashable {}
 
     private func core(state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .onAppear:
             state.buildVersion = "\(build.version()) (\(build.gitSha()))"
             return .merge(
-                self.setupDiscord(&state),
-                self.setupCache(&state)
+                setupDiscord(&state),
+                setupCache(&state)
             )
 
-        case .discordStatus(let status):
+        case let .discordStatus(status):
             state.discordStatus = status
 
         case .resetImageCache:
@@ -145,14 +151,14 @@ extension SettingsReducer {
     }
 }
 
-extension FileClient {
-    public func save(userSettings: UserSettings) async throws {
-        try await self.save(userSettings, to: FileClient.userSettingsFileName)
+public extension FileClient {
+    func save(userSettings: UserSettings) async throws {
+        try await save(userSettings, to: FileClient.userSettingsFileName)
     }
 
-    public func loadUserSettings() async throws -> UserSettings {
-        try await self.load(UserSettings.self, from: FileClient.userSettingsFileName)
+    func loadUserSettings() async throws -> UserSettings {
+        try await load(UserSettings.self, from: FileClient.userSettingsFileName)
     }
 
-    public static let userSettingsFileName = "user-settings"
+    static let userSettingsFileName = "user-settings"
 }

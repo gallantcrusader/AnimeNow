@@ -1,13 +1,15 @@
 //
 //  SwiftUIView.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 2/7/23.
-//  
+//
 //
 
-import SwiftUI
 import ImageDatabaseClient
+import SwiftUI
+
+// MARK: - CachedAsyncImagePhase
 
 public enum CachedAsyncImagePhase {
     case empty
@@ -15,26 +17,29 @@ public enum CachedAsyncImagePhase {
     case failed(Error)
 
     public var image: Image? {
-        if case .success(let image) = self {
+        if case let .success(image) = self {
             return image
         }
         return nil
     }
 
     public var error: Error? {
-        if case .failed(let error) = self {
+        if case let .failed(error) = self {
             return error
         }
         return nil
     }
 }
 
+// MARK: - CachedAsyncImage
+
 public struct CachedAsyncImage<Content: View>: View {
-    @State private var phase = CachedAsyncImagePhase.empty
+    @State
+    private var phase = CachedAsyncImagePhase.empty
     private let url: URL?
     private let transaction: Transaction
     private let content: (CachedAsyncImagePhase) -> Content
-    private var onAverageColorChanged: ((Color?) -> Void)? = nil
+    private var onAverageColorChanged: ((Color?) -> Void)?
 
     public init(
         url: URL? = nil,
@@ -79,7 +84,9 @@ public struct CachedAsyncImage<Content: View>: View {
         }
 
         Task.detached {
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else {
+                return
+            }
 
             do {
                 let image = try await ImageDatabase.shared.image(url)
@@ -102,8 +109,8 @@ public struct CachedAsyncImage<Content: View>: View {
     }
 }
 
-extension CachedAsyncImage {
-    public init<I: View, P: View>(
+public extension CachedAsyncImage {
+    init<I: View, P: View>(
         url: URL?,
         transaction: Transaction = .init(),
         @ViewBuilder content: @escaping (Image) -> I,
@@ -119,13 +126,15 @@ extension CachedAsyncImage {
     }
 }
 
+// MARK: - CachedAsyncImage_Previews
+
 struct CachedAsyncImage_Previews: PreviewProvider {
     static var previews: some View {
         CachedAsyncImage(url: nil) { phase in
             switch phase {
             case .empty:
                 EmptyView()
-            case .success(let image):
+            case let .success(image):
                 image
                     .resizable()
                     .scaledToFill()

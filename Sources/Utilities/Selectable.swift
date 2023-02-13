@@ -1,12 +1,14 @@
 //
 //  Selectable.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/4/23.
-//  
+//
 //
 
 import Foundation
+
+// MARK: - Selectable
 
 public struct Selectable<E: Identifiable> {
     public var selected: E.ID?
@@ -21,7 +23,9 @@ public struct Selectable<E: Identifiable> {
 
     public var items: [E] {
         didSet {
-            if item == nil { selected = nil }
+            if item == nil {
+                selected = nil
+            }
         }
     }
 
@@ -32,5 +36,7 @@ public struct Selectable<E: Identifiable> {
         return nil
     }
 }
+
+// MARK: Equatable
 
 extension Selectable: Equatable where E: Equatable {}

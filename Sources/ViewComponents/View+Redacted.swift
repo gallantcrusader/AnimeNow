@@ -8,9 +8,9 @@
 import Foundation
 import SwiftUI
 
-extension View {
+public extension View {
     @ViewBuilder
-    public func placeholder(active: Bool, duration: Double = 1.5) -> some View {
+    func placeholder(active: Bool, duration: Double = 1.5) -> some View {
         Group {
             if active {
                 self.redacted(reason: .placeholder)

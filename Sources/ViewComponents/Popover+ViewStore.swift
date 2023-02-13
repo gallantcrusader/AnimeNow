@@ -3,34 +3,28 @@
 //  Anime Now! (macOS)
 //
 //  Created by ErrorErrorError on 10/31/22.
-//  
+//
 //
 
 #if os(macOS)
-import SwiftUI
 import ComposableArchitecture
+import SwiftUI
 
-extension View {
-    public func popoverStore<State, Action, Content: View>(
-        store: Store<State?, Action>,
-        onDismiss: @escaping () -> Void = { },
-        destination: @escaping (Store<State, Action>) -> Content
+public extension View {
+    func popover<Action>(
+        _ store: Store<Bool, Action>,
+        onDismiss: @escaping () -> Action,
+        @ViewBuilder content: @escaping () -> some View
     ) -> some View {
-        WithViewStore(
-            store,
-            observe: { $0 != nil }
-        ) { viewStore in
+        WithViewStore(store) { viewStore in
             self.popover(
-                isPresented: .init(
-                    get: { viewStore.state },
-                    set: { $0 ? () : onDismiss() }
-                )
-            ) {
-                IfLetStore(
-                    store
-                ) { store in
-                    destination(store)
+                isPresented: viewStore.binding { viewState in
+                    viewState.self
+                } send: { _ in
+                    onDismiss()
                 }
+            ) {
+                content()
             }
         }
     }

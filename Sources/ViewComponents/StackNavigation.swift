@@ -3,18 +3,21 @@
 //  Anime Now! (iOS)
 //
 //  Created by ErrorErrorError on 11/22/22.
-//  
+//
 //
 
-import SwiftUI
 import OrderedCollections
+import SwiftUI
+
+// MARK: - StackNavigation
 
 public struct StackNavigation<Buttons: View, Content: View>: View {
     let title: String?
     var content: () -> Content
-    var buttons: (() -> Buttons)? = nil
+    var buttons: (() -> Buttons)?
 
-    @StateObject var stack = StackNavigationObservable()
+    @StateObject
+    var stack = StackNavigationObservable()
 
     public init(
         title: String? = nil,
@@ -96,22 +99,25 @@ public extension StackNavigation where Buttons == EmptyView {
     }
 }
 
+// MARK: - StackNavigationLink
+
 public struct StackNavigationLink: View {
     var title: String
     var label: () -> AnyView
     var destination: () -> AnyView
 
-    public init<Label: View, Destination: View>(
+    public init(
         title: String,
-        @ViewBuilder label: @escaping () -> Label,
-        @ViewBuilder destination: @escaping () -> Destination
+        @ViewBuilder label: @escaping () -> some View,
+        @ViewBuilder destination: @escaping () -> some View
     ) {
         self.title = title
         self.label = { AnyView(label()) }
         self.destination = { AnyView(destination()) }
     }
 
-    @EnvironmentObject var stack: StackNavigationObservable
+    @EnvironmentObject
+    var stack: StackNavigationObservable
 
     public var body: some View {
         #if os(iOS)
@@ -134,8 +140,11 @@ public struct StackNavigationLink: View {
     }
 }
 
+// MARK: - StackNavigationObservable
+
 class StackNavigationObservable: ObservableObject {
-    @Published var stack = [StackNavigationLink]()
+    @Published
+    var stack = [StackNavigationLink]()
 
     func push(_ view: StackNavigationLink) {
         stack.append(view)

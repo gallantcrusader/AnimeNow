@@ -10,17 +10,20 @@ import SharedModels
 import SociableWeaver
 import Utilities
 
+// MARK: - AniListAPI
+
 public final class AniListAPI: APIBase {
     public static let shared: AniListAPI = .init()
 
+    // swiftlint:disable force_unwrapping
     public let base = URL(string: "https://graphql.anilist.co")!
 
     private init() {}
 }
 
-extension Request where Route == AniListAPI {
-    public static func graphql<Q: GraphQLQuery>(
-        _ query: Q.Type,
+public extension Request where Route == AniListAPI {
+    static func graphql<Q: GraphQLQuery>(
+        _: Q.Type,
         _ options: Q.QueryOptions
     ) -> Request<Route, Q.Response> {
         let query = Q.createQuery(options)
@@ -40,15 +43,14 @@ extension Request where Route == AniListAPI {
 
 // MARK: - Converters
 
-extension AniListAPI {
-    public static func convert(from medias: [Media]) -> [Anime] {
+public extension AniListAPI {
+    static func convert(from medias: [Media]) -> [Anime] {
         medias.compactMap { media in
             convert(from: media)
         }
     }
 
-    // swiftlint:disable function_body_length
-    public static func convert(from media: Media) -> Anime {
+    static func convert(from media: Media) -> Anime {
         var coverImages: [ImageSize] = []
 
         if let imageStr = media.coverImage.extraLarge, let url = URL(string: imageStr) {
@@ -124,16 +126,16 @@ extension AniListAPI {
     }
 }
 
-// MARK: - GraphQL Queries
+// MARK: - PageResponseObject
 
 public protocol PageResponseObject {
     static var pageResponseName: String { get }
 }
 
-extension AniListAPI {
-    public typealias PageMediaQuery = PageQuery<AniListAPI.Media>
+public extension AniListAPI {
+    typealias PageMediaQuery = PageQuery<AniListAPI.Media>
 
-    public struct PageQuery<O: GraphQLQueryObject & PageResponseObject>: GraphQLQuery {
+    struct PageQuery<O: GraphQLQueryObject & PageResponseObject>: GraphQLQuery {
         public typealias Response = GraphQL.Response<PageResponse<Self>>
 
         public enum QueryArgument: DefaultArguments {
@@ -189,13 +191,13 @@ extension AniListAPI {
                     O.createQueryObject(CodingKeys.items, options.itemArguments)
                     AniListAPI.PageInfo.createQueryObject(CodingKeys.pageInfo)
                 }
-                    .caseStyle(.pascalCase)
+                .caseStyle(.pascalCase)
 
                 for argument in options.arguments {
                     switch argument {
-                    case .page(let int):
+                    case let .page(int):
                         obj = obj.argument(key: "page", value: int)
-                    case .perPage(let int):
+                    case let .perPage(int):
                         obj = obj.argument(key: "perPage", value: int)
                     }
                 }
@@ -207,13 +209,13 @@ extension AniListAPI {
 
 // MARK: - GraphQL Models
 
-extension AniListAPI {
-    public struct PageResponse<T: Decodable>: Decodable {
+public extension AniListAPI {
+    struct PageResponse<T: Decodable>: Decodable {
         // swiftlint:disable identifier_name
         public let Page: T
     }
 
-    public struct PageInfo: GraphQLQueryObject {
+    struct PageInfo: GraphQLQueryObject {
         public typealias Argument = Void
 
         let total: Int
@@ -235,7 +237,7 @@ extension AniListAPI {
         }
     }
 
-    public struct FuzzyDate: GraphQLQueryObject {
+    struct FuzzyDate: GraphQLQueryObject {
         public typealias Argument = Void
 
         let year: Int?
@@ -253,11 +255,11 @@ extension AniListAPI {
         }
     }
 
-    public struct MediaResponse: Decodable {
+    struct MediaResponse: Decodable {
         public let Media: Media
     }
 
-    public struct Media: GraphQLQuery, GraphQLQueryObject, PageResponseObject {
+    struct Media: GraphQLQuery, GraphQLQueryObject, PageResponseObject {
         public typealias Response = GraphQL.Response<MediaResponse>
 
         public static var pageResponseName: String { "media" }
@@ -316,27 +318,27 @@ extension AniListAPI {
 
             for argument in arguments {
                 switch argument {
-                case .id(let id):
+                case let .id(id):
                     obj = obj.argument(key: "id", value: id)
-                case .idIn(let ids):
+                case let .idIn(ids):
                     obj = obj.argument(key: "id_in", value: ids)
-                case .isAdult(let bool):
+                case let .isAdult(bool):
                     obj = obj.argument(key: "isAdult", value: bool)
-                case .type(let mediaType):
+                case let .type(mediaType):
                     obj = obj.argument(key: "type", value: mediaType)
-                case .formatIn(let formats):
+                case let .formatIn(formats):
                     obj = obj.argument(key: "format_in", value: formats)
-                case .sort(let sort):
+                case let .sort(sort):
                     obj = obj.argument(key: "sort", value: sort)
-                case .search(let query):
+                case let .search(query):
                     obj = obj.argument(key: "search", value: query)
-                case .status(let status):
+                case let .status(status):
                     obj = obj.argument(key: "status", value: status)
-                case .statusIn(let status):
+                case let .statusIn(status):
                     obj = obj.argument(key: "status_in", value: status)
-                case .statusNot(let status):
+                case let .statusNot(status):
                     obj = obj.argument(key: "status_not", value: status)
-                case .statusNotIn(let status):
+                case let .statusNotIn(status):
                     obj = obj.argument(key: "status_not_in", value: status)
                 }
             }

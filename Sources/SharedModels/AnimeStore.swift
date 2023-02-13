@@ -5,9 +5,11 @@
 //  Created by ErrorErrorError on 9/30/22.
 //
 
-import Utilities
 import Foundation
 import IdentifiedCollections
+import Utilities
+
+// MARK: - AnimeStore
 
 public struct AnimeStore: AnimeRepresentable {
     public var id: Anime.ID = .init()
@@ -35,17 +37,17 @@ public struct AnimeStore: AnimeRepresentable {
         self.episodes = episodes
     }
 
-    public init() {  }
+    public init() {}
 }
 
-extension AnimeStore {
-    public var lastModifiedEpisode: EpisodeStore? {
-        episodes.sorted(by: \.lastUpdatedProgress).last
+public extension AnimeStore {
+    var lastModifiedEpisode: EpisodeStore? {
+        episodes.max(by: \.lastUpdatedProgress)
     }
 }
 
-extension AnimeStore {
-    public static func findOrCreate(
+public extension AnimeStore {
+    static func findOrCreate(
         _ anime: any AnimeRepresentable,
         _ animeStores: [AnimeStore] = []
     ) -> AnimeStore {
@@ -57,8 +59,8 @@ extension AnimeStore {
     }
 }
 
-extension AnimeStore {
-    public mutating func updateProgress(
+public extension AnimeStore {
+    mutating func updateProgress(
         for episode: any EpisodeRepresentable,
         progress: Double
     ) {
@@ -66,7 +68,7 @@ extension AnimeStore {
 
         episodeInfo.number = episode.number
         episodeInfo.title = format == .movie ? title : episode.title
-        episodeInfo.thumbnail = format == .movie ? posterImage.largest :  episode.thumbnail
+        episodeInfo.thumbnail = format == .movie ? posterImage.largest : episode.thumbnail
         episodeInfo.progress = progress
         episodeInfo.lastUpdatedProgress = .init()
 

@@ -1,25 +1,29 @@
 //
 //  DeviceInfoClient.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 1/26/23.
-//  
+//
 //
 
-import Foundation
 import ComposableArchitecture
+import Foundation
+
+// MARK: - Build
 
 public struct Build {
     public var version: () -> String
     public var gitSha: () -> String
 }
 
-extension DependencyValues {
-    public var build: Build {
+public extension DependencyValues {
+    var build: Build {
         get { self[Build.self] }
         set { self[Build.self] = newValue }
     }
 }
+
+// MARK: - Build + DependencyKey
 
 extension Build: DependencyKey {
     public static let liveValue: Build = Self(
@@ -30,9 +34,9 @@ extension Build: DependencyKey {
     public static let previewValue = noop
 }
 
-extension Build {
-  public static let noop = Self(
-    version: { "test" },
-    gitSha: { "0000000" }
-  )
+public extension Build {
+    static let noop = Self(
+        version: { "test" },
+        gitSha: { "0000000" }
+    )
 }

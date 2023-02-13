@@ -1,12 +1,14 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 2/9/23.
-//  
+//
 //
 
 import SwiftUI
+
+// MARK: - DynamicHStackScrollView
 
 public struct DynamicHStackScrollView<T, C: RandomAccessCollection<T>, V: View, L: View>: View where C.Index == Int {
     private let items: C
@@ -17,8 +19,10 @@ public struct DynamicHStackScrollView<T, C: RandomAccessCollection<T>, V: View, 
     private let spacing: CGFloat
 
     #if os(macOS)
-    @State private var visibleRange: Range<Int> = 0..<0
-    @State private var actualWidth: CGFloat = 0.0
+    @State
+    private var visibleRange: Range<Int> = 0..<0
+    @State
+    private var actualWidth: CGFloat = 0.0
     #endif
 
     public init(
@@ -44,15 +48,15 @@ public struct DynamicHStackScrollView<T, C: RandomAccessCollection<T>, V: View, 
             #endif
             container
             #if os(macOS)
-                .arrowIndicators($visibleRange, items.bounds, shiftBy: 1)
+            .arrowIndicators($visibleRange, items.bounds, shiftBy: 1)
             #endif
         }
         .frame(maxWidth: .infinity)
     }
 }
 
-extension DynamicHStackScrollView {
-    public init(
+public extension DynamicHStackScrollView {
+    init(
         idealWidth: CGFloat,
         spacing: CGFloat = 12,
         items: C,
@@ -74,8 +78,8 @@ extension DynamicHStackScrollView {
     var container: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: spacing) {
-                ForEach(items.indices, id: \.self) {
-                    itemContent(items[$0])
+                ForEach(items.indices, id: \.self) { index in
+                    itemContent(items[index])
                         .frame(width: idealWidth)
                 }
             }
@@ -83,14 +87,15 @@ extension DynamicHStackScrollView {
         }
     }
 }
+
 #elseif os(macOS)
 extension DynamicHStackScrollView {
     @ViewBuilder
     var container: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: spacing) {
-                ForEach(items.bounds[visibleRange], id: \.self) {
-                    itemContent(items[$0])
+                ForEach(items.bounds[visibleRange], id: \.self) { index in
+                    itemContent(items[index])
                         .frame(width: max(0, actualWidth))
                 }
             }
@@ -112,10 +117,10 @@ extension DynamicHStackScrollView {
                     .onChange(of: spacing) { _ in
                         recalculate(proxy)
                     }
-                    .onChange(of: proxy.size) { newValue in
+                    .onChange(of: proxy.size) { _ in
                         recalculate(proxy)
                     }
-                    .onChange(of: items.count) { newValue in
+                    .onChange(of: items.count) { _ in
                         recalculate(proxy)
                     }
             }

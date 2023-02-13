@@ -1,14 +1,16 @@
 //
 //  APIClient+Live.swift
-//  
+//
 //
 //  Created by ErrorErrorError on 12/27/22.
-//  
+//
 //
 
-import Logger
-import Foundation
 import ComposableArchitecture
+import Foundation
+import Logger
+
+// MARK: - APIClientLive
 
 public class APIClientLive: APIClient {
     public func request<A: APIBase, O: Decodable>(
@@ -30,11 +32,11 @@ public class APIClientLive: APIClient {
             var urlRequest = URLRequest(url: url)
             urlRequest.httpMethod = request.method.stringValue
 
-            if case .post(let data) = request.method {
+            if case let .post(data) = request.method {
                 urlRequest.httpBody = data
             }
 
-            request.headers?(api).forEach { (key, value) in
+            request.headers?(api).forEach { key, value in
                 urlRequest.setValue(value.description, forHTTPHeaderField: key)
             }
 
@@ -52,14 +54,16 @@ public class APIClientLive: APIClient {
     }
 }
 
+// MARK: - Request + CustomStringConvertible
+
 extension Request: CustomStringConvertible {
     public var description: String {
-        return "/\(path.map(\.description).joined(separator: "/"))"
+        "/\(path.map(\.description).joined(separator: "/"))"
     }
 }
 
-extension URLRequest {
-    fileprivate mutating func setHeaders() {
+private extension URLRequest {
+    mutating func setHeaders() {
         let info = Bundle.main.infoDictionary
         let executable = info?[kCFBundleNameKey as String] ?? "Anime Now!"
         let bundle = info?[kCFBundleIdentifierKey as String] ?? "Unknown"
@@ -87,7 +91,7 @@ extension URLRequest {
             #endif
         }()
 
-        self.setValue(
+        setValue(
             "\(executable)/\(appVersion) (\(bundle); commit:\(appCommit)) \(osName) \(osVersion)",
             forHTTPHeaderField: "User-Agent"
         )
@@ -97,11 +101,11 @@ extension URLRequest {
 extension URLSession {
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         if #available(iOS 15, macOS 12.0, *) {
-           return try await self.data(for: request, delegate: nil)
+            return try await self.data(for: request, delegate: nil)
         } else {
             return try await withCheckedThrowingContinuation { continuation in
                 let task = self.dataTask(with: request) { data, response, error in
-                    guard let data = data, let response = response else {
+                    guard let data, let response else {
                         let error = error ?? URLError(.badServerResponse)
                         return continuation.resume(throwing: error)
                     }
@@ -116,11 +120,11 @@ extension URLSession {
 
     func data(from url: URL) async throws -> (Data, URLResponse) {
         if #available(iOS 15, macOS 12.0, *) {
-           return try await self.data(from: url, delegate: nil)
+            return try await self.data(from: url, delegate: nil)
         } else {
             return try await withCheckedThrowingContinuation { continuation in
                 let task = self.dataTask(with: url) { data, response, error in
-                    guard let data = data, let response = response else {
+                    guard let data, let response else {
                         let error = error ?? URLError(.badServerResponse)
                         return continuation.resume(throwing: error)
                     }

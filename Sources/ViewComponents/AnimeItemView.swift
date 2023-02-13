@@ -8,6 +8,8 @@
 import SharedModels
 import SwiftUI
 
+// MARK: - AnimeItemView
+
 public struct AnimeItemView: View {
     let anime: any AnimeRepresentable
 
@@ -39,18 +41,21 @@ public struct AnimeItemView: View {
                         .padding(.vertical, 8)
                         .frame(maxWidth: .infinity)
                 }
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity
-                    )
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity
+                )
             )
             .aspectRatio(2 / 3, contentMode: .fit)
             .cornerRadius(12)
     }
 }
 
+// MARK: - TrendingAnimeItemView_Previews
+
 struct TrendingAnimeItemView_Previews: PreviewProvider {
-    @Namespace static var namespace
+    @Namespace
+    static var namespace
 
     static var previews: some View {
         AnimeItemView(
