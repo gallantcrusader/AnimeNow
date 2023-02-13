@@ -17,3 +17,17 @@ jobs:
       - name: Lint code using SwiftLint
         run: |
           swiftlint lint --strict --reporter github-actions-logging
+
+  run-swiftformat:
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install SwiftFormat
+        run: |
+          brew install SwiftFormat
+
+      - name: Lint code using SwiftFormat
+        run: |
+          swiftformat --version
+          swiftformat --config .swiftformat --lint --quiet .

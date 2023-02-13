@@ -20,10 +20,10 @@ jobs:
           path: .build/checkouts
 
       - name: Build swift package
-        run: swift build -v
+        run: swift build
 
       - name: Run tests
-        run: swift test --enable-code-coverage -v
+        run: swift test --enable-code-coverage --parallel
 
       - name: Export coverage test
         run: |
