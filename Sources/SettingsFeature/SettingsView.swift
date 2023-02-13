@@ -129,9 +129,9 @@ public struct SettingsView: View {
                                         .foregroundColor(
                                             .init(
                                                 .sRGB,
-                                                red: 0.447_0,
-                                                green: 0.537_2,
-                                                blue: 0.854_9
+                                                red: 0.4470,
+                                                green: 0.5372,
+                                                blue: 0.8549
                                             )
                                         )
                                     )
