@@ -1,0 +1,19 @@
+from_latest_tag = false
+ignore_merge_commits = false
+branch_whitelist = []
+pre_bump_hooks = [
+    "sh -c 'Misc/Scripts/validate_swiftlint.sh'",
+    "sh -c 'Misc/Scripts/validate_swiftformat.sh'"
+]
+post_bump_hooks = [
+    "git push",
+    "git push remote {{version}}"
+]
+
+[commit_types]
+
+[changelog]
+path = "CHANGELOG.md"
+authors = []
+
+[bump_profiles]

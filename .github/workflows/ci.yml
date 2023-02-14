@@ -34,7 +34,7 @@ jobs:
             --ignore-filename-regex='.*build/checkouts.*' \
             --ignore-filename-regex='Tests/.*' > "$BUILD_PATH/codecov/lcov.info"
           echo "# Coverage Job Summary" >> $GITHUB_STEP_SUMMARY
-          echo "\n" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "$(cat $BUILD_PATH/codecov/lcov.info)" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
