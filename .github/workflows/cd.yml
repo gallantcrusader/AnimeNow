@@ -32,7 +32,6 @@ jobs:
       git_sha: ${{ steps.info.outputs.git_sha }}
       semantic_version: ${{ steps.info.outputs.semantic_version }}
       prerelease: ${{ steps.info.outputs.prerelease }}
-      release_notes: ${{ steps.release_notes.outputs.release_notes }}
 
     steps:
       - name: Checkout
@@ -56,7 +55,15 @@ jobs:
         id: release_notes
         run: |
           brew install cocogitto
-          echo "release_notes=\"$(cog changelog -a ${{ steps.info.outputs.semantic_version }} -t full_hash)\"" >> $GITHUB_OUTPUT
+          mkdir ${{ github.workspace }}/outputs
+          cog changelog -a ${{ steps.info.outputs.semantic_version }} -t full_hash > ${{ github.workspace }}/outputs/changelog.txt
+
+      - name: Cache Changelog
+        id: cache-changelog
+        uses: actions/cache/save@v3
+        with:
+          path: ${{ github.workspace }}/outputs
+          key: ${{ steps.info.outputs.semantic_version }}-changelog
 
   build:
     needs: [setup]
@@ -132,16 +139,24 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
 
+      - name: Download Changelog
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ github.workspace }}/outputs
+          key: ${{ needs.setup.outputs.semantic_version }}-changelog
+          fail-on-cache-miss: true
+
       - name: Release to GitHub
         id: release
         uses: softprops/action-gh-release@v1
         with:
           fail_on_unmatched_files: true
           files: |
-            */*
+            **/*.ipa
+            **/*.dmg
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: false
           prerelease: ${{ needs.setup.outputs.prerelease == 'true' }}
-          body: ${{ needs.setup.outputs.release_notes }}
+          body_path: ${{ github.workspace }}/outputs/changelog.txt
           name: v${{ needs.setup.outputs.semantic_version }}
           tag_name: ${{ needs.setup.outputs.semantic_version }}
