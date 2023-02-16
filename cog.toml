@@ -11,9 +11,16 @@ post_bump_hooks = [
 ]
 
 [commit_types]
+wip = { changelog_title = "wip" }
 
 [changelog]
 path = "CHANGELOG.md"
-authors = []
+template = "changelog_template"
+remote = "github.com"
+repository = "AnimeNow"
+owner = "AnimeNow-Team"
+authors = [
+    { username = "ErrorErrorError", signature = "ErrorErrorError" }
+]
 
 [bump_profiles]

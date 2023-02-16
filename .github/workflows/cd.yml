@@ -21,8 +21,11 @@ jobs:
         run: |
           commit_message="$(git log -1 --pretty=%B)"
 
-          if [[ $commit_message != *"chore(version)"* ]]; then
-            exit -1
+          if [[ $commit_message == *"chore(version)"* ]]; then
+            echo "Can create a new release!"
+          else
+            echo "Latest commit is not a new release."
+            exit 1
           fi
 
   setup:
@@ -31,7 +34,6 @@ jobs:
     outputs:
       git_sha: ${{ steps.info.outputs.git_sha }}
       semantic_version: ${{ steps.info.outputs.semantic_version }}
-      prerelease: ${{ steps.info.outputs.prerelease }}
 
     steps:
       - name: Checkout
@@ -45,18 +47,13 @@ jobs:
           semantic_version=$(git tag -l --sort -creatordate | head -1)
           echo "semantic_version=$semantic_version" >> $GITHUB_OUTPUT
           echo "git_sha=$(git rev-list --abbrev-commit -n 1 $semantic_version)" >> $GITHUB_OUTPUT
-          if [[ $semantic_version == *"beta"* ]]; then
-            echo "prerelease='true'" >> $GITHUB_OUTPUT
-          else
-            echo "prerelease='false'" >> $GITHUB_OUTPUT
-          fi
 
       - name: Generate release notes
         id: release_notes
         run: |
           brew install cocogitto
           mkdir ${{ github.workspace }}/outputs
-          cog changelog -a ${{ steps.info.outputs.semantic_version }} -t full_hash > ${{ github.workspace }}/outputs/changelog.txt
+          cog changelog -a ${{ steps.info.outputs.semantic_version }} > ${{ github.workspace }}/outputs/changelog.txt
 
       - name: Cache Changelog
         id: cache-changelog
@@ -156,7 +153,7 @@ jobs:
             **/*.dmg
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: false
-          prerelease: ${{ needs.setup.outputs.prerelease == 'true' }}
+          prerelease: ${{ contains(needs.setup.outputs.semantic_version, 'beta') }}
           body_path: ${{ github.workspace }}/outputs/changelog.txt
           name: v${{ needs.setup.outputs.semantic_version }}
           tag_name: ${{ needs.setup.outputs.semantic_version }}
