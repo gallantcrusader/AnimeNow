@@ -55,30 +55,38 @@ public struct ContextButton<Label: View>: View {
 
     public var body: some View {
         #if os(iOS)
-        Menu(content: {
+        Menu {
             ForEach(items, id: \.name) { item in
                 Button {
                     action?(item.name)
                 } label: {
-                    Text(item.name)
-                    CachedAsyncImage(url: item.image) { image in
-                        image.resizable()
-                    } placeholder: {
-                        EmptyView()
+                    HStack {
+                        Text(item.name)
+                        CachedAsyncImage(url: item.image) { image in
+                            image.resizable()
+                                .interpolation(.medium)
+                        } placeholder: {
+                            EmptyView()
+                        }
+                        .scaledToFit()
+                        .frame(width: iconSize.width, height: iconSize.height)
                     }
-                    .scaledToFit()
-                    .frame(width: iconSize.width, height: iconSize.height)
                 }
             }
-        }, label: label)
-            .foregroundColor(.white)
+        } label: {
+            label()
+        }
+        .foregroundColor(.white)
         #else
         label()
             .background(
                 GeometryReader { geometryProxy in
-                    Spacer()
+                    Color.clear
                         .onChange(of: geometryProxy.frame(in: .global)) { newValue in
                             menu.frame = newValue
+                        }
+                        .onAppear {
+                            menu.frame = geometryProxy.frame(in: .global)
                         }
                 }
             )
@@ -135,7 +143,7 @@ private class MenuObservable: NSObject, ObservableObject, NSMenuDelegate {
             let point = windowPosition.origin.applying(
                 .init(
                     translationX: frame.origin.x,
-                    y: windowPosition.size.height - frame.origin.y
+                    y: windowPosition.size.height - frame.origin.y - frame.height
                 )
             )
             menu.popUp(

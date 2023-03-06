@@ -13,41 +13,16 @@ import Logger
 // MARK: - APIClientLive
 
 public class APIClientLive: APIClient {
-    public func request<A: APIBase, O: Decodable>(
-        _ api: A,
-        _ request: Request<A, O>
-    ) async throws -> O {
+    public func request<O>(_ request: Request<O>) async throws -> O where O: Decodable {
         do {
-            guard var components = URLComponents(url: api.base, resolvingAgainstBaseURL: true) else {
-                throw URLError(.badURL)
-            }
-
-            components.path += request.path.isEmpty ? "" : "/" + request.path.map(\.description).joined(separator: "/")
-            components.queryItems = request.query
-
-            guard let url = components.url else {
-                throw URLError(.unsupportedURL)
-            }
-
-            var urlRequest = URLRequest(url: url)
-            urlRequest.httpMethod = request.method.stringValue
-
-            if case let .post(data) = request.method {
-                urlRequest.httpBody = data
-            }
-
-            request.headers?(api).forEach { key, value in
-                urlRequest.setValue(value.description, forHTTPHeaderField: key)
-            }
-
+            var urlRequest = try request.makeRequest()
             urlRequest.setHeaders()
-
             let (data, _) = try await URLSession.shared.data(for: urlRequest)
             return try request.decoder.decode(O.self, from: data)
         } catch {
             Logger.log(
                 .error,
-                "\(String(describing: A.self)) - \(request) failed with error: \(error)"
+                "\(request) failed with error: \(error)"
             )
             throw error
         }
@@ -58,7 +33,40 @@ public class APIClientLive: APIClient {
 
 extension Request: CustomStringConvertible {
     public var description: String {
-        "/\(path.map(\.description).joined(separator: "/"))"
+        """
+        Request(
+            base: \(base),
+            path: \(path),
+            query: \(query ?? []),
+            method: \(method),
+            headers: \(headers?.mapValues { $0.description.localizedCaseInsensitiveContains("Bearer") ? "**********" : $0 } ?? [:])
+        )
+        """
+    }
+
+    func makeRequest() throws -> URLRequest {
+        guard var components = URLComponents(url: base, resolvingAgainstBaseURL: true) else {
+            throw URLError(.badURL)
+        }
+
+        components.path += path.isEmpty ? "" : "/" + path.map(\.description).joined(separator: "/")
+        components.queryItems = query
+
+        guard let url = components.url else {
+            throw URLError(.unsupportedURL)
+        }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = method.stringValue
+
+        if case let .post(data) = method {
+            urlRequest.httpBody = data
+        }
+
+        headers?.forEach { key, value in
+            urlRequest.setValue(value.description, forHTTPHeaderField: key)
+        }
+        return urlRequest
     }
 }
 

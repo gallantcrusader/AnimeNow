@@ -9,22 +9,21 @@
 import Foundation
 import SharedModels
 
-// MARK: - EnimeAPI
+// MARK: - EnimeEndpoint
 
-public final class EnimeAPI: APIBase {
-    public static let shared: EnimeAPI = .init()
-
-    // swiftlint:disable force_unwrapping
-    public let base = URL(string: "https://api.enime.moe")!
-
-    private init() {}
+public struct EnimeEndpoint<D: Decodable>: Endpoint {
+    var base = URL(string: "https://api.enime.moe").unsafelyUnwrapped
+    var path: [CustomStringConvertible] = []
+    var query: [Query] = []
+    var method: Request<D>.Method = .get
+    var headers: [String: CustomStringConvertible]?
 }
 
-public extension Request where Route == EnimeAPI {
+public extension EnimeEndpoint {
     static func recentEpisodes(
         page: Int = 1,
         perPage: Int = 25
-    ) -> Request<Route, EnimeAPI.Response> {
+    ) -> EnimeEndpoint<EnimeModels.Response> {
         .init(
             path: ["recent"],
             query: [
@@ -35,7 +34,17 @@ public extension Request where Route == EnimeAPI {
     }
 }
 
-public extension EnimeAPI {
+public extension Request {
+    static func enime<D: Decodable>(_ endpoint: EnimeEndpoint<D>) -> Request<D> {
+        endpoint.build()
+    }
+}
+
+// MARK: - EnimeModels
+
+public enum EnimeModels {}
+
+public extension EnimeModels {
     struct Response: Decodable {
         public let data: [RecentItem]
     }
@@ -70,7 +79,7 @@ public extension EnimeAPI {
     }
 }
 
-public extension EnimeAPI {
+public extension EnimeModels {
     static func convert(from item: RecentItem) -> SharedModels.UpdatedAnimeEpisode {
         var posterImage = [SharedModels.ImageSize]()
         var coverImage = [SharedModels.ImageSize]()
@@ -89,7 +98,7 @@ public extension EnimeAPI {
             categories = genre
         }
 
-        let anilistFormat = AniListAPI.Media.Format(rawValue: item.anime.format) ?? .TV
+        let anilistFormat = AniListModels.Media.Format(rawValue: item.anime.format) ?? .TV
         let format: SharedModels.Anime.Format
 
         switch anilistFormat {
@@ -107,7 +116,7 @@ public extension EnimeAPI {
             format = .special
         }
 
-        let anilistStatus = AniListAPI.Media.Status(rawValue: item.anime.status) ?? .RELEASING
+        let anilistStatus = AniListModels.Media.Status(rawValue: item.anime.status) ?? .RELEASING
         let status: SharedModels.Anime.Status
 
         switch anilistStatus {

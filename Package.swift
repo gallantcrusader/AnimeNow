@@ -26,6 +26,7 @@ let package = Package(
 
         /// Clients
         .library(name: "APIClient", targets: ["APIClient"]),
+        .library(name: "AuthenticationClient", targets: ["AuthenticationClient"]),
         .library(name: "AnimeClient", targets: ["AnimeClient"]),
         .library(name: "ChromeCastClient", targets: ["ChromeCastClient"]),
         .library(name: "DatabaseClient", targets: ["DatabaseClient"]),
@@ -35,6 +36,7 @@ let package = Package(
         .library(name: "ImageDatabaseCleint", targets: ["ImageDatabaseClient"]),
         .library(name: "VideoPlayerClient", targets: ["VideoPlayerClient"]),
         .library(name: "UserDefaultsClient", targets: ["UserDefaultsClient"]),
+        .library(name: "TrackingListClient", targets: ["TrackingListClient"]),
 
         /// Other
         .library(name: "AnyPublisherStream", targets: ["AnyPublisherStream"]),
@@ -46,14 +48,16 @@ let package = Package(
         .library(name: "Logger", targets: ["Logger"])
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "0.49.2"),
+        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "0.51.0"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay.git", exact: "0.8.1"),
-        .package(url: "https://github.com/pointfreeco/swiftui-navigation", exact: "0.5.0"),
+        .package(url: "https://github.com/pointfreeco/swiftui-navigation", exact: "0.6.1"),
         .package(url: "https://github.com/thisIsTheFoxe/SwiftWebVTT.git", exact: "0.1.0"),
         .package(url: "https://github.com/NicholasBellucci/SociableWeaver.git", exact: "0.1.12"),
         .package(url: "https://github.com/apple/swift-collections.git", exact: "1.0.3"),
         .package(url: "https://github.com/CoreOffice/XMLCoder.git", exact: "0.15.0"),
         .package(url: "https://github.com/LiveUI/Awesome", exact: "2.4.0"),
+        .package(url: "https://github.com/Cindori/FluidGradient.git", exact: "1.0.0"),
+        .package(url: "https://github.com/johnpatrickmorgan/TCACoordinators.git", exact: "0.4.0"),
         .package(path: "Sources/SwordRPC"),
         .package(path: "Sources/OpenCastSwift")
     ],
@@ -107,6 +111,7 @@ let package = Package(
                 "SearchFeature",
                 "SettingsFeature",
                 "SharedModels",
+                "TrackingListClient",
                 "UserDefaultsClient",
                 "Utilities",
                 "VideoPlayerClient",
@@ -119,9 +124,11 @@ let package = Package(
             dependencies: [
                 "DatabaseClient",
                 "SharedModels",
+                "TrackingListClient",
                 "Utilities",
                 "ViewComponents",
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "TCACoordinators", package: "TCACoordinators")
             ]
         ),
         .target(
@@ -208,6 +215,7 @@ let package = Package(
                 "ImageDatabaseClient",
                 "UserDefaultsClient",
                 "SharedModels",
+                "TrackingListClient",
                 "Utilities",
                 "ViewComponents",
                 .product(name: "Awesome", package: "Awesome"),
@@ -228,11 +236,20 @@ let package = Package(
         .target(
             name: "APIClient",
             dependencies: [
+                "AuthenticationClient",
                 "Logger",
                 "SharedModels",
                 "Utilities",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 .product(name: "SociableWeaver", package: "SociableWeaver")
+            ]
+        ),
+        .target(
+            name: "AuthenticationClient",
+            dependencies: [
+                "Logger",
+                "Utilities",
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
         .target(
@@ -294,6 +311,17 @@ let package = Package(
             ]
         ),
         .target(
+            name: "TrackingListClient",
+            dependencies: [
+                "APIClient",
+                "FileClient",
+                "SharedModels",
+                "Utilities",
+                "Logger",
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+            ]
+        ),
+        .target(
             name: "VideoPlayerClient",
             dependencies: [
                 "AnyPublisherStream",
@@ -337,7 +365,8 @@ let package = Package(
                 "DownloaderClient",
                 "SharedModels",
                 "Utilities",
-                "ImageDatabaseClient"
+                "ImageDatabaseClient",
+                .product(name: "FluidGradient", package: "FluidGradient")
             ]
         ),
         .target(name: "AnyPublisherStream"),
@@ -348,6 +377,12 @@ let package = Package(
             name: "AnimeClientTests",
             dependencies: [
                 "AnimeClient"
+            ]
+        ),
+        .testTarget(
+            name: "APIClientTests",
+            dependencies: [
+                "APIClient"
             ]
         ),
         .testTarget(

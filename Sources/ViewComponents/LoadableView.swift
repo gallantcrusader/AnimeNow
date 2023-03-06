@@ -69,11 +69,11 @@ public extension LoadableView {
     }
 }
 
-public extension LoadableView where Loading == EmptyView, Failed == EmptyView, Idle == EmptyView {
+public extension LoadableView {
     init(
         loadable: Loadable<T>,
         @ViewBuilder loadedView: @escaping (T) -> Loaded
-    ) {
+    ) where Loading == EmptyView, Failed == EmptyView, Idle == EmptyView {
         self.init(
             loadable: loadable,
             loadedView: loadedView,
@@ -82,15 +82,13 @@ public extension LoadableView where Loading == EmptyView, Failed == EmptyView, I
             idleView: { EmptyView() }
         )
     }
-}
 
-public extension LoadableView where Loading == Idle {
     init(
         loadable: Loadable<T>,
         @ViewBuilder loadedView: @escaping (T) -> Loaded,
         @ViewBuilder failedView: @escaping () -> Failed,
         @ViewBuilder waitingView: @escaping () -> Idle
-    ) {
+    ) where Loading == Idle {
         self.init(
             loadable: loadable,
             loadedView: loadedView,
@@ -98,6 +96,34 @@ public extension LoadableView where Loading == Idle {
             loadingView: waitingView,
             idleView: waitingView
         )
+    }
+
+    init(
+        loadable: Loadable<T>,
+        @ViewBuilder loadedView: @escaping (T) -> Loaded,
+        @ViewBuilder failedView: @escaping () -> Failed
+    ) where Loading == Idle, Idle == EmptyView {
+        self.init(
+            loadable: loadable,
+            loadedView: loadedView,
+            failedView: failedView,
+            loadingView: { EmptyView() },
+            idleView: { EmptyView() }
+        )
+    }
+
+    init(
+        loadable: Loadable<T>,
+        @ViewBuilder loadedView: @escaping (T) -> Loaded,
+        @ViewBuilder failedView: @escaping () -> Failed,
+        @ViewBuilder loadingView: @escaping () -> Loading
+    ) where Idle == EmptyView {
+        self.init(
+            loadable: loadable,
+            loadedView: loadedView,
+            failedView: failedView,
+            loadingView: loadingView
+        ) { EmptyView() }
     }
 }
 

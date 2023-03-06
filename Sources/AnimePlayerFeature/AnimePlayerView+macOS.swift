@@ -429,14 +429,9 @@ struct VideoPlayerViewMacOS_Previews: PreviewProvider {
                     player: .init(),
                     anime: Anime.narutoShippuden,
                     availableProviders: .init(
-                        items: [
-                            .init(name: "Gogoanime")
-                        ]
+                        items: []
                     ),
-                    streamingProvider: .init(
-                        name: "Gogoanime",
-                        episodes: Episode.demoEpisodes
-                    ),
+                    streamingProvider: .init(name: ""),
                     selectedEpisode: Episode.demoEpisodes[0].id
                 ),
                 reducer: AnimePlayerReducer()

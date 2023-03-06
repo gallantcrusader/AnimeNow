@@ -12,7 +12,7 @@ import SwiftUI
 // MARK: - ImageDatabase
 
 @globalActor
-public actor ImageDatabase {
+public actor ImageDatabase: GlobalActor {
     public static var shared = ImageDatabase()
 
     private let cache: URLCache = {
@@ -51,7 +51,7 @@ public actor ImageDatabase {
                 cachedImages.setObject(image, forKey: request.id as NSString)
                 return image
             } else {
-                throw "Malformed image data response for: \(request.url?.absoluteString ?? "Unknown") "
+                throw "Malformed image data response for: \(request.url?.absoluteString ?? "Unknown")"
             }
         }
 

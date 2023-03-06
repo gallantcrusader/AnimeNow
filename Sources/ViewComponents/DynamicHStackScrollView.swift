@@ -13,7 +13,7 @@ import SwiftUI
 public struct DynamicHStackScrollView<T, C: RandomAccessCollection<T>, V: View, L: View>: View where C.Index == Int {
     private let items: C
     private let itemContent: (T) -> V
-    private let label: (() -> L)?
+    private let label: () -> L
 
     private let idealWidth: CGFloat
     private let spacing: CGFloat
@@ -25,12 +25,14 @@ public struct DynamicHStackScrollView<T, C: RandomAccessCollection<T>, V: View, 
     private var actualWidth: CGFloat = 0.0
     #endif
 
+    private var emptyCollectionPlaceholder: String?
+
     public init(
         idealWidth: CGFloat,
         spacing: CGFloat = 12,
         items: C,
-        itemContent: @escaping (T) -> V,
-        label: (() -> L)? = nil
+        @ViewBuilder itemContent: @escaping (T) -> V,
+        @ViewBuilder label: @escaping () -> L
     ) {
         self.idealWidth = idealWidth
         self.spacing = spacing
@@ -40,18 +42,38 @@ public struct DynamicHStackScrollView<T, C: RandomAccessCollection<T>, V: View, 
     }
 
     public var body: some View {
-        LazyVStack(alignment: .leading) {
-            label?()
+        VStack(alignment: .leading) {
+            label()
                 .padding(.horizontal)
             #if os(macOS)
                 .padding(.horizontal, 40)
             #endif
             container
-            #if os(macOS)
-            .arrowIndicators($visibleRange, items.bounds, shiftBy: 1)
-            #endif
         }
         .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    var noItemsAvailable: some View {
+        VStack(alignment: .center) {
+            Text("No items available")
+                .font(.system(size: 15, weight: .bold))
+
+            if let emptyCollectionPlaceholder {
+                Text(emptyCollectionPlaceholder)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(.gray)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 140)
+        .padding(.horizontal)
+    }
+
+    public func emptyItems(placeholder: String) -> DynamicHStackScrollView {
+        var view = self
+        view.emptyCollectionPlaceholder = placeholder
+        return view
     }
 }
 
@@ -60,15 +82,16 @@ public extension DynamicHStackScrollView {
         idealWidth: CGFloat,
         spacing: CGFloat = 12,
         items: C,
-        itemContent: @escaping (T) -> V
+        @ViewBuilder itemContent: @escaping (T) -> V
     ) where L == EmptyView {
         self.init(
             idealWidth: idealWidth,
             spacing: spacing,
             items: items,
-            itemContent: itemContent,
-            label: nil
-        )
+            itemContent: itemContent
+        ) {
+            EmptyView()
+        }
     }
 }
 
@@ -76,14 +99,20 @@ public extension DynamicHStackScrollView {
 extension DynamicHStackScrollView {
     @ViewBuilder
     var container: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: spacing) {
-                ForEach(items.indices, id: \.self) { index in
-                    itemContent(items[index])
-                        .frame(width: idealWidth)
+        if items.isEmpty {
+            noItemsAvailable
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: spacing) {
+                    ForEach(items.indices, id: \.self) { index in
+                        itemContent(items[index])
+                            .frame(width: idealWidth)
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
+            .frame(maxWidth: .infinity)
         }
     }
 }
@@ -92,39 +121,46 @@ extension DynamicHStackScrollView {
 extension DynamicHStackScrollView {
     @ViewBuilder
     var container: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: spacing) {
-                ForEach(items.bounds[visibleRange], id: \.self) { index in
-                    itemContent(items[index])
-                        .frame(width: max(0, actualWidth))
+        if items.isEmpty {
+            noItemsAvailable
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: spacing) {
+                    ForEach(items.bounds[visibleRange], id: \.self) { index in
+                        if items.indices.contains(index) {
+                            itemContent(items[index])
+                                .frame(width: max(0, actualWidth))
+                        }
+                    }
                 }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .leading
+                )
             }
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .leading
+            .background(
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear {
+                            recalculate(proxy)
+                        }
+                        .onChange(of: idealWidth) { _ in
+                            recalculate(proxy)
+                        }
+                        .onChange(of: spacing) { _ in
+                            recalculate(proxy)
+                        }
+                        .onChange(of: proxy.size) { _ in
+                            recalculate(proxy)
+                        }
+                        .onChange(of: items.count) { _ in
+                            recalculate(proxy)
+                        }
+                }
             )
+            .arrowIndicators($visibleRange, items.bounds, shiftBy: 1)
         }
-        .background(
-            GeometryReader { proxy in
-                Color.clear
-                    .onAppear {
-                        recalculate(proxy)
-                    }
-                    .onChange(of: idealWidth) { _ in
-                        recalculate(proxy)
-                    }
-                    .onChange(of: spacing) { _ in
-                        recalculate(proxy)
-                    }
-                    .onChange(of: proxy.size) { _ in
-                        recalculate(proxy)
-                    }
-                    .onChange(of: items.count) { _ in
-                        recalculate(proxy)
-                    }
-            }
-        )
     }
 
     private func recalculateVisibleRange(_ maxItems: Int) {

@@ -19,6 +19,7 @@ public struct SettingsRowView<Accessory: View>: View {
     private var multiSelection = false
     private var cornerRadius = 0.0
     private let height = 58.0
+    private var foregroundColor: Color?
 
     public var body: some View {
         HStack {
@@ -43,7 +44,7 @@ public struct SettingsRowView<Accessory: View>: View {
         .padding(.horizontal, height / 4)
         .frame(minHeight: height)
         .font(.callout)
-        .foregroundColor(loading ? .gray : nil)
+        .foregroundColor(loading ? .gray : foregroundColor)
         .background(Color(white: 0.2))
         .cornerRadius(cornerRadius)
         .contentShape(Rectangle())
@@ -117,6 +118,18 @@ public extension SettingsRowView {
         } accessory: {
             SettingsSwitch(on: active)
         }
+    }
+
+    init(
+        name: String,
+        tapped: (() -> Void)? = nil,
+        @ViewBuilder builder: @escaping () -> Accessory
+    ) {
+        self.init(
+            name: name,
+            tapped: tapped,
+            accessory: builder
+        )
     }
 
     static func views(
@@ -229,6 +242,12 @@ public extension SettingsRowView {
     func cornerRadius(_ cornerRadius: CGFloat = 12.0) -> Self {
         var view = self
         view.cornerRadius = cornerRadius
+        return view
+    }
+
+    func foregroundColor(_ color: Color?) -> Self {
+        var view = self
+        view.foregroundColor = color
         return view
     }
 }

@@ -9,6 +9,8 @@
 import ComposableArchitecture
 import SharedModels
 import SwiftUI
+import TCACoordinators
+import TrackingListClient
 import Utilities
 import ViewComponents
 
@@ -17,39 +19,68 @@ import ViewComponents
 public struct CollectionsView: View {
     let store: StoreOf<CollectionsReducer>
 
-    public init(
-        store: StoreOf<CollectionsReducer>
-    ) {
+    public init(store: StoreOf<CollectionsReducer>) {
         self.store = store
     }
 
     public var body: some View {
         StackNavigation(title: DeviceUtil.isMac ? nil : "My Collections") {
-            ScrollView(.vertical) {
+            ScrollView(.vertical, showsIndicators: false) {
                 ExtraTopSafeAreaInset()
                 Spacer(minLength: 8)
 
-                LazyVGrid(
-                    columns: !DeviceUtil.isPhone ? [
-                        .init(
-                            .adaptive(minimum: 140),
-                            spacing: 12
-                        )
-                    ] : .init(
-                        repeating: .init(
-                            .flexible(
-                                maximum: 160
-                            ),
-                            spacing: 24
-                        ),
-                        count: 2
-                    ),
-                    spacing: 24
-                ) {
-                    favorites
-                    collections
+                WithViewStore(
+                    store,
+                    observe: \.route
+                ) { viewStore in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 8) {
+                            ForEach(CollectionsReducer.Route.allCases, id: \.self) { route in
+                                ChipView(text: route.text)
+                                    .chipBackgroundColor(route == viewStore.state ? route.selectedColor : nil)
+                                    .chipOpacity(1.0)
+                                    .foregroundColor(.init(white: 1.0))
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        viewStore.send(
+                                            .binding(.set(\.$route, route)),
+                                            animation: .easeInOut(duration: 0.25)
+                                        )
+                                    }
+                            }
+                        }
+                        .padding(.horizontal)
+                        #if os(macOS)
+                            .padding(.horizontal, 40)
+                        #endif
+                    }
+                    .padding(.bottom, 8)
+
+                    LazyVStack(spacing: 24) {
+                        switch viewStore.state {
+                        case .local:
+                            WithViewStore(store, observe: \.local) { viewStore in
+                                collectionRow(viewStore.favorites)
+                                collectionSection(viewStore.collections)
+                            }
+                        case .anilist:
+                            WithViewStore(store, observe: \.anilist) { viewStore in
+                                thirdPartyView("AniList", viewStore.state.map(to: \.lists))
+                            }
+                        case .myanimelist:
+                            WithViewStore(store, observe: \.myanimelist) { viewStore in
+                                thirdPartyView("MyAnimeList", viewStore.state)
+                            }
+                        case .kitsu:
+                            WithViewStore(store, observe: \.kitsu) { viewStore in
+                                thirdPartyView("Kitsu", viewStore.state.map(to: \.collections))
+                            }
+                        }
+                    }
+                    .transition(.opacity)
                 }
-                .padding()
+
                 ExtraBottomSafeAreaInset()
                 Spacer(minLength: 32)
             }
@@ -71,44 +102,42 @@ public struct CollectionsView: View {
             maxWidth: .infinity,
             maxHeight: .infinity
         )
-        #if os(macOS)
-        .padding(.horizontal, 40)
-        #endif
     }
 }
 
 extension CollectionsView {
     @ViewBuilder
-    var favorites: some View {
-        WithViewStore(
-            store,
-            observe: \.favorites
-        ) { viewState in
-            StackNavigationLink(title: "Favorites") {
-                AnyView(
-                    folderView(
-                        "Favorites",
-                        viewState.state
-                            .prefix(3)
-                            .compactMap(\.posterImage.largest?.link),
-                        viewState.state.count
-                    )
-                )
-            } destination: {
-                AnyView(
-                    collectionsPage(title: "Favorites", viewState.state)
-                )
-            }
+    func thirdPartyView<C: CollectionState>(
+        _ name: String,
+        _ state: AuthState<[C]>
+    ) -> some View where C.C.Index == Int {
+        switch state {
+        case .unauthenticated:
+            Text("Sign in to \(name) to view your collections!")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .authenticating:
+            Text("Authenticating to \(name)...")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case let .authenticated(value):
+            collectionSection(value)
+        case .failed:
+            Text("Failed to authenticate to \(name).")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
-}
 
-extension CollectionsView {
+    @ViewBuilder
+    func collectionSection<C: CollectionState>(
+        _ collections: [C]
+    ) -> some View where C.C.Index == Int {
+        ForEach(collections, id: \.id) { collection in
+            collectionRow(collection)
+        }
+    }
+
     @ViewBuilder
     func collectionsPage(
-        title _: String,
-        _ animes: [AnimeStore],
-        collectionId: CollectionStore.ID? = nil
+        _ collection: some CollectionState
     ) -> some View {
         ScrollView {
             LazyVGrid(
@@ -120,24 +149,21 @@ extension CollectionsView {
                     count: DeviceUtil.isPhone ? 2 : 6
                 )
             ) {
-                ForEach(animes) { anime in
-                    AnimeItemView(
-                        anime: anime
-                    )
-                    .onTapGesture {
-                        ViewStore(store).send(.onAnimeTapped(anime))
-                    }
-                    .contextMenu {
-                        Button {
-                            if let collectionId {
-                                ViewStore(store).send(.removeAnimeFromCollection(collectionId, anime))
-                            } else {
-                                ViewStore(store).send(.removeAnimeFromFavorites(anime))
+                ForEach(collection.animes) { anime in
+                    AnimeItemView(anime: anime)
+                        .onTapGesture {
+                            if let animeStore = anime as? AnimeStore {
+                                ViewStore(store).send(.onAnimeTapped(animeStore.id))
                             }
-                        } label: {
-                            Text("Remove from \(collectionId != nil ? "Collections" : "Favorites")")
                         }
-                    }
+                        .contextMenu {
+                            if let collection = collection as? CollectionStore,
+                               let anime = anime as? AnimeStore {
+                                Button("Remove from collection") {
+                                    ViewStore(store).send(.remove(anime.id, collection.id))
+                                }
+                            }
+                        }
                 }
             }
             .padding([.top, .horizontal])
@@ -153,39 +179,62 @@ extension CollectionsView {
 
 extension CollectionsView {
     @ViewBuilder
-    var collections: some View {
-        WithViewStore(
-            store,
-            observe: \.collections
-        ) { collections in
-            ForEach(collections.state) { collection in
-                StackNavigationLink(title: collection.title.value) {
-                    folderView(
-                        collection.title.value,
-                        collection.animes
-                            .prefix(3)
-                            .compactMap(\.posterImage.largest?.link),
-                        collection.animes.count
-                    )
-                } destination: {
-                    collectionsPage(
-                        title: collection.title.value,
-                        Array(collection.animes),
-                        collectionId: collection.id
-                    )
-                    .id(collection.title)
+    func collectionRow<C: CollectionState>(
+        _ collection: C
+    ) -> some View where C.C.Index == Int {
+        DynamicHStackScrollView(
+            idealWidth: DeviceUtil.isPhone ? 140 : 190,
+            items: collection.animes
+        ) { anime in
+            AnimeItemView(anime: anime)
+                .onTapGesture {
+                    if let animeStore = anime as? AnimeStore {
+                        ViewStore(store).send(.onAnimeTapped(animeStore.id))
+                    }
                 }
                 .contextMenu {
-                    if collection.title.canDelete {
-                        Button {
-                            ViewStore(store).send(.deleteCollection(id: collection.id))
-                        } label: {
-                            Label(
-                                "Delete Collection",
-                                systemImage: "trash.fill"
-                            )
+                    if let collection = collection as? CollectionStore,
+                       let anime = anime as? AnimeStore {
+                        Button("Remove from collection") {
+                            ViewStore(store).send(.remove(anime.id, collection.id))
                         }
-                        .foregroundColor(Color.red)
+                    } else if let collection = collection as? LocalCollection, collection.title == .favorites {
+                        Button("Remove from favorites") {
+                            ViewStore(store).send(.removeFromFavories(anime.id))
+                        }
+                    }
+                }
+        } label: {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text(collection.name)
+                            .font(DeviceUtil.isPhone ? .headline : .title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                        Spacer()
+                    }
+                    Text("\(collection.animes.count) ITEM\(collection.animes.isEmpty || collection.animes.count > 1 ? "S" : "")")
+                        .foregroundColor(.gray)
+                }
+
+                StackNavigationLink(title: collection.name) {
+                    Text("View All")
+                        .foregroundColor(.secondaryAccent)
+                } destination: {
+                    collectionsPage(collection)
+                }
+                .opacity(collection.animes.isEmpty ? 0 : 1.0)
+                .disabled(collection.animes.isEmpty)
+            }
+            .font(DeviceUtil.isPhone ? .footnote.weight(.semibold) : .body.weight(.semibold))
+        }
+        .emptyItems(placeholder: "Add to this collection via anime details.")
+        .contextMenu {
+            if let collection = collection as? CollectionStore {
+                if collection.title.canDelete {
+                    Button("Delete collection") {
+                        ViewStore(store).send(.removeCollection(collection.id))
                     }
                 }
             }
@@ -193,104 +242,24 @@ extension CollectionsView {
     }
 }
 
-extension CollectionsView {
-    @ViewBuilder
-    func folderView(
-        _ title: String = "",
-        _ images: [URL?] = [],
-        _ count: Int = 0
-    ) -> some View {
-        VStack(alignment: .leading) {
-            ZStack(alignment: .bottom) {
-                let cornerRadius: CGFloat = 12
-                let padding: CGFloat = 12
-                let aspectRatio: CGFloat = 5 / 7
-                let offsetBy: CGFloat = 28
-                if images.isEmpty {
-                    Color(
-                        white: 0.1
-                    )
-                    .overlay(
-                        Image(
-                            "rectangle.portrait.slash"
-                        )
-                        .font(.largeTitle)
-                        .foregroundColor(.white)
-                    )
-                    .aspectRatio(aspectRatio, contentMode: .fit)
-                    .cornerRadius(cornerRadius)
-                } else {
-                    ForEach(
-                        Array(zip(images.indices, images)),
-                        id: \.0
-                    ) { index, url in
-                        FillAspectImage(
-                            url: url
-                        )
-                        .aspectRatio(aspectRatio, contentMode: .fit)
-                        .zIndex(.init(images.count - index))
-                        .cornerRadius(cornerRadius / CGFloat(index + 1))
-                        .padding(CGFloat(index) * padding)
-                        .offset(y: -CGFloat(index) * offsetBy)
-                    }
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .lineLimit(1)
-                    .font(.headline.bold())
-                    .foregroundColor(.white)
-
-                Text("\(count) ITEMS")
-                    .font(.caption.bold())
-                    .foregroundColor(.gray)
-            }
+extension CollectionsReducer.Route {
+    var selectedColor: Color {
+        switch self {
+        case .local:
+            return .gray.opacity(0.25)
+        case .anilist:
+            return .init(red: 0.2078, green: 0.4667, blue: 1.0)
+        case .myanimelist:
+            return .init(red: 0.1803, green: 0.3177, blue: 0.6352)
+        case .kitsu:
+            return .init(red: 0.969, green: 0.322, blue: 0.224)
         }
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: .infinity
-        )
     }
 }
 
-extension CollectionsView {
-    @ViewBuilder
-    func collectionView(
-        _: String,
-        _: [AnimeStore]
-    ) -> some View {
-        EmptyView()
-    }
-}
+// MARK: - CollectionsView_Previews
 
-extension CollectionsView {
-    @ViewBuilder
-    var showEmptyState: some View {
-        VStack(spacing: 12) {
-            Image("rectangle.stack.badge.play")
-                .font(.largeTitle)
-                .foregroundColor(Color.gray)
-
-            Text("Your collection is empty")
-                .foregroundColor(.white)
-
-            Text("To add to your collection, click on the plus icon on the show details.")
-                .font(.callout)
-                .foregroundColor(.gray)
-        }
-        .multilineTextAlignment(.center)
-        .padding()
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: .infinity
-        )
-    }
-}
-
-// MARK: - LibraryView_Previews
-
-struct LibraryView_Previews: PreviewProvider {
+struct CollectionsView_Previews: PreviewProvider {
     static var previews: some View {
         CollectionsView(
             store: .init(

@@ -162,7 +162,7 @@ extension AnimeStreamLogic {
     func core(_ state: inout State, _ action: Action) -> EffectTask<Action> {
         switch action {
         case .initialize:
-            state.availableProviders.selected = state.availableProviders.selected ?? "Gogoanime"
+            state.availableProviders.selected = state.availableProviders.selected ?? state.availableProviders.items.last?.id
             return fetchStreamingProvider(&state)
 
         case let .fetchedProvider(provider):

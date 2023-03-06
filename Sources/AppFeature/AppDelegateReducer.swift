@@ -12,6 +12,7 @@ import DownloaderClient
 import FileClient
 import SettingsFeature
 import SharedModels
+import TrackingListClient
 import UserDefaultsClient
 import Utilities
 
@@ -41,6 +42,8 @@ public struct AppDelegateReducer: ReducerProtocol {
     var downloaderClient
     @Dependency(\.userDefaultsClient)
     var userDefaultsClient
+    @Dependency(\.trackingListClient)
+    var trackingListClient
 }
 
 extension AppDelegateReducer {

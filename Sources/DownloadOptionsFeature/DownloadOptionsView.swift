@@ -110,9 +110,7 @@ struct DownloadOptionsView_Previews: PreviewProvider {
                     anime: Anime.attackOnTitan,
                     episodeId: 1,
                     availableProviders: .init(
-                        items: [
-                            .init(name: "Gogoanime")
-                        ]
+                        items: []
                     )
                 ),
                 reducer: DownloadOptionsReducer()

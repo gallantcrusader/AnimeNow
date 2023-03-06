@@ -60,13 +60,8 @@ extension Request {
         fetchRequest.propertiesToFetch = properties
         fetchRequest.includesPropertyValues = !properties.isEmpty
 
-        fetchLimit.flatMap { limit in
-            fetchRequest.fetchLimit = limit
-        }
-
-        if let predicate {
-            fetchRequest.predicate = predicate
-        }
+        fetchLimit.flatMap { fetchRequest.fetchLimit = $0 }
+        predicate.flatMap { fetchRequest.predicate = $0 }
 
         if !sortDescriptors.isEmpty {
             fetchRequest.sortDescriptors = sortDescriptors.map(\.object)

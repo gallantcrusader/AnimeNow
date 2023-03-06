@@ -14,7 +14,10 @@ public struct SettingsGroupView<Label: View, Items: View>: View {
     let label: () -> Label
     let items: () -> Items
 
-    private var padding = 12.0
+    var spacing = 1.0
+    var backgroundColor: Color? = Color(white: 0.3)
+    var cornerRadius = 12.0
+    var cornerItems = false
 
     public init(
         @ViewBuilder label: @escaping () -> Label,
@@ -27,12 +30,34 @@ public struct SettingsGroupView<Label: View, Items: View>: View {
     public var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
             label()
-            LazyVStack(spacing: 1) {
+            LazyVStack(spacing: spacing) {
                 items()
+                    .cornerRadius(cornerItems ? cornerRadius : 0)
             }
-            .background(Color(white: 0.3))
-            .cornerRadius(padding)
+            .background(backgroundColor)
+            .cornerRadius(cornerRadius)
         }
+    }
+}
+
+public extension SettingsGroupView {
+    func cornerRadius(_ cornerRadius: Double, cornerItems: Bool = false) -> Self {
+        var view = self
+        view.cornerItems = cornerItems
+        view.cornerRadius = cornerRadius
+        return view
+    }
+
+    func backgroundColor(_ color: Color?) -> Self {
+        var view = self
+        view.backgroundColor = color
+        return view
+    }
+
+    func spacing(_ spacing: Double) -> Self {
+        var view = self
+        view.spacing = spacing
+        return view
     }
 }
 

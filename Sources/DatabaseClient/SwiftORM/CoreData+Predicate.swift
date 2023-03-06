@@ -26,18 +26,18 @@ public extension PredicateProtocol {
     static func && (
         lhs: Self,
         rhs: Self
-    ) -> CompoundPredicate<Self.Root> {
+    ) -> CompoundPredicate<Root> {
         CompoundPredicate(type: .and, subpredicates: [lhs, rhs])
     }
 
     static func || (
         lhs: Self,
         rhs: Self
-    ) -> CompoundPredicate<Self.Root> {
+    ) -> CompoundPredicate<Root> {
         CompoundPredicate(type: .or, subpredicates: [lhs, rhs])
     }
 
-    static prefix func ! (not: Self) -> CompoundPredicate<Self.Root> {
+    static prefix func ! (not: Self) -> CompoundPredicate<Root> {
         CompoundPredicate(type: .not, subpredicates: [not])
     }
 }
@@ -46,14 +46,14 @@ public extension PredicateProtocol {
 
 public extension ConvertableValue where Self: Equatable {
     static func == <R>(
-        kp: some KeyPath<R, Self>,
+        kp: KeyPath<R, Self>,
         value: Self
     ) -> ComparisonPredicate<R> {
         ComparisonPredicate(kp, .equalTo, value)
     }
 
     static func != <R>(
-        kp: some KeyPath<R, Self>,
+        kp: KeyPath<R, Self>,
         value: Self
     ) -> ComparisonPredicate<R> {
         ComparisonPredicate(kp, .notEqualTo, value)
@@ -62,50 +62,41 @@ public extension ConvertableValue where Self: Equatable {
 
 public extension ConvertableValue where Self: Comparable {
     static func > <R>(
-        kp: some KeyPath<R, Self>,
+        kp: KeyPath<R, Self>,
         value: Self
     ) -> ComparisonPredicate<R> {
         ComparisonPredicate(kp, .greaterThan, value)
     }
 
     static func < <R>(
-        kp: some KeyPath<R, Self>,
+        kp: KeyPath<R, Self>,
         value: Self
     ) -> ComparisonPredicate<R> {
         ComparisonPredicate(kp, .lessThan, value)
     }
 
     static func <= <R>(
-        kp: some KeyPath<R, Self>,
+        kp: KeyPath<R, Self>,
         value: Self
     ) -> ComparisonPredicate<R> {
         ComparisonPredicate(kp, .lessThanOrEqualTo, value)
     }
 
     static func >= <R>(
-        kp: some KeyPath<R, Self>,
+        kp: KeyPath<R, Self>,
         value: Self
     ) -> ComparisonPredicate<R> {
         ComparisonPredicate(kp, .greaterThanOrEqualTo, value)
     }
 }
 
-// public extension Sequence where Element: ConvertableValue & Equatable {
-//    static func === <R>(
-//        kp: some KeyPath<R, Self.Element>,
-//        values: Self
-//    ) -> ComparisonPredicate<R> {
-//        ComparisonPredicate(kp, .in, values)
-//    }
-// }
-
 // MARK: - internal
 
 internal extension ComparisonPredicate {
-    convenience init(
-        _ keyPath: KeyPath<Root, some ConvertableValue>,
+    convenience init<Value: ConvertableValue>(
+        _ keyPath: KeyPath<Root, Value>,
         _ op: NSComparisonPredicate.Operator,
-        _ value: (any ConvertableValue)?
+        _ value: Value?
     ) {
         let attribute = Root.attribute(keyPath)
         let ex1 = NSExpression(forKeyPath: attribute.name)

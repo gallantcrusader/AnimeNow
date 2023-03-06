@@ -130,6 +130,8 @@ public struct AppReducer: ReducerProtocol {
         case binding(BindingAction<State>)
     }
 
+    @Dependency(\.anilistClient)
+    var anilistClient
     @Dependency(\.apiClient)
     var apiClient
     @Dependency(\.mainQueue)
@@ -140,6 +142,10 @@ public struct AppReducer: ReducerProtocol {
     var databaseClient
     @Dependency(\.downloaderClient)
     var downloaderClient
+    @Dependency(\.kitsuClient)
+    var kitsuClient
+    @Dependency(\.myanimelistClient)
+    var myanimelistClient
     @Dependency(\.videoPlayerClient)
     var videoPlayerClient
 
@@ -215,7 +221,7 @@ extension AppReducer {
         case .appDelegate(.appDidFinishLaunching):
             state.settings.animeProviders = .loading
             return .run { send in
-                await withTaskGroup(of: Void.self) { group in
+                await withThrowingTaskGroup(of: Void.self) { group in
                     group.addTask {
                         let downloadCounts = downloaderClient.count()
 
@@ -227,9 +233,21 @@ extension AppReducer {
                     group.addTask {
                         await send(
                             .fetchedAnimeProviders(
-                                .init { try await apiClient.request(.consumetAPI, .listProviders(of: .ANIME)) }
+                                .init { try await apiClient.request(.consumet(.listProviders(of: .ANIME))) }
                             )
                         )
+                    }
+
+                    group.addTask {
+                        try await anilistClient.initialize()
+                    }
+
+                    group.addTask {
+                        try await myanimelistClient.initialize()
+                    }
+
+                    group.addTask {
+                        try await kitsuClient.initialize()
                     }
                 }
             }
@@ -257,11 +275,11 @@ extension AppReducer {
                 animation: .interactiveSpring(response: 0.35, dampingFraction: 1.0)
             )
 
-        case let .collection(.onAnimeTapped(anime)):
+        case let .collection(.onAnimeTapped(animeId)):
             return .action(
                 .setAnimeDetail(
                     .init(
-                        anime: anime,
+                        animeId: animeId,
                         availableProviders: state.settings.selectableAnimeProviders
                     )
                 ),

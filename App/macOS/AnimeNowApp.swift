@@ -25,7 +25,9 @@ struct AnimeNowApp: App {
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.expanded)
         .commands {
-            CommandGroup(replacing: .newItem) {}
+            CommandGroup(replacing: .newItem) {
+                EmptyView()
+            }
             CommandGroup(after: .appInfo) {
                 Button {} label: {
                     Text("Check for Updates...")
@@ -40,7 +42,7 @@ struct AnimeNowApp: App {
                     action: AppReducer.Action.settings
                 )
             )
-            .frame(width: 325, height: 550)
+            .frame(width: 450, height: 400)
         }
     }
 }

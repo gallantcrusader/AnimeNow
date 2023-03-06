@@ -65,7 +65,7 @@ public struct HomeView: View {
                     ScrollView(.vertical, showsIndicators: false) {
                         ExtraTopSafeAreaInset()
 
-                        VStack(spacing: 24) {
+                        LazyVStack(spacing: 24) {
                             animeHeroItems(isLoading: viewStore.isLoading)
 
                             listAnyEpisodes(
@@ -245,14 +245,15 @@ extension HomeView {
             state
         } content: { viewStore in
             if let items = isLoading ? Anime.placeholders(5) : viewStore.value, !items.isEmpty {
-                DynamicHStackScrollView(idealWidth: DeviceUtil.isPhone ? 140 : 190, items: items) { anime in
-                    AnimeItemView(
-                        anime: anime
-                    )
-                    .onTapGesture {
-                        viewStore.send(.animeTapped(anime))
-                    }
-                    .disabled(isLoading)
+                DynamicHStackScrollView(
+                    idealWidth: DeviceUtil.isPhone ? 140 : 190,
+                    items: items
+                ) { anime in
+                    AnimeItemView(anime: anime)
+                        .onTapGesture {
+                            viewStore.send(.animeTapped(anime))
+                        }
+                        .disabled(isLoading)
                 } label: {
                     headerText(title)
                 }
@@ -271,14 +272,15 @@ extension HomeView {
         } content: { viewStore in
             if let items = isLoading ? Anime.placeholders(5).map({ anime in anime.eraseAsRepresentable() }) : viewStore.value,
                !items.isEmpty {
-                DynamicHStackScrollView(idealWidth: DeviceUtil.isPhone ? 140 : 190, items: items) { anime in
-                    AnimeItemView(
-                        anime: anime
-                    )
-                    .onTapGesture {
-                        viewStore.send(.anyAnimeTapped(id: anime.id))
-                    }
-                    .disabled(isLoading)
+                DynamicHStackScrollView(
+                    idealWidth: DeviceUtil.isPhone ? 140 : 190,
+                    items: items
+                ) { anime in
+                    AnimeItemView(anime: anime)
+                        .onTapGesture {
+                            viewStore.send(.anyAnimeTapped(id: anime.id))
+                        }
+                        .disabled(isLoading)
                 } label: {
                     headerText(title)
                 }

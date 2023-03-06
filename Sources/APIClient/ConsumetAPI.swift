@@ -7,25 +7,33 @@
 
 import Foundation
 import SharedModels
+import Utilities
 
-// MARK: - ConsumetAPI
+// MARK: - ConsumetEndpoint
 
-public final class ConsumetAPI: APIBase {
-    public static let shared: ConsumetAPI = .init()
-
-    // swiftlint:disable force_unwrapping
-    public let base = URL(string: "https://api.consumet.org")!
-
-    private init() {}
+public struct ConsumetEndpoint<D: Decodable>: Endpoint {
+    var base = URL(string: "https://api.consumet.org").unsafelyUnwrapped
+    var path: [CustomStringConvertible] = []
+    var query: [Query] = []
+    var method: Request<D>.Method = .get
+    var headers: [String: CustomStringConvertible]?
 }
 
-public extension Request where Route == ConsumetAPI {
+// MARK: - Consumet + Request
+
+public extension Request {
+    static func consumet<D: Decodable>(_ endpoint: ConsumetEndpoint<D>) -> Request<D> {
+        endpoint.build()
+    }
+}
+
+public extension ConsumetEndpoint {
     static func anilistEpisodes(
         animeId: Int,
         dub: Bool,
         provider: String,
         fetchFiller: Bool = true
-    ) -> Request<Route, [ConsumetAPI.Episode]> {
+    ) -> ConsumetEndpoint<[ConsumetModels.Episode]> {
         .init(
             path: ["meta", "anilist", "episodes", animeId],
             query: [
@@ -40,7 +48,7 @@ public extension Request where Route == ConsumetAPI {
         episodeId: String,
         dub: Bool,
         provider: String
-    ) -> Request<Route, ConsumetAPI.StreamingLinksPayload> {
+    ) -> ConsumetEndpoint<ConsumetModels.StreamingLinksPayload> {
         .init(
             path: ["meta", "anilist", "watch", episodeId],
             query: [
@@ -51,8 +59,8 @@ public extension Request where Route == ConsumetAPI {
     }
 
     static func listProviders(
-        of type: ConsumetAPI.ProviderType = .ANIME
-    ) -> Request<Route, [ProviderInfo]> {
+        of type: ConsumetModels.ProviderType = .ANIME
+    ) -> ConsumetEndpoint<[ProviderInfo]> {
         .init(
             path: ["utils", "providers"],
             query: [
@@ -62,8 +70,11 @@ public extension Request where Route == ConsumetAPI {
     }
 }
 
-// swiftlint:disable discouraged_optional_boolean
-public extension ConsumetAPI {
+// MARK: - ConsumetModels
+
+public enum ConsumetModels {}
+
+public extension ConsumetModels {
     enum ProviderType: String {
         case ANIME
         case MANGA
@@ -87,7 +98,8 @@ public extension ConsumetAPI {
         public let type: String?
         public let image: String?
         public let description: String?
-        public let isFiller: Bool?
+        @Defaultable<False>
+        public var isFiller: Bool
     }
 
     struct StreamingLinksPayload: Decodable {
@@ -99,8 +111,10 @@ public extension ConsumetAPI {
 
     struct StreamingLink: Decodable {
         let url: String
-        let isM3U8: Bool?
-        let isDASH: Bool?
+        @Defaultable<True>
+        var isM3U8: Bool
+        @Defaultable<False>
+        var isDASH: Bool
         let quality: String?
     }
 
@@ -116,9 +130,7 @@ public extension ConsumetAPI {
 }
 
 private extension Source.Quality {
-    init?(
-        _ quality: String
-    ) {
+    init?(_ quality: String) {
         if let matched = Self.allCases.first(where: { $0.description.localizedCaseInsensitiveContains(quality) }) {
             self = matched
             return
@@ -137,7 +149,7 @@ private extension Source.Quality {
 
 // MARK: - Converters
 
-public extension ConsumetAPI {
+public extension ConsumetModels {
     static func convert(from payload: StreamingLinksPayload) -> SharedModels.SourcesOptions {
         var sources: [SharedModels.Source] = []
 
@@ -160,7 +172,7 @@ public extension ConsumetAPI {
 
             var format = Source.Format.m3u8
 
-            if link.isDASH == true {
+            if link.isDASH {
                 format = .mpd
             }
 
@@ -189,11 +201,11 @@ public extension ConsumetAPI {
         return .init(sources.sorted(by: \.quality), subtitles: subtitles)
     }
 
-    static func convert(from episodes: [ConsumetAPI.Episode]) -> [SharedModels.Episode] {
+    static func convert(from episodes: [ConsumetModels.Episode]) -> [SharedModels.Episode] {
         episodes.compactMap(convert(from:))
     }
 
-    static func convert(from episode: ConsumetAPI.Episode) -> SharedModels.Episode {
+    static func convert(from episode: ConsumetModels.Episode) -> SharedModels.Episode {
         let thumbnail: ImageSize?
 
         if let thumbnailString = episode.image, let thumbnailURL = URL(string: thumbnailString) {
@@ -210,7 +222,7 @@ public extension ConsumetAPI {
             number: episode.number,
             description: episode.description ?? "Description is not available for this episode.",
             thumbnail: thumbnail,
-            isFiller: episode.isFiller ?? false
+            isFiller: episode.isFiller
         )
     }
 }

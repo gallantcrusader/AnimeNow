@@ -1,49 +1,70 @@
 //
-//  AniList.swift
+//  AniListAPI.swift
 //
 //
 //  Created by ErrorErrorError on 9/28/22.
 //
 
+import AuthenticationClient
+import ComposableArchitecture
 import Foundation
 import SharedModels
 import SociableWeaver
 import Utilities
 
-// MARK: - AniListAPI
+// MARK: - AniListEndpoint
 
-public final class AniListAPI: APIBase {
-    public static let shared: AniListAPI = .init()
-
-    // swiftlint:disable force_unwrapping
-    public let base = URL(string: "https://graphql.anilist.co")!
-
-    private init() {}
+public struct AniListEndpoint<D: Decodable>: Endpoint {
+    var base = URL(string: "https://graphql.anilist.co").unsafelyUnwrapped
+    var query: [Query] = []
+    var path: [CustomStringConvertible] = []
+    var method: Request<D>.Method
+    var headers: [String: CustomStringConvertible]?
 }
 
-public extension Request where Route == AniListAPI {
-    static func graphql<Q: GraphQLQuery>(
-        _: Q.Type,
-        _ options: Q.QueryOptions
-    ) -> Request<Route, Q.Response> {
-        let query = Q.createQuery(options)
-
-        let data = (try? GraphQL.Paylod(query: query.format()).toData()) ?? .init()
-
+public extension AniListEndpoint {
+    static func graphql<Q: GraphQLQuery & AniListQuery>(
+        _ query: Q.Type,
+        _ options: Q.QueryOptions,
+        _ token: String? = nil
+    ) throws -> AniListEndpoint<Q.Response> {
+        let query = query.createQuery(options)
+        let data = try GraphQL.Paylod(query: query.description).toData()
+        var headers = [
+            "Content-Type": "application/json",
+            "Content-Length": "\(data.count)",
+            "Accept": "application/json"
+        ]
+        token.flatMap { headers["Authorization"] = "Bearer \($0)" }
         return .init(
-            method: .post(data)
-        ) { _ in
-            [
-                "Content-Type": "application/json",
-                "Content-Length": data.count
-            ]
-        }
+            method: .post(data),
+            headers: headers
+        )
+    }
+
+    static func graphql<Q: AniListQuery>(
+        _ query: Q.Type,
+        _ token: String? = nil
+    ) throws -> AniListEndpoint<Q.Response> where Q.QueryOptions == Void {
+        try .graphql(query, (), token)
     }
 }
 
-// MARK: - Converters
+// MARK: - AniList + Request4
 
-public extension AniListAPI {
+public extension Request {
+    static func anilist<D: Decodable>(_ endpoint: AniListEndpoint<D>) -> Request<D> {
+        endpoint.build()
+    }
+}
+
+// MARK: - AniListModels
+
+public enum AniListModels {}
+
+// MARK: - AniList + Converters
+
+public extension AniListModels {
     static func convert(from medias: [Media]) -> [Anime] {
         medias.compactMap { media in
             convert(from: media)
@@ -132,10 +153,14 @@ public protocol PageResponseObject {
     static var pageResponseName: String { get }
 }
 
-public extension AniListAPI {
-    typealias PageMediaQuery = PageQuery<AniListAPI.Media>
+// MARK: - AniListQuery
 
-    struct PageQuery<O: GraphQLQueryObject & PageResponseObject>: GraphQLQuery {
+public protocol AniListQuery: GraphQLQuery {}
+
+public extension AniListModels {
+    typealias MediaPageQuery = PageQuery<Self.Media>
+
+    struct PageQuery<O: GraphQLQueryObject & PageResponseObject>: AniListQuery {
         public typealias Response = GraphQL.Response<PageResponse<Self>>
 
         public enum QueryArgument: DefaultArguments {
@@ -147,18 +172,18 @@ public extension AniListAPI {
 
         public struct QueryOptions {
             public var arguments: [QueryArgument]
-            public var itemArguments: [O.Argument]
+            public var itemArguments: O.Argument
 
             public init(
                 arguments: [QueryArgument] = .defaultArgs,
-                itemArguments: [O.Argument] = []
+                itemArguments: O.Argument
             ) {
                 self.arguments = arguments
                 self.itemArguments = itemArguments
             }
         }
 
-        public let pageInfo: AniListAPI.PageInfo
+        public let pageInfo: AniListModels.PageInfo
         public let items: [O]
 
         public enum CodingKeys: CodingKey {
@@ -185,11 +210,13 @@ public extension AniListAPI {
             }
         }
 
-        public static func createQuery(_ options: QueryOptions) -> SociableWeaver.Weave {
+        public static func createQuery(
+            _ options: QueryOptions
+        ) -> Weave {
             Weave(.query) {
-                var obj = Object("Page") {
+                var obj = Object(name: "Page") {
                     O.createQueryObject(CodingKeys.items, options.itemArguments)
-                    AniListAPI.PageInfo.createQueryObject(CodingKeys.pageInfo)
+                    AniListModels.PageInfo.createQueryObject(CodingKeys.pageInfo)
                 }
                 .caseStyle(.pascalCase)
 
@@ -201,7 +228,45 @@ public extension AniListAPI {
                         obj = obj.argument(key: "perPage", value: int)
                     }
                 }
-                return "{ \(obj.description) }"
+                return obj
+            }
+        }
+    }
+
+    struct Viewer: AniListQuery {
+        public typealias Response = GraphQL.Response<Self>
+
+        // swiftlint:disable identifier_name
+        public let Viewer: User
+
+        public static func createQuery(_: Void = ()) -> Weave {
+            Weave(.query) {
+                AniListModels.User.createQueryObject(CodingKeys.Viewer)
+                    .caseStyle(.pascalCase)
+            }
+        }
+    }
+
+    struct MediaListCollectionQuery: AniListQuery {
+        public typealias Response = GraphQL.Response<Self>
+
+        public let MediaListCollection: MediaListCollection
+
+        public struct QueryArgument {
+            let userId: Int
+            let type: Media.MediaType
+
+            public init(userId: Int, type: Media.MediaType = .ANIME) {
+                self.userId = userId
+                self.type = type
+            }
+        }
+
+        public static func createQuery(_ options: QueryArgument) -> Weave {
+            Weave(.query) {
+                AniListModels.MediaListCollection.createQueryObject(CodingKeys.MediaListCollection)
+                    .argument(key: "userId", value: options.userId)
+                    .argument(key: "type", value: options.type)
             }
         }
     }
@@ -209,7 +274,7 @@ public extension AniListAPI {
 
 // MARK: - GraphQL Models
 
-public extension AniListAPI {
+public extension AniListModels {
     struct PageResponse<T: Decodable>: Decodable {
         // swiftlint:disable identifier_name
         public let Page: T
@@ -224,10 +289,8 @@ public extension AniListAPI {
         let lastPage: Int
         let hasNextPage: Bool
 
-        public static func createQueryObject(
-            _ name: CodingKey
-        ) -> Object {
-            Object(name) {
+        public static func createQueryObject(_ name: String, _: Void) -> Object {
+            Object(name: name) {
                 Field(CodingKeys.total)
                 Field(CodingKeys.perPage)
                 Field(CodingKeys.currentPage)
@@ -237,17 +300,15 @@ public extension AniListAPI {
         }
     }
 
-    struct FuzzyDate: GraphQLQueryObject {
+    struct FuzzyDate: GraphQLQueryObject, Equatable {
         public typealias Argument = Void
 
         let year: Int?
         let month: Int?
         let day: Int?
 
-        public static func createQueryObject(
-            _ name: CodingKey
-        ) -> Object {
-            Object(name) {
+        public static func createQueryObject(_ name: String, _: Void) -> Object {
+            Object(name: name) {
                 Field(CodingKeys.year)
                 Field(CodingKeys.month)
                 Field(CodingKeys.day)
@@ -259,7 +320,151 @@ public extension AniListAPI {
         public let Media: Media
     }
 
-    struct Media: GraphQLQuery, GraphQLQueryObject, PageResponseObject {
+    struct MediaListCollection: GraphQLQueryObject, Equatable {
+        public let lists: [MediaListGroup]
+        public let user: User
+        public let hasNextChunk: Bool
+
+        public static func createQueryObject(
+            _ name: String,
+            _: Void
+        ) -> Object {
+            Object(name: name) {
+                MediaListGroup.createQueryObject(CodingKeys.lists)
+                User.createQueryObject(CodingKeys.user)
+                Field(CodingKeys.hasNextChunk)
+            }
+            .caseStyle(.pascalCase)
+        }
+    }
+
+    struct MediaListGroup: GraphQLQueryObject, Equatable {
+        public let entries: [MediaList]
+        public let name: String
+        @Defaultable<True>
+        public var isCustomList: Bool
+        public let status: MediaList.Status?
+
+        public static func createQueryObject(
+            _ name: String,
+            _: Void
+        ) -> Object {
+            Object(name: name) {
+                MediaList.createQueryObject(CodingKeys.entries)
+                Field(CodingKeys.name)
+                Field(CodingKeys.isCustomList)
+                Field(CodingKeys.status)
+            }
+        }
+    }
+
+    struct MediaList: GraphQLQueryObject, Equatable {
+        public let id: Int
+        public let userId: Int
+        public let mediaId: Int
+        public let status: Status?
+        public let progress: Int?
+        public let `repeat`: Int?
+        public let priority: Int?
+        @Defaultable<False>
+        public var `private`: Bool
+        public let startedAt: FuzzyDate?
+        public let completedAt: FuzzyDate?
+        public let createdAt: Int?
+        public let updatedAt: Int?
+        public let media: Media?
+
+        public enum Status: String, Decodable, EnumValueRepresentable, Equatable {
+            case CURRENT
+            case PLANNING
+            case COMPLETED
+            case DROPPED
+            case PAUSED
+            case REPEATING
+        }
+
+        public static func createQueryObject(
+            _ name: String,
+            _: Void
+        ) -> Object {
+            Object(name: name) {
+                Field(CodingKeys.id)
+                Field(CodingKeys.userId)
+                Field(CodingKeys.mediaId)
+                Field(CodingKeys.status)
+                Field(CodingKeys.progress)
+                Field(CodingKeys.repeat)
+                Field(CodingKeys.priority)
+                Field(CodingKeys.private)
+                FuzzyDate.createQueryObject(CodingKeys.startedAt)
+                FuzzyDate.createQueryObject(CodingKeys.completedAt)
+                Field(CodingKeys.createdAt)
+                Field(CodingKeys.updatedAt)
+                Media.createQueryObject(CodingKeys.media, .init(filters: []))
+            }
+        }
+    }
+
+    struct User: GraphQLQueryObject, Equatable {
+        public typealias Argument = Void
+
+        public let id: Int
+        public let name: String
+        public let avatar: Avatar?
+        public let bannerImage: String?
+        public let statistics: StatisticType?
+
+        public struct Avatar: GraphQLQueryObject, Equatable {
+            public let large: String?
+            public let medium: String?
+
+            public static func createQueryObject(_ name: String, _: Void) -> Object {
+                Object(name: name) {
+                    Field(CodingKeys.large)
+                    Field(CodingKeys.medium)
+                }
+            }
+        }
+
+        public struct StatisticType: GraphQLQueryObject, Equatable {
+            public let anime: Statistic
+
+            public struct Statistic: GraphQLQueryObject, Equatable {
+                @Defaultable<Zero>
+                public var count: Int
+                @Defaultable<Zero>
+                public var episodesWatched: Int
+                @Defaultable<Zero>
+                public var minutesWatched: Int
+
+                public static func createQueryObject(_ name: String, _: Void) -> Object {
+                    Object(name: name) {
+                        Field(CodingKeys.count)
+                        Field(CodingKeys.episodesWatched)
+                        Field(CodingKeys.minutesWatched)
+                    }
+                }
+            }
+
+            public static func createQueryObject(_ name: String, _: Void) -> Object {
+                Object(name: name) {
+                    Statistic.createQueryObject(CodingKeys.anime)
+                }
+            }
+        }
+
+        public static func createQueryObject(_ name: String, _: Void) -> Object {
+            Object(name: name) {
+                Field(CodingKeys.id)
+                Field(CodingKeys.name)
+                Avatar.createQueryObject(CodingKeys.avatar)
+                Field(CodingKeys.bannerImage)
+                StatisticType.createQueryObject(CodingKeys.statistics)
+            }
+        }
+    }
+
+    struct Media: GraphQLQueryObject, PageResponseObject, AniListQuery, Equatable {
         public typealias Response = GraphQL.Response<MediaResponse>
 
         public static var pageResponseName: String { "media" }
@@ -278,7 +483,7 @@ public extension AniListAPI {
         let averageScore: Int?
         let genres: [String]
 
-        public enum Argument: DefaultArguments {
+        public enum Filter: DefaultArguments {
             case id(Int)
             case idIn([Int])
             case isAdult(Bool = false)
@@ -291,16 +496,24 @@ public extension AniListAPI {
             case statusNotIn([Status])
             case search(String)
 
-            public static let defaultArgs: [Argument] = {
+            public static let defaultArgs: [Self] = {
                 [.isAdult(), .type(), .formatIn()]
             }()
         }
 
+        public struct Argument {
+            let filters: [Filter]
+
+            public init(filters: [AniListModels.Media.Filter] = .defaultArgs) {
+                self.filters = filters
+            }
+        }
+
         public static func createQueryObject(
             _ name: String,
-            _ arguments: [Argument] = .defaultArgs
+            _ arguments: Argument = .init()
         ) -> Object {
-            var obj = Object(name) {
+            var obj = Object(name: name) {
                 Field(CodingKeys.id)
                 Field(CodingKeys.idMal)
                 Title.createQueryObject(CodingKeys.title)
@@ -316,7 +529,7 @@ public extension AniListAPI {
                 Field(CodingKeys.genres)
             }
 
-            for argument in arguments {
+            for argument in arguments.filters {
                 switch argument {
                 case let .id(id):
                     obj = obj.argument(key: "id", value: id)
@@ -346,7 +559,7 @@ public extension AniListAPI {
         }
 
         public static func createQuery(
-            _ arguments: [Media.Argument] = .defaultArgs
+            _ arguments: Argument = .init()
         ) -> Weave {
             enum CodingKeys: CodingKey {
                 case Media
@@ -375,17 +588,16 @@ public extension AniListAPI {
             case EPISODE_DESC
         }
 
-        public struct MediaCoverImage: GraphQLQueryObject {
-            public typealias Argument = Void
-
+        public struct MediaCoverImage: GraphQLQueryObject, Equatable {
             let extraLarge: String?
             let large: String?
             let medium: String?
 
-            static func createQueryObject(
-                _ name: CodingKey
+            public static func createQueryObject(
+                _ name: String,
+                _: Void
             ) -> Object {
-                Object(name) {
+                Object(name: name) {
                     Field(CodingKeys.extraLarge)
                     Field(CodingKeys.large)
                     Field(CodingKeys.medium)
@@ -393,7 +605,7 @@ public extension AniListAPI {
             }
         }
 
-        public enum Status: String, Decodable, EnumValueRepresentable {
+        public enum Status: String, Decodable, EnumValueRepresentable, Equatable {
             case FINISHED
             case RELEASING
             case NOT_YET_RELEASED
@@ -401,7 +613,7 @@ public extension AniListAPI {
             case HIATUS
         }
 
-        public enum Format: String, Decodable, EnumValueRepresentable, CaseIterable {
+        public enum Format: String, Decodable, EnumValueRepresentable, CaseIterable, Equatable {
             case TV
             case TV_SHORT
             case MOVIE
@@ -410,23 +622,22 @@ public extension AniListAPI {
             case ONA
         }
 
-        public enum MediaType: String, Decodable, EnumRawValueRepresentable {
+        public enum MediaType: String, Decodable, EnumRawValueRepresentable, Equatable {
             case ANIME
             case MANGA
         }
 
-        public struct Title: GraphQLQueryObject {
-            public typealias Argument = Void
-
+        public struct Title: GraphQLQueryObject, Equatable {
             let romaji: String?
             let english: String?
             let native: String?
             let userPreferred: String?
 
-            static func createQueryObject(
-                _ name: CodingKey
+            public static func createQueryObject(
+                _ name: String,
+                _: Void
             ) -> Object {
-                Object(name) {
+                Object(name: name) {
                     Field(CodingKeys.romaji)
                     Field(CodingKeys.english)
                     Field(CodingKeys.native)

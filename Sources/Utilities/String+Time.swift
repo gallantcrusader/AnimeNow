@@ -51,16 +51,6 @@ extension Double {
 
 public extension String {
     func trimHTMLTags() -> String? {
-        guard let htmlStringData = data(using: String.Encoding.utf8) else {
-            return nil
-        }
-
-        let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
-            .documentType: NSAttributedString.DocumentType.html,
-            .characterEncoding: String.Encoding.utf8.rawValue
-        ]
-
-        let attributedString = try? NSAttributedString(data: htmlStringData, options: options, documentAttributes: nil)
-        return attributedString?.string
+        replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression, range: nil)
     }
 }

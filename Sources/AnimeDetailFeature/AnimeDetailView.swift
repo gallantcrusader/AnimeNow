@@ -817,13 +817,7 @@ struct AnimeDetailView_Previews: PreviewProvider {
             store: .init(
                 initialState: .init(
                     animeId: 127_230,
-                    availableProviders: .init(
-                        items: [
-                            .init(name: "Gogoanime"),
-                            .init(name: "Zoro"),
-                            .init(name: "Kamyroll")
-                        ]
-                    )
+                    availableProviders: .init(items: [])
                 ),
                 reducer: AnimeDetailReducer()
             )

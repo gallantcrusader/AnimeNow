@@ -19,18 +19,20 @@ public protocol GraphQLArgument {
 
 public protocol GraphQLQueryObject: Decodable {
     associatedtype Argument
-    static func createQueryObject(_ name: String, _ arguments: [Argument]) -> Object
+    static func createQueryObject(_ name: String, _ arguments: Argument) -> Object
 }
 
 public extension GraphQLQueryObject {
-    static func createQueryObject(_ name: CodingKey, _ arguments: [Argument] = []) -> Object {
+    static func createQueryObject(_ name: CodingKey, _ arguments: Argument) -> Object {
         createQueryObject(name.stringValue, arguments)
     }
-}
 
-public extension GraphQLQueryObject where Argument == Void {
-    static func createQueryObject(_ name: String, _ arguments: [Void] = []) -> Object {
-        createQueryObject(name, arguments)
+    static func createQueryObject(_ name: CodingKey) -> Object where Argument == Void {
+        createQueryObject(name.stringValue, ())
+    }
+
+    static func createQueryObject(_ name: String) -> Object where Argument == Void {
+        createQueryObject(name, ())
     }
 }
 
@@ -81,25 +83,58 @@ public extension Collection where Element: DefaultArguments {
     static var defaultArgs: [Element] { Element.defaultArgs }
 }
 
-public extension Weave {
-    func format(removeOperation: Bool = true) -> String {
-        let weave = String("\(description)")
-
-        if removeOperation {
-            let output = String(weave.split(separator: "{", maxSplits: 1, omittingEmptySubsequences: true).last ?? "")
-            return "{\(output)"
-        } else {
-            return "{ \(weave) }"
-        }
-    }
-}
-
 public extension Object {
     func argument(_ argument: some GraphQLArgument) -> Self {
         let argumentKey = argument.description
         let value = argument.getValue()
         return self.argument(key: argumentKey, value: value)
     }
+
+    init(name: String, @WeavableBuilder builder: () -> ObjectWeavable) {
+        self.init(name) { builder() }
+    }
+
+    init(name: CodingKey, @WeavableBuilder builder: () -> ObjectWeavable) {
+        self.init(name: name.stringValue) { builder() }
+    }
+}
+
+// MARK: - WeavableBuilder
+
+@resultBuilder
+enum WeavableBuilder {
+    static func buildBlock(_ components: ObjectWeavable...) -> ObjectWeavable {
+        GroupWeave(items: components)
+    }
+
+    static func buildEither(_ component: ObjectWeavable) -> ObjectWeavable {
+        component
+    }
+
+    static func buildOptional(_ component: ObjectWeavable?) -> ObjectWeavable {
+        component ?? EmptyWeave()
+    }
+}
+
+// MARK: - GroupWeave
+
+struct GroupWeave: ObjectWeavable {
+    var items: [ObjectWeavable]
+    var description: String {
+        let val = items
+            .map(\.description)
+            .joined(separator: " ")
+        return val
+    }
+
+    var debugDescription: String { description }
+}
+
+// MARK: - EmptyWeave
+
+struct EmptyWeave: ObjectWeavable {
+    var description: String = ""
+    var debugDescription: String = ""
 }
 
 public extension Field {

@@ -103,7 +103,7 @@ extension Loadable: Equatable where T: Equatable {
 public extension Loadable {
     init(capture body: @Sendable () async throws -> T) async {
         do {
-            self = .success(try await body())
+            self = try await .success(body())
         } catch {
             self = .failed(error)
         }

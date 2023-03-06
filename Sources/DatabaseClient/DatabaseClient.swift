@@ -20,6 +20,7 @@ public protocol DatabaseClient {
         _ keyPath: WritableKeyPath<T, V>,
         _ value: V
     ) async throws -> Bool
+
     @discardableResult
     func update<T: ManagedObjectConvertible, V: ConvertableValue>(
         _ id: T.ID,
@@ -27,9 +28,7 @@ public protocol DatabaseClient {
         _ value: V?
     ) async throws -> Bool
 
-    // Delete
     func delete<T: ManagedObjectConvertible>(_ item: T) async throws
-
     func fetch<T: ManagedObjectConvertible>(_ request: Request<T>) async throws -> [T]
     func observe<T: ManagedObjectConvertible>(_ request: Request<T>) -> AsyncStream<[T]>
 }

@@ -12,7 +12,7 @@ import SwiftUI
 public struct ChipView<Accessory: View>: View {
     let text: String
     var accessory: (() -> Accessory)?
-    var backgroundColor: Color = .gray
+    var backgroundColor: Color? = .gray
     var opacity = 0.25
 
     public init(
@@ -33,17 +33,13 @@ public struct ChipView<Accessory: View>: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
-        .background(
-            Capsule()
-                .foregroundColor(backgroundColor)
-                .opacity(opacity)
-        )
+        .background(backgroundColor?.opacity(opacity))
         .clipShape(Capsule())
     }
 }
 
 public extension ChipView {
-    func chipBackgroundColor(_ color: Color) -> Self {
+    func chipBackgroundColor(_ color: Color?) -> Self {
         var view = self
         view.backgroundColor = color
         return view

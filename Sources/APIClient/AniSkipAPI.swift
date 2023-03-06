@@ -9,24 +9,23 @@ import Foundation
 import SharedModels
 import Utilities
 
-// MARK: - AniSkipAPI
+// MARK: - AniSkipEndpoint
 
-public final class AniSkipAPI: APIBase {
-    public static var shared: AniSkipAPI = .init()
-
-    // swiftlint:disable force_unwrapping
-    public let base = URL(string: "https://api.aniskip.com/v2")!
-
-    private init() {}
+public struct AniSkipEndpoint<D: Decodable>: Endpoint {
+    var base = URL(string: "https://api.aniskip.com/v2").unsafelyUnwrapped
+    var path: [CustomStringConvertible] = []
+    var query: [Query] = []
+    var method: Request<D>.Method = .get
+    var headers: [String: CustomStringConvertible]?
 }
 
-public extension Request where Route == AniSkipAPI {
+public extension AniSkipEndpoint {
     static func skipTime(
         malId: Int,
         episode: Int,
-        types: [AniSkipAPI.SkipItem.SkipType] = .allCases,
+        types: [AniSkipModels.SkipItem.SkipType] = .allCases,
         episodeLength: Int = 0
-    ) -> Request<Route, AniSkipAPI.Response> {
+    ) throws -> AniSkipEndpoint<AniSkipModels.Response> {
         .init(
             path: ["skip-times", "\(malId)", "\(episode)"],
             query: types.map { .init(name: "types", $0.rawValue) } + [
@@ -36,7 +35,19 @@ public extension Request where Route == AniSkipAPI {
     }
 }
 
-public extension AniSkipAPI {
+// MARK: - AniSkip + Request
+
+public extension Request {
+    static func aniskip<D: Decodable>(_ endpoint: AniSkipEndpoint<D>) -> Request<D> {
+        endpoint.build()
+    }
+}
+
+// MARK: - AniSkipModels
+
+public enum AniSkipModels {}
+
+public extension AniSkipModels {
     struct Response: Decodable {
         public let found: Bool
         public let results: [SkipItem]
@@ -63,7 +74,7 @@ public extension AniSkipAPI {
     }
 }
 
-public extension AniSkipAPI {
+public extension AniSkipModels {
     static func convert(from items: [SkipItem]) -> [SharedModels.SkipTime] {
         items.map { item -> SharedModels.SkipTime in
             let option: SharedModels.SkipTime.Option
