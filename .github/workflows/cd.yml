@@ -22,12 +22,20 @@ jobs:
         id: validate
         run: |
           commit_message="$(git log -1 --pretty=%B)"
+          tag="$(git tag --contains $(git log -1 --pretty=%h))"
 
           if [[ $commit_message == *"chore(version)"* ]]; then
-            echo "Can create a new release!"
+            echo "Can create a new release"
           else
             echo "Latest commit is not a new release."
             exit 1
+          fi
+  
+          if [[ -z $tag ]]; then
+            echo "Latest commit does not contain a tag."
+            exit 1
+          else
+            echo "Latest commit contains a tag release"
           fi
 
   setup:
@@ -46,16 +54,16 @@ jobs:
       - name: Get Build Info
         id: info
         run: |
-          semantic_version=$(git tag -l --sort -creatordate | head -1)
-          echo "semantic_version=$semantic_version" >> $GITHUB_OUTPUT
-          echo "git_sha=$(git rev-list --abbrev-commit -n 1 $semantic_version)" >> $GITHUB_OUTPUT
+          git_sha=$(git log --pretty=%h -1)
+          echo "git_sha=$git_sha" >> $GITHUB_OUTPUT
+          echo "semantic_version=$(git describe --tags --exact-match $git_sha)" >> $GITHUB_OUTPUT
 
       - name: Generate release notes
         id: release_notes
         run: |
-          brew install cocogitto
+          brew install git-cliff
           mkdir ${{ github.workspace }}/outputs
-          cog changelog -a ${{ steps.info.outputs.semantic_version }} > ${{ github.workspace }}/outputs/changelog.txt
+          git-cliff --current > ${{ github.workspace }}/outputs/changelog.txt
 
       - name: Cache Changelog
         id: cache-changelog
@@ -91,7 +99,14 @@ jobs:
             -scheme "Anime Now!" \
             -archivePath "./Anime Now! (${{ matrix.platform }}).xcarchive" \
             -xcconfig "./MainConfig.xcconfig" \
-            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY= CODE_SIGN_ENTITLEMENTS= GCC_OPTIMIZATION_LEVEL=s SWIFT_OPTIMIZATION_LEVEL=-O
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY= \
+            CODE_SIGN_ENTITLEMENTS= \
+            GCC_OPTIMIZATION_LEVEL=s \
+            SWIFT_OPTIMIZATION_LEVEL=-O \
+            GCC_GENERATE_DEBUGGING_SYMBOLS=YES \
+            DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
           popd
 
       - name: Construct ipa
@@ -124,12 +139,25 @@ jobs:
             "./Anime Now! (macOS).xcarchive/Products/Applications/"
           popd
 
-      - name: Upload Artifact
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.platform }}
           path: './App/Anime Now! (${{ matrix.platform }}).${{ matrix.extension }}'
           if-no-files-found: error
+
+      - name: Tar dSYM symbols
+        run: |
+          pushd App
+          tar -czf 'Anime Now! (${{ matrix.platform }}) Symbols.tar.gz' -C './Anime Now! (${{ matrix.platform }}).xcarchive' 'dSYMs'
+          popd
+
+      - name: Upload DSYM Arfifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform }}-symbols
+          path: './App/Anime Now! (${{ matrix.platform }}) Symbols.tar.gz'
+          if-no-files-found: warn
 
   publish:
     runs-on: macos-12
@@ -153,6 +181,7 @@ jobs:
           files: |
             **/*.ipa
             **/*.dmg
+            **/*.tar.gz
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: false
           prerelease: ${{ contains(needs.setup.outputs.semantic_version, 'beta') }}

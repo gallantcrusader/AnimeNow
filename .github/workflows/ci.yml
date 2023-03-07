@@ -39,13 +39,6 @@ jobs:
           echo "$(cat $BUILD_PATH/codecov/lcov.info)" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-      - name: PR comment with reactions
-        if: github.event_name == 'pull_request'
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          message: |
-             "$(cat $GITHUB_STEP_SUMMARY)"
-
       - name: Cache swift packages
         uses: actions/cache/save@v3
         with:
