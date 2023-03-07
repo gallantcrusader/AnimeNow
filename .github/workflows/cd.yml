@@ -1,190 +1,36 @@
-name: CD
+name: cd
 
 on:
   workflow_run:
     workflows: 
-      - CI
+      - ci
     branches:
+      - main
       - dev
     types:
       - completed
 
 jobs:
-  validation:
-    runs-on: macos-12
+  build-publish:
     if: github.event.workflow_run.conclusion == 'success'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: validate
-        id: validate
-        run: |
-          commit_message="$(git log -1 --pretty=%B)"
-          tag="$(git tag --contains $(git log -1 --pretty=%h))"
-
-          if [[ $commit_message == *"chore(version)"* ]]; then
-            echo "Can create a new release"
-          else
-            echo "Latest commit is not a new release."
-            exit 1
-          fi
-  
-          if [[ -z $tag ]]; then
-            echo "Latest commit does not contain a tag."
-            exit 1
-          else
-            echo "Latest commit contains a tag release"
-          fi
-
-  setup:
     runs-on: macos-12
-    needs: [validation]
-    outputs:
-      git_sha: ${{ steps.info.outputs.git_sha }}
-      semantic_version: ${{ steps.info.outputs.semantic_version }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Get Build Info
-        id: info
+      - name: Brew Install Dependencies
         run: |
-          git_sha=$(git log --pretty=%h -1)
-          echo "git_sha=$git_sha" >> $GITHUB_OUTPUT
-          echo "semantic_version=$(git describe --tags --exact-match $git_sha)" >> $GITHUB_OUTPUT
+          brew install git-cliff create-dmg
 
-      - name: Generate release notes
-        id: release_notes
-        run: |
-          brew install git-cliff
-          mkdir ${{ github.workspace }}/outputs
-          git-cliff --current > ${{ github.workspace }}/outputs/changelog.txt
-
-      - name: Cache Changelog
-        id: cache-changelog
-        uses: actions/cache/save@v3
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v3
         with:
-          path: ${{ github.workspace }}/outputs
-          key: ${{ steps.info.outputs.semantic_version }}-changelog
-
-  build:
-    needs: [setup]
-    strategy:
-      matrix: 
-        include:
-          - platform: iOS
-            extension: ipa
-          - platform: macOS
-            extension: dmg
-    runs-on: macos-12
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Update Commit & Semantic Version
-        run: |
-          sed -i '' 's/\(^COMMIT = \).*/\1${{ needs.setup.outputs.git_sha }}/' ./App/MainConfig.xcconfig
-          sed -i '' 's/\(^MARKETING_VERSION = \).*/\1${{ needs.setup.outputs.semantic_version }}/' ./App/MainConfig.xcconfig
-
-      - name: Archive
-        run: |
-          pushd App
-          xcodebuild archive \
-            -destination "generic/platform=${{ matrix.platform }}" \
-            -scheme "Anime Now!" \
-            -archivePath "./Anime Now! (${{ matrix.platform }}).xcarchive" \
-            -xcconfig "./MainConfig.xcconfig" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGN_IDENTITY= \
-            CODE_SIGN_ENTITLEMENTS= \
-            GCC_OPTIMIZATION_LEVEL=s \
-            SWIFT_OPTIMIZATION_LEVEL=-O \
-            GCC_GENERATE_DEBUGGING_SYMBOLS=YES \
-            DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
-          popd
-
-      - name: Construct ipa
-        if: ${{ matrix.platform == 'iOS' }}
-        run: |
-          pushd App
-          mkdir -p "./Payload"
-          mv "./Anime Now! (iOS).xcarchive/Products/Applications/Anime Now!.app" "./Payload/Anime Now!.app"
-          zip -r "./Anime Now! (iOS).ipa" './Payload'
-          rm -rf "./Payload"
-          rm -rf "./Anime Now! (iOS).xcarchive"
-          popd
-
-      - name: Construct dmg
-        if: ${{ matrix.platform == 'macOS' }}
-        run: |
-          pushd App
-          brew install create-dmg
-          create-dmg \
-            --volname "Anime Now!" \
-            --background "../Misc/Media/dmg_background.png" \
-            --window-pos 200 120 \
-            --window-size 660 400 \
-            --icon-size 160 \
-            --icon "Anime Now!.app" 180 170 \
-            --hide-extension "Anime Now!.app" \
-            --app-drop-link 480 170 \
-            --no-internet-enable \
-            "./Anime Now! (macOS).dmg" \
-            "./Anime Now! (macOS).xcarchive/Products/Applications/"
-          popd
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.platform }}
-          path: './App/Anime Now! (${{ matrix.platform }}).${{ matrix.extension }}'
-          if-no-files-found: error
-
-      - name: Tar dSYM symbols
-        run: |
-          pushd App
-          tar -czf 'Anime Now! (${{ matrix.platform }}) Symbols.tar.gz' -C './Anime Now! (${{ matrix.platform }}).xcarchive' 'dSYMs'
-          popd
-
-      - name: Upload DSYM Arfifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.platform }}-symbols
-          path: './App/Anime Now! (${{ matrix.platform }}) Symbols.tar.gz'
-          if-no-files-found: warn
-
-  publish:
-    runs-on: macos-12
-    needs: [setup, build]
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v3
-
-      - name: Download Changelog
-        uses: actions/cache/restore@v3
-        with:
-          path: ${{ github.workspace }}/outputs
-          key: ${{ needs.setup.outputs.semantic_version }}-changelog
-          fail-on-cache-miss: true
-
-      - name: Release to GitHub
-        id: release
-        uses: softprops/action-gh-release@v1
-        with:
-          fail_on_unmatched_files: true
-          files: |
-            **/*.ipa
-            **/*.dmg
-            **/*.tar.gz
-          token: ${{ secrets.GITHUB_TOKEN }}
-          generate_release_notes: false
-          prerelease: ${{ contains(needs.setup.outputs.semantic_version, 'beta') }}
-          body_path: ${{ github.workspace }}/outputs/changelog.txt
-          name: v${{ needs.setup.outputs.semantic_version }}
-          tag_name: ${{ needs.setup.outputs.semantic_version }}
+          extra_plugins: |
+            @semantic-release/exec
+            @google/semantic-release-replace-plugin
+            @semantic-release/git
+            @semantic-release/github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
