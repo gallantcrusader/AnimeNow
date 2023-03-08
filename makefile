@@ -1,7 +1,7 @@
 all: ios-build macos-build
 
 ios-build:
-	xcodebuild archive \
+	set -o pipefail && xcodebuild archive \
 		-project App/AnimeNow.xcodeproj \
     	-destination "generic/platform=iOS" \
         -scheme "Anime Now!" \
@@ -14,14 +14,14 @@ ios-build:
         GCC_OPTIMIZATION_LEVEL=s \
         SWIFT_OPTIMIZATION_LEVEL=-O \
         GCC_GENERATE_DEBUGGING_SYMBOLS=YES \
-        DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
+        DEBUG_INFORMATION_FORMAT=dwarf-with-dsym | xcbeautify
 	mkdir -p "./App/Payload"
 	cd App && mv "./Anime Now! (iOS).xcarchive/Products/Applications/Anime Now!.app" "./Payload/Anime Now!.app"
 	cd App && zip -r "./Anime Now! (iOS).ipa" './Payload'
 	cd App && tar -czf 'Anime Now! (iOS) Symbols.tar.gz' -C './Anime Now! (iOS).xcarchive' 'dSYMs'
 
 macos-build:
-	xcodebuild archive \
+	set -o pipefail && xcodebuild archive \
 		-project App/AnimeNow.xcodeproj \
 		-destination "generic/platform=macOS" \
 		-scheme "Anime Now!" \
@@ -34,7 +34,7 @@ macos-build:
 		GCC_OPTIMIZATION_LEVEL=s \
 		SWIFT_OPTIMIZATION_LEVEL=-O \
 		GCC_GENERATE_DEBUGGING_SYMBOLS=YES \
-		DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
+		DEBUG_INFORMATION_FORMAT=dwarf-with-dsym | xcbeautify
 	create-dmg \
 		--volname "Anime Now!" \
 		--background "./Misc/Media/dmg_background.png" \
@@ -47,4 +47,4 @@ macos-build:
 		--no-internet-enable \
 		"./App/Anime Now! (macOS).dmg" \
 		"./App/Anime Now! (macOS).xcarchive/Products/Applications/"
-	cd App && tar -czf 'Anime Now! (macOS) Symbols.tar.gz' -C './App/Anime Now! (macOS).xcarchive' 'dSYMs'
+	cd App && tar -czf 'Anime Now! (macOS) Symbols.tar.gz' -C './Anime Now! (macOS).xcarchive' 'dSYMs'

@@ -22,7 +22,7 @@ jobs:
 
       - name: Brew Install Dependencies
         run: |
-          brew install git-cliff create-dmg
+          brew install git-cliff create-dmg xcbeautify
 
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v3
