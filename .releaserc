@@ -39,11 +39,7 @@
         }],
         ["@semantic-release/exec", {
             "generateNotesCmd": "git-cliff ${lastRelease.gitHead}..${nextRelease.gitHead} -t ${nextRelease.version}",
-            "prepareCmd": "git-cliff -t ${nextRelease.version} > CHANGELOG.md; make all"
-        }],
-        ["@semantic-release/git", {
-            "assets": ["CHANGELOG.md"],
-            "message": "chore(version): ${nextRelease.version} [skip ci]"
+            "prepareCmd": "make all"
         }],
         ["@semantic-release/github", {
             "assets": [

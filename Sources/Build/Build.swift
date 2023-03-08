@@ -1,5 +1,5 @@
 //
-//  DeviceInfoClient.swift
+//  Build.swift
 //
 //
 //  Created by ErrorErrorError on 1/26/23.
@@ -28,7 +28,7 @@ public extension DependencyValues {
 extension Build: DependencyKey {
     public static let liveValue: Build = Self(
         version: { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown" },
-        gitSha: { Bundle.main.infoDictionary?["GitSha"] as? String ?? "Unknown" }
+        gitSha: { (Bundle.main.infoDictionary?["GitSha"] as? String)?.prefix(7).description ?? "Unknown" }
     )
 
     public static let previewValue = noop
