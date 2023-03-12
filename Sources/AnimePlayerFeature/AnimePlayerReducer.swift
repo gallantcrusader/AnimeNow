@@ -67,50 +67,77 @@ public struct AnimePlayerReducer: ReducerProtocol {
     }
 
     public struct State: Equatable {
+        public let player: AVPlayer
         public let anime: AnyAnimeRepresentable
         public var stream: AnimeStreamLogic.State
 
-        var animeStore = Loadable<AnimeStore>.idle
-        var skipTimes = Loadable<[SkipTime]>.idle
+        public var animeStore = Loadable<AnimeStore>.idle
+        public var skipTimes = Loadable<[SkipTime]>.idle
 
-        var selectedSidebar: Sidebar?
+        public var selectedSidebar: Sidebar?
+        public var showPlayerOverlay = true
 
-        var showPlayerOverlay = true
+        // Shared Player Properties
+
+        public var playerProgress: Double = 0.0
+        public var playerBuffered: Double { player.bufferProgress }
+        public var playerDuration: Double { player.totalDuration }
+        public var playerStatus = VideoPlayerClient.Status.idle
+        public var playerIsFullScreen = false
+        public var playerVolume: Double { player.isMuted ? 0.0 : Double(player.volume) }
+        public var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
+        @BindableState
+        public var playerPiPActive = false
+        @BindableState
+        public var playerGravity = VideoPlayer.Gravity.resizeAspect
+
+        public var enableDoubleTapGesture = true
+        public var showSkipTimes = true
+        public var skipInterval = 15
+        public var autoTrackEpisodes = true
 
         // Internal
 
         var hasInitialized = false
 
-        // Shared Player Properties
-
-        let player: AVPlayer
-        public var playerProgress: Double = 0.0
-        var playerBuffered: Double { player.bufferProgress }
-        public var playerDuration: Double { player.totalDuration }
-        var playerStatus = VideoPlayerClient.Status.idle
-        var playerIsFullScreen = false
-        var playerVolume: Double { player.isMuted ? 0.0 : Double(player.volume) }
-        var playerPiPStatus = VideoPlayer.PIPStatus.restoreUI
-        @BindableState
-        var playerPiPActive = false
-        @BindableState
-        var playerGravity = VideoPlayer.Gravity.resizeAspect
-
         public init(
             player: AVPlayer,
-            anime: any AnimeRepresentable,
-            availableProviders: Selectable<ProviderInfo>,
-            streamingProvider: AnimeStreamingProvider? = nil,
-            selectedEpisode: Episode.ID
+            anime: AnyAnimeRepresentable,
+            stream: AnimeStreamLogic.State,
+            animeStore: Loadable<AnimeStore> = Loadable<AnimeStore>.idle,
+            skipTimes: Loadable<[SkipTime]> = Loadable<[SkipTime]>.idle,
+            selectedSidebar: AnimePlayerReducer.Sidebar? = nil,
+            showPlayerOverlay: Bool = true,
+            hasInitialized: Bool = false,
+            playerProgress: Double = 0.0,
+            playerStatus: VideoPlayerClient.Status = VideoPlayerClient.Status.idle,
+            playerIsFullScreen: Bool = false,
+            playerPiPStatus: VideoPlayer.PIPStatus = VideoPlayer.PIPStatus.restoreUI,
+            playerPiPActive: Bool = false,
+            playerGravity: AVLayerVideoGravity = VideoPlayer.Gravity.resizeAspect,
+            enableDoubleTapGesture: Bool = true,
+            showSkipTimes: Bool = true,
+            skipInterval: Int = 15,
+            autoTrackEpisodes: Bool = true
         ) {
             self.player = player
-            self.anime = anime.eraseAsRepresentable()
-            self.stream = .init(
-                animeId: anime.id,
-                episodeId: selectedEpisode,
-                availableProviders: availableProviders,
-                streamingProviders: streamingProvider.flatMap { [$0] } ?? []
-            )
+            self.anime = anime
+            self.stream = stream
+            self.animeStore = animeStore
+            self.skipTimes = skipTimes
+            self.selectedSidebar = selectedSidebar
+            self.showPlayerOverlay = showPlayerOverlay
+            self.hasInitialized = hasInitialized
+            self.playerProgress = playerProgress
+            self.playerStatus = playerStatus
+            self.playerIsFullScreen = playerIsFullScreen
+            self.playerPiPStatus = playerPiPStatus
+            self.playerPiPActive = playerPiPActive
+            self.playerGravity = playerGravity
+            self.enableDoubleTapGesture = enableDoubleTapGesture
+            self.showSkipTimes = showSkipTimes
+            self.skipInterval = skipInterval
+            self.autoTrackEpisodes = autoTrackEpisodes
         }
     }
 
@@ -183,6 +210,8 @@ public struct AnimePlayerReducer: ReducerProtocol {
     var animeClient
     @Dependency(\.databaseClient)
     var databaseClient
+    @Dependency(\.trackingListClient)
+    var trackingListClient
     @Dependency(\.videoPlayerClient)
     var videoPlayerClient
     @Dependency(\.userDefaultsClient)
@@ -318,7 +347,7 @@ extension AnimePlayerReducer.State {
 }
 
 extension AnimePlayerReducer.State {
-    enum ActionType: Equatable {
+    enum ActionType: Hashable {
         case skipRecap(to: Double)
         case skipOpening(to: Double)
         case skipEnding(to: Double)
@@ -336,22 +365,63 @@ extension AnimePlayerReducer.State {
                 return "Next Episode"
             }
         }
+
+        var image: String {
+            switch self {
+            case .nextEpisode:
+                return "play.fill"
+            default:
+                return "forward.fill"
+            }
+        }
+
+        var action: AnimePlayerReducer.Action {
+            switch self {
+            case let .nextEpisode(id):
+                return .stream(.selectEpisode(id))
+            case let .skipRecap(time), let .skipOpening(time), let .skipEnding(time):
+                return .seeking(to: time)
+            }
+        }
     }
 
-    var skipAction: ActionType? {
-        if let skipTime = skipTimes.value?.first(where: { $0.isInRange(playerProgress) }) {
-            switch skipTime.type {
-            case .recap:
-                return .skipRecap(to: skipTime.endTime)
-            case .opening, .mixedOpening:
-                return .skipOpening(to: skipTime.endTime)
-            case .ending, .mixedEnding:
-                return .skipEnding(to: skipTime.endTime)
-            }
-        } else if almostEnding, let nextEpisode {
-            return .nextEpisode(nextEpisode.id)
+    var skipActions: [ActionType] {
+        guard showSkipTimes else {
+            return []
         }
-        return nil
+
+        var actions = [ActionType]()
+
+        actions.append(
+            contentsOf: skipTimes.value?
+                .filter { $0.isInRange(playerProgress) }
+                .sorted(by: \.duration)
+                .compactMap { skip in
+                    switch skip.type {
+                    case .recap:
+                        return .skipRecap(to: skip.endTime)
+                    case .opening, .mixedOpening:
+                        return .skipOpening(to: skip.endTime)
+                    case .ending, .mixedEnding:
+                        return .skipEnding(to: skip.endTime)
+                    }
+                } ?? []
+        )
+
+        if let nextEpisode {
+            let skipEnding = skipTimes.value?
+                .filter { $0.type == .ending || $0.type == .mixedEnding }
+                .min(by: \.startTime)
+            if let skipEnding {
+                if playerProgress >= skipEnding.startTime {
+                    actions.append(.nextEpisode(nextEpisode.id))
+                }
+            } else if almostEnding {
+                actions.append(.nextEpisode(nextEpisode.id))
+            }
+        }
+
+        return actions
     }
 }
 
@@ -648,7 +718,7 @@ extension AnimePlayerReducer {
             guard state.playerDuration > 0.0 else {
                 break
             }
-            let progress = state.playerProgress - 15 / state.playerDuration
+            let progress = state.playerProgress - Double(state.skipInterval) / state.playerDuration
             let requestedTime = max(progress, .zero)
             state.playerProgress = requestedTime
             return .run {
@@ -659,7 +729,7 @@ extension AnimePlayerReducer {
             guard state.playerDuration > 0.0 else {
                 break
             }
-            let progress = state.playerProgress + 15 / state.playerDuration
+            let progress = state.playerProgress + Double(state.skipInterval) / state.playerDuration
             let requestedTime = min(progress, 1.0)
             state.playerProgress = requestedTime
             return .run {
@@ -835,10 +905,13 @@ extension AnimePlayerReducer {
     }
 
     private func saveEpisodeState(state: State, episodeId: Episode.ID? = nil) -> EffectTask<Action> {
+        struct SyncCancellationId: Hashable {}
+
         let episodeId = episodeId ?? state.stream.selectedEpisode
         guard let episode = state.stream.streamingProvider?.episodes[id: episodeId],
               state.playerDuration > 0,
-              var animeStore = state.animeStore.value else {
+              var animeStore = state.animeStore.value
+        else {
             return .none
         }
 
@@ -849,8 +922,21 @@ extension AnimePlayerReducer {
             progress: progress
         )
 
-        return .run { [animeStore] in
-            try await databaseClient.insert(animeStore)
-        }
+        let autoTrack = state.autoTrackEpisodes
+
+        return .merge(
+            .run { [animeStore] _ in
+                try await databaseClient.insert(animeStore)
+            },
+            .run { [animeStore, episodeId] _ in
+                if autoTrack,
+                   let episode = animeStore.episodes.first(where: { $0.number == episodeId }),
+                   episode.almostFinished {
+                    try await withTaskCancellation(id: SyncCancellationId.self, cancelInFlight: true) {
+                        try await trackingListClient.sync(animeStore.id, episodeId)
+                    }
+                }
+            }
+        )
     }
 }

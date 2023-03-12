@@ -10,6 +10,7 @@ import ComposableArchitecture
 import DiscordClient
 import FluidGradient
 import SwiftUI
+import SwiftUINavigation
 import ViewComponents
 
 // MARK: - SettingsView
@@ -32,8 +33,10 @@ public struct SettingsView: View {
         #if os(iOS)
         StackNavigation(title: "Settings") {
             ScrollView(showsIndicators: false) {
-                LazyVStack(spacing: 24) {
+                VStack(spacing: 24) {
                     general
+                    player
+                    tracking
                     accounts
                     discord
                     about
@@ -45,6 +48,12 @@ public struct SettingsView: View {
         .onAppear {
             viewStore.send(.onAppear)
         }
+        .confirmationDialog(
+            store.scope(state: \.logoutAlert) { child in
+                SettingsReducer.Action.logoutAlertAction(child)
+            },
+            dismiss: .cancel
+        )
         #else
         TabView {
             ScrollView {
@@ -55,6 +64,28 @@ public struct SettingsView: View {
                 VStack {
                     Image(systemName: "gearshape.fill")
                     Text("General")
+                }
+            }
+
+            ScrollView {
+                player
+                    .padding()
+            }
+            .tabItem {
+                VStack {
+                    Image(systemName: "play.fill")
+                    Text("Player")
+                }
+            }
+
+            ScrollView {
+                tracking
+                    .padding()
+            }
+            .tabItem {
+                VStack {
+                    Image(systemName: "books.vertical.fill")
+                    Text("Tracking")
                 }
             }
 
@@ -94,6 +125,12 @@ public struct SettingsView: View {
         .onAppear {
             viewStore.send(.onAppear)
         }
+        .alert(
+            store.scope(state: \.logoutAlert) { child in
+                SettingsReducer.Action.logoutAlertAction(child)
+            },
+            dismiss: .cancel
+        )
         #endif
     }
 }
@@ -153,6 +190,67 @@ extension SettingsView {
     }
 }
 
+// MARK: - SettingsView + Videos
+
+extension SettingsView {
+    @ViewBuilder
+    var player: some View {
+        SettingsGroupView(title: "Player") {
+            SettingsRowView(
+                name: "Double Tap to Skip",
+                active: viewStore.binding(\.$userSettings.videoSettings.doubleTapToSeek)
+            )
+
+            SettingsRowView(name: "Skip Time") {
+                StepperView {
+                    Text("\(viewStore.userSettings.videoSettings.skipTime)s")
+                        .frame(width: 32)
+                        .foregroundColor(.white)
+                } increment: {
+                    let skipTime = viewStore.userSettings.videoSettings.skipTime
+                    let nextElement = skipIntervalValues.firstIndex(of: skipTime) ?? 2
+
+                    if nextElement + 1 < skipIntervalValues.count {
+                        viewStore.send(.binding(.set(\.$userSettings.videoSettings.skipTime, skipIntervalValues[nextElement + 1])))
+                    }
+                } decrement: {
+                    let skipTime = viewStore.userSettings.videoSettings.skipTime
+                    let nextElement = skipIntervalValues.firstIndex(of: skipTime) ?? 2
+
+                    if nextElement - 1 >= 0 {
+                        viewStore.send(.binding(.set(\.$userSettings.videoSettings.skipTime, skipIntervalValues[nextElement - 1])))
+                    }
+                }
+                .minusDisabled(viewStore.userSettings.videoSettings.skipTime == skipIntervalValues.first)
+                .plusDisabled(viewStore.userSettings.videoSettings.skipTime == skipIntervalValues.last)
+            }
+
+            SettingsRowView(
+                name: "Time Stamps",
+                active: viewStore.binding(\.$userSettings.videoSettings.showTimeStamps)
+            )
+        }
+    }
+
+    private var skipIntervalValues: [Int] {
+        [5, 10, 15, 30, 45, 60, 75, 90]
+    }
+}
+
+// MARK: - SettingsView + Tracking
+
+extension SettingsView {
+    @ViewBuilder
+    var tracking: some View {
+        SettingsGroupView(title: "Tracking") {
+            SettingsRowView(
+                name: "Auto Track Episodes",
+                active: viewStore.binding(\.$userSettings.trackingSettings.autoTrackEpisodes)
+            )
+        }
+    }
+}
+
 // MARK: - SettingsView + Accounts
 
 extension SettingsView {
@@ -208,6 +306,19 @@ extension SettingsView {
                                 .foregroundColor(.init(white: 1.0))
 
                                 Spacer()
+
+                                if let accountURL = user.pageURL {
+                                    Button {
+                                        openURL(accountURL)
+                                    } label: {
+                                        Image(systemName: "square.and.arrow.up")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .frame(width: 24, height: 24)
+                                            .foregroundColor(.white)
+                                            .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
                             .padding(.horizontal)
                             .frame(height: 96)
@@ -224,7 +335,10 @@ extension SettingsView {
                                 }
                                 .scaledToFill()
                                 .overlay(Color.black.opacity(0.5))
+                                .contentShape(Rectangle())
+                                .clipped()
                             )
+                            .contentShape(Rectangle())
                             .clipped()
                         case .failed:
                             Text("Failed to retrieve user info.")
@@ -252,7 +366,7 @@ extension SettingsView {
                 .background(
                     FluidGradient(
                         blobs: account.palette,
-                        speed: 0.05
+                        speed: 0.0
                     )
                     .blur(radius: 24)
                 )
@@ -273,10 +387,10 @@ extension SettingsView {
             SettingsGroupView(title: "Discord") {
                 SettingsRowView(
                     name: "Enable",
-                    active: viewStore.binding(\.$userSettings.discordEnabled)
+                    active: viewStore.binding(\.$userSettings.discordSettings.discordEnabled)
                 )
 
-                if viewStore.userSettings.discordEnabled {
+                if viewStore.userSettings.discordSettings.discordEnabled {
                     SettingsRowView(
                         name: "Status",
                         text: viewStore.discordStatus.rawValue
