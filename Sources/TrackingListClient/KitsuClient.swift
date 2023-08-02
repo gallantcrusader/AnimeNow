@@ -86,7 +86,8 @@ extension KitsuClient: DependencyKey {
                 description: "Log in with your Kitsu credentials!"
             ) { [unowned self] userInfo in
                 guard let password = userInfo.password
-                    .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowedRFC3986) else {
+                    .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowedRFC3986)
+                else {
                     throw KitsuLogInError.malformedPassword
                 }
                 return try await apiClient.request(

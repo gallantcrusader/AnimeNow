@@ -27,13 +27,13 @@ public extension AnimeClient {
         []
     } getRecentlyUpdated: {
         []
-    } getEpisodes: { _, _ in
+    } getEpisodes: { _, _, _ in
         .init(name: "", episodes: [Episode(title: "", number: 0, description: "", isFiller: true)])
-    } getSources: { _, _ in
+    } getSources: { _, _, _ in
         .init([])
     } getSkipTimes: { _, _ in
         .init()
-    } getAnimeProviders: {
+    } getAnimeProviders: { _ in
         [.init(name: "First"), .init(name: "Second"), .init(name: "Third")]
-    }
+    } invalidateAnimeProvider: { _, _ in }
 }

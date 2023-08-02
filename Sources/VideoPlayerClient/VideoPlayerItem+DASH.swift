@@ -115,7 +115,8 @@ private extension MPD.Period.AdaptationSet.Representation {
 private extension String {
     var toMPDDuration: TimeInterval? {
         guard var timeValue = components(separatedBy: "PT").last,
-              !timeValue.isEmpty else {
+              !timeValue.isEmpty
+        else {
             return nil
         }
 
@@ -161,7 +162,8 @@ extension VideoPlayerItem {
                 }
 
                 guard (response as? HTTPURLResponse)?.statusCode != nil,
-                      let data else {
+                      let data
+                else {
                     completion(.failure(ResourceLoaderError.emptyData))
                     return
                 }
@@ -200,7 +202,8 @@ extension VideoPlayerItem {
 
         guard let representation = mpd.Period.AdaptationSet
             .flatMap(\.Representation)
-            .first(where: { $0.id == id || (id == nil) }) else {
+            .first(where: { $0.id == id || (id == nil) })
+        else {
             completion(.failure(ResourceLoaderError.failedToCreateM3U8))
             return
         }

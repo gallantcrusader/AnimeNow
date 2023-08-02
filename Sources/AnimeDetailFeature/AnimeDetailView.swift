@@ -172,7 +172,8 @@ extension AnimeDetailView {
             }
 
             guard let episodes = state.episodes.value,
-                  let firstEpisode = episodes.first else {
+                  let firstEpisode = episodes.first
+            else {
                 self = .unavailable
                 return
             }
@@ -615,9 +616,21 @@ extension AnimeDetailView {
                             viewState.compact
                         )
                     } else {
-                        Text("No episodes available from this provider.")
-                            .padding()
-                            .frame(height: 100)
+                        VStack {
+                            Text("No episodes available from this provider.")
+                                .padding()
+                            Button(action: {
+                                viewState.send(.stream(.retryEpisodeFetch))
+                            }) {
+                                Label("Retry", systemImage: "arrow.clockwise")
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal)
+                            .padding(.vertical, 10)
+                            .background(Color.gray.opacity(0.25))
+                            .clipShape(Capsule())
+                        }
+                        .frame(height: 150)
                     }
                 } failedView: {
                     Text("There was an error retrieving episodes from this provider.")
@@ -816,6 +829,7 @@ struct AnimeDetailView_Previews: PreviewProvider {
         AnimeDetailView(
             store: .init(
                 initialState: .init(
+                    hostname: URL(string: "https://api.consumet.org").unsafelyUnwrapped,
                     animeId: 127_230,
                     availableProviders: .init(items: [])
                 ),

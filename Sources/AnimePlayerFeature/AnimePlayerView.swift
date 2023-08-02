@@ -175,8 +175,7 @@ extension AnimePlayerView {
 
             if isMovie {
                 self.title = state.anime.title
-                self
-                    .header = (state.stream.streamingProvider?.episodes.count ?? 0) > 1 ?
+                self.header = (state.stream.streamingProvider?.episodes.count ?? 0) > 1 ?
                     "E\(state.stream.selectedEpisode)" : nil
             } else {
                 self.title = state.episode?.title ?? "Loading..."
@@ -763,6 +762,7 @@ struct VideoPlayerView_Previews: PreviewProvider {
                     player: .init(),
                     anime: Anime.narutoShippuden.eraseAsRepresentable(),
                     stream: .init(
+                        hostname: URL(string: "https://api.consumet.org").unsafelyUnwrapped,
                         animeId: Anime.narutoShippuden.id,
                         episodeId: Episode.demoEpisodes[0].id,
                         availableProviders: .init(items: []),

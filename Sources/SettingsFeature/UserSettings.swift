@@ -12,6 +12,7 @@ import Utilities
 // MARK: - UserSettings
 
 public struct UserSettings: Codable, Equatable {
+    public var hostname: String
     public var preferredProvider: String?
     @Defaultable<DiscordSettings>
     public var discordSettings: DiscordSettings
@@ -24,12 +25,14 @@ public struct UserSettings: Codable, Equatable {
         preferredProvider: String? = nil,
         discordSettings: UserSettings.DiscordSettings = .init(),
         trackingSettings: UserSettings.TrackingSettings = .init(),
-        videoSettings: UserSettings.VideoSetings = .init()
+        videoSettings: UserSettings.VideoSetings = .init(),
+        hostname: String = ""
     ) {
         self.preferredProvider = preferredProvider
         self.discordSettings = discordSettings
         self.trackingSettings = trackingSettings
         self.videoSettings = videoSettings
+        self.hostname = hostname
     }
 }
 

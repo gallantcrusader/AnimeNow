@@ -316,7 +316,7 @@ struct FocusOnAppearTextField: View {
             .focused($focused)
             .onAppear {
                 DispatchQueue.main.async {
-                    self.focused = true
+                    focused = true
                 }
             }
     }

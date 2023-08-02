@@ -364,6 +364,7 @@ struct VideoPlayerViewiOS_Previews: PreviewProvider {
                         player: .init(),
                         anime: Anime.narutoShippuden.eraseAsRepresentable(),
                         stream: .init(
+                            hostname: URL(string: "https://api.consumet.org").unsafelyUnwrapped,
                             animeId: Anime.narutoShippuden.id,
                             episodeId: 0,
                             availableProviders: .init(items: [])

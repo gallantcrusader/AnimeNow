@@ -21,10 +21,10 @@ class DeviceAuthChannel: CastChannel {
             $0.challenge = CastAuthChallenge()
         }
 
-        let request = requestDispatcher.request(
+        let request = try requestDispatcher.request(
             withNamespace: namespace,
             destinationId: CastConstants.receiver,
-            payload: try message.serializedData()
+            payload: message.serializedData()
         )
 
         send(request)

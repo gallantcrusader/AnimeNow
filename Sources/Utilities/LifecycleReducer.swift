@@ -34,7 +34,7 @@ struct LifecycleReducer<Wrapped: ReducerProtocol>: ReducerProtocol {
             }
         }
         .ifLet(\.self, action: /Action.wrapped) {
-            self.wrapped
+            wrapped
         }
     }
 }

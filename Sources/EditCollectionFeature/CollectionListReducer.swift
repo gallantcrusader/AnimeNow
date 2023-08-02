@@ -35,7 +35,7 @@ public struct EditCollectionReducer: ReducerProtocol {
     }
 
     public var body: some ReducerProtocol<State, Action> {
-        Reduce(self.core)
+        Reduce(core)
     }
 }
 

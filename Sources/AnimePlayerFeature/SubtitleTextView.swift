@@ -164,7 +164,7 @@ extension SubtitleTextView {
 
                     let parser = WebVTTParser(string: stringVal)
 
-                    self?.updateState(.success(try parser.parse()))
+                    try self?.updateState(.success(parser.parse()))
                 } catch {
                     self?.updateState(.failed(error))
                 }

@@ -12,11 +12,25 @@ import Utilities
 // MARK: - ConsumetEndpoint
 
 public struct ConsumetEndpoint<D: Decodable>: Endpoint {
-    var base = URL(string: "https://api.consumet.org").unsafelyUnwrapped
-    var path: [CustomStringConvertible] = []
-    var query: [Query] = []
-    var method: Request<D>.Method = .get
+    var base: URL
+    var path: [CustomStringConvertible]
+    var query: [Query]
+    var method: Request<D>.Method
     var headers: [String: CustomStringConvertible]?
+
+    init(
+        base: URL?,
+        path: [CustomStringConvertible] = [],
+        query: [Query] = [],
+        method: Request<D>.Method? = .get,
+        headers: [String: CustomStringConvertible]? = nil
+    ) {
+        self.base = base ?? URL(string: "https://api.consumet.org").unsafelyUnwrapped
+        self.path = path
+        self.query = query
+        self.method = method ?? .get
+        self.headers = headers
+    }
 }
 
 // MARK: - Consumet + Request
@@ -29,12 +43,14 @@ public extension Request {
 
 public extension ConsumetEndpoint {
     static func anilistEpisodes(
+        hostname: URL?,
         animeId: Int,
         dub: Bool,
         provider: String,
         fetchFiller: Bool = true
     ) -> ConsumetEndpoint<[ConsumetModels.Episode]> {
         .init(
+            base: hostname,
             path: ["meta", "anilist", "episodes", animeId],
             query: [
                 .init(name: "dub", dub),
@@ -45,11 +61,13 @@ public extension ConsumetEndpoint {
     }
 
     static func anilistWatch(
+        hostname: URL?,
         episodeId: String,
         dub: Bool,
         provider: String
     ) -> ConsumetEndpoint<ConsumetModels.StreamingLinksPayload> {
         .init(
+            base: hostname,
             path: ["meta", "anilist", "watch", episodeId],
             query: [
                 .init(name: "dub", dub),
@@ -59,9 +77,11 @@ public extension ConsumetEndpoint {
     }
 
     static func listProviders(
+        hostname: URL?,
         of type: ConsumetModels.ProviderType = .ANIME
     ) -> ConsumetEndpoint<[ProviderInfo]> {
         .init(
+            base: hostname,
             path: ["utils", "providers"],
             query: [
                 .init(name: "type", type.rawValue)
@@ -189,7 +209,8 @@ public extension ConsumetModels {
         let subtitles: [SharedModels.SourcesOptions.Subtitle] = (payload.subtitles ?? [])
             .compactMap { subtitle in
                 guard let url = URL(string: subtitle.url),
-                      subtitle.lang != "Thumbnails" else {
+                      subtitle.lang != "Thumbnails"
+                else {
                     return nil
                 }
                 return SharedModels.SourcesOptions.Subtitle(

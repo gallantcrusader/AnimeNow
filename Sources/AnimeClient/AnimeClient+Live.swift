@@ -141,7 +141,7 @@ public extension AnimeClient {
         } getRecentlyUpdated: {
             let updated = try await apiClient.request(.enime(.recentEpisodes()))
             return updated.data.map(EnimeModels.convert)
-        } getEpisodes: { animeId, provider in
+        } getEpisodes: { hostname, animeId, provider in
             if let episodesCached = cachedStreamingProviders.value(forKey: "\(animeId)-\(provider.name)") {
                 return episodesCached
             }
@@ -149,6 +149,7 @@ public extension AnimeClient {
             async let sub = try? await apiClient.request(
                 .consumet(
                     .anilistEpisodes(
+                        hostname: hostname,
                         animeId: animeId,
                         dub: false,
                         provider: provider.name
@@ -159,6 +160,7 @@ public extension AnimeClient {
             async let dub = try? await apiClient.request(
                 .consumet(
                     .anilistEpisodes(
+                        hostname: hostname,
                         animeId: animeId,
                         dub: true,
                         provider: provider.name
@@ -166,24 +168,25 @@ public extension AnimeClient {
                 )
             )
 
-            var providerData = AnimeStreamingProvider(
+            var providerData = await AnimeStreamingProvider(
                 name: provider.name,
                 logo: provider.logo,
                 episodes: mergeSources(
-                    await sub ?? .init(),
-                    await dub ?? .init()
+                    sub ?? .init(),
+                    dub ?? .init()
                 )
             )
 
             cachedStreamingProviders.update(providerData, forKey: "\(animeId)-\(provider.name)")
 
             return providerData
-        } getSources: { provider, link in
+        } getSources: { hostname, provider, link in
             switch link {
             case let .stream(id, audio):
                 let response = try await apiClient.request(
                     .consumet(
                         .anilistWatch(
+                            hostname: hostname,
                             episodeId: id,
                             dub: audio.isDub,
                             provider: provider
@@ -210,12 +213,14 @@ public extension AnimeClient {
                 )
             )
             return AniSkipModels.convert(from: response.results)
-        } getAnimeProviders: {
+        } getAnimeProviders: { hostname in
             try await apiClient.request(
                 .consumet(
-                    .listProviders(of: .ANIME)
+                    .listProviders(hostname: hostname, of: .ANIME)
                 )
             )
+        } invalidateAnimeProvider: { animeId, providerName in
+            cachedStreamingProviders.removeValue(forKey: "\(animeId)-\(providerName)")
         }
     }()
 }

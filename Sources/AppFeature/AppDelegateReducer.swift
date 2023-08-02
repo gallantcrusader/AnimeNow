@@ -29,7 +29,7 @@ public struct AppDelegateReducer: ReducerProtocol {
     }
 
     public var body: some ReducerProtocol<State, Action> {
-        Reduce(self.core)
+        Reduce(core)
     }
 
     @Dependency(\.fileClient)

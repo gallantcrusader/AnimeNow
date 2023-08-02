@@ -164,7 +164,7 @@ extension AniListClient: DependencyKey {
             if let currentUser = await currentUser.value {
                 return try await operation(currentUser)
             } else {
-                return try await operation(try await refreshUser())
+                return try await try await operation(refreshUser())
             }
         }
 

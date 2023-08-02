@@ -107,7 +107,7 @@ final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
     ) -> AsyncStream<[T]> {
         .init { continuation in
             Task.detached { [unowned self] in
-                let values = try? await self.fetch(request)
+                let values = try? await fetch(request)
                 continuation.yield(values ?? [])
 
                 let observe = NotificationCenter.default.observeNotifications(
@@ -115,7 +115,7 @@ final class DatabaseClientLive: DatabaseClient, @unchecked Sendable {
                 )
 
                 for await _ in observe {
-                    let values = try? await self.fetch(request)
+                    let values = try? await fetch(request)
                     continuation.yield(values ?? [])
                 }
             }

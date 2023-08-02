@@ -27,7 +27,7 @@ public struct ModalOverlayReducer: ReducerProtocol {
     public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
-        Reduce(self.core)
+        Reduce(core)
             .ifCaseLet(/State.addNewCollection, action: /Action.addNewCollection) {
                 NewCollectionReducer()
             }

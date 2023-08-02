@@ -138,7 +138,8 @@ extension CastDeviceScanner: NetServiceBrowserDelegate {
         #endif
 
         guard let deviceId = service.id,
-              let index = devices.firstIndex(where: { $0.id == deviceId }) else {
+              let index = devices.firstIndex(where: { $0.id == deviceId })
+        else {
             #if DEBUG
             NSLog("No device")
             #endif

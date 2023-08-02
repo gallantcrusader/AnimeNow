@@ -40,7 +40,7 @@ public struct DownloadsReducer: ReducerProtocol {
     public init() {}
 
     public var body: some ReducerProtocol<State, Action> {
-        Reduce(self.core)
+        Reduce(core)
     }
 }
 

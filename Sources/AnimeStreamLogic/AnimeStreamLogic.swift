@@ -8,6 +8,7 @@
 
 import AnimeClient
 import ComposableArchitecture
+import Foundation
 import SharedModels
 import UserDefaultsClient
 import Utilities
@@ -62,6 +63,7 @@ public struct AnimeStreamLogic: ReducerProtocol {
     public struct State: Equatable {
         public let animeId: Anime.ID
         public var selectedEpisode: Episode.ID
+        public var hostname: URL
 
         public var availableProviders: Selectable<ProviderInfo>
         public var streamingProviders = [AnimeStreamingProvider.ID: Loadable<AnimeStreamingProvider>]()
@@ -71,11 +73,13 @@ public struct AnimeStreamLogic: ReducerProtocol {
         public var selectedSubtitle: SourcesOptions.Subtitle.ID?
 
         public init(
+            hostname: URL,
             animeId: Anime.ID,
             episodeId: Episode.ID,
             availableProviders: Selectable<ProviderInfo>,
             streamingProviders: [AnimeStreamingProvider] = []
         ) {
+            self.hostname = hostname
             self.animeId = animeId
             self.selectedEpisode = episodeId
             self.availableProviders = availableProviders
@@ -93,10 +97,11 @@ public struct AnimeStreamLogic: ReducerProtocol {
         case fetchedProvider(AnimeStreamingProvider)
         case fetchedSources(Loadable<SourcesOptions>)
         case selectSource(Source.ID)
+        case retryEpisodeFetch
     }
 
     public var body: some ReducerProtocol<State, Action> {
-        Reduce(self.core)
+        Reduce(core)
     }
 
     @Dependency(\.animeClient)
@@ -240,6 +245,19 @@ extension AnimeStreamLogic {
                 await userDefaultsClient.set(.videoPlayerSubtitle, value: subtitle)
             }
 
+        case .retryEpisodeFetch:
+            if let provider = state.streamingProvider {
+                state.sourceOptions = .idle
+                state.streamingProviders[provider.id] = .idle
+                let animeId = state.animeId
+                return .concatenate(
+                    .run {
+                        await animeClient.invalidateAnimeProvider(animeId, provider.name)
+                    },
+                    fetchStreamingProvider(&state)
+                )
+            }
+
         case .destroy:
             return .merge(
                 .cancel(id: FetchProviderCancellable.self),
@@ -254,11 +272,12 @@ extension AnimeStreamLogic {
         if let provider = state.availableProviders.item {
             if (state.streamingProviders[provider.id] ?? .idle) == .idle {
                 let animeId = state.animeId
+                let hostname = state.hostname
                 state.streamingProviders[provider.id] = .loading
                 return .run {
                     await withTaskCancellation(id: FetchProviderCancellable.self) {
-                        .fetchedProvider(
-                            await animeClient.getEpisodes(animeId, provider)
+                        await .fetchedProvider(
+                            animeClient.getEpisodes(hostname, animeId, provider)
                         )
                     }
                 }
@@ -281,13 +300,14 @@ extension AnimeStreamLogic {
             state.selectedLink = state.selectedLink ?? preferredLink ?? episode.links.first?.id
 
             if let link = state.link {
+                let hostname = state.hostname
                 return .run {
                     await withTaskCancellation(
                         id: FetchSourceOptionsCancellable.self,
                         cancelInFlight: true
                     ) {
                         await .fetchedSources(
-                            .init { try await animeClient.getSources(provider.name, link) }
+                            .init { try await animeClient.getSources(hostname, provider.name, link) }
                         )
                     }
                 }

@@ -30,11 +30,11 @@ struct ScaledOnHover: ViewModifier {
                             return
                         }
                         withAnimation {
-                            self.isHovered = true
+                            isHovered = true
                         }
                     }
                     .onEnded { _ in
-                        self.isHovered = false
+                        isHovered = false
                     }
             )
     }

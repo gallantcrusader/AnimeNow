@@ -36,7 +36,7 @@ struct Extensions_Api_CastChannel_CastMessage: SwiftProtobuf.Message {
     }
 
     /// Returns true if `protocolVersion` has been explicitly set.
-    var hasProtocolVersion: Bool { self._protocolVersion != nil }
+    var hasProtocolVersion: Bool { _protocolVersion != nil }
     /// Clears the value of `protocolVersion`. Subsequent reads from it will return its default value.
     mutating func clearProtocolVersion() { _protocolVersion = nil }
 
@@ -60,7 +60,7 @@ struct Extensions_Api_CastChannel_CastMessage: SwiftProtobuf.Message {
     }
 
     /// Returns true if `sourceID` has been explicitly set.
-    var hasSourceID: Bool { self._sourceID != nil }
+    var hasSourceID: Bool { _sourceID != nil }
     /// Clears the value of `sourceID`. Subsequent reads from it will return its default value.
     mutating func clearSourceID() { _sourceID = nil }
 
@@ -70,7 +70,7 @@ struct Extensions_Api_CastChannel_CastMessage: SwiftProtobuf.Message {
     }
 
     /// Returns true if `destinationID` has been explicitly set.
-    var hasDestinationID: Bool { self._destinationID != nil }
+    var hasDestinationID: Bool { _destinationID != nil }
     /// Clears the value of `destinationID`. Subsequent reads from it will return its default value.
     mutating func clearDestinationID() { _destinationID = nil }
 
@@ -83,7 +83,7 @@ struct Extensions_Api_CastChannel_CastMessage: SwiftProtobuf.Message {
     }
 
     /// Returns true if `namespace` has been explicitly set.
-    var hasNamespace: Bool { self._namespace != nil }
+    var hasNamespace: Bool { _namespace != nil }
     /// Clears the value of `namespace`. Subsequent reads from it will return its default value.
     mutating func clearNamespace() { _namespace = nil }
 
@@ -93,7 +93,7 @@ struct Extensions_Api_CastChannel_CastMessage: SwiftProtobuf.Message {
     }
 
     /// Returns true if `payloadType` has been explicitly set.
-    var hasPayloadType: Bool { self._payloadType != nil }
+    var hasPayloadType: Bool { _payloadType != nil }
     /// Clears the value of `payloadType`. Subsequent reads from it will return its default value.
     mutating func clearPayloadType() { _payloadType = nil }
 
@@ -105,7 +105,7 @@ struct Extensions_Api_CastChannel_CastMessage: SwiftProtobuf.Message {
     }
 
     /// Returns true if `payloadUtf8` has been explicitly set.
-    var hasPayloadUtf8: Bool { self._payloadUtf8 != nil }
+    var hasPayloadUtf8: Bool { _payloadUtf8 != nil }
     /// Clears the value of `payloadUtf8`. Subsequent reads from it will return its default value.
     mutating func clearPayloadUtf8() { _payloadUtf8 = nil }
 
@@ -115,7 +115,7 @@ struct Extensions_Api_CastChannel_CastMessage: SwiftProtobuf.Message {
     }
 
     /// Returns true if `payloadBinary` has been explicitly set.
-    var hasPayloadBinary: Bool { self._payloadBinary != nil }
+    var hasPayloadBinary: Bool { _payloadBinary != nil }
     /// Clears the value of `payloadBinary`. Subsequent reads from it will return its default value.
     mutating func clearPayloadBinary() { _payloadBinary = nil }
 
@@ -174,19 +174,19 @@ struct Extensions_Api_CastChannel_CastMessage: SwiftProtobuf.Message {
     init() {}
 
     public var isInitialized: Bool {
-        if self._protocolVersion == nil {
+        if _protocolVersion == nil {
             return false
         }
-        if self._sourceID == nil {
+        if _sourceID == nil {
             return false
         }
-        if self._destinationID == nil {
+        if _destinationID == nil {
             return false
         }
-        if self._namespace == nil {
+        if _namespace == nil {
             return false
         }
-        if self._payloadType == nil {
+        if _payloadType == nil {
             return false
         }
         return true
@@ -287,7 +287,7 @@ struct Extensions_Api_CastChannel_AuthResponse: SwiftProtobuf.Message {
     }
 
     /// Returns true if `signature` has been explicitly set.
-    var hasSignature: Bool { self._signature != nil }
+    var hasSignature: Bool { _signature != nil }
     /// Clears the value of `signature`. Subsequent reads from it will return its default value.
     mutating func clearSignature() { _signature = nil }
 
@@ -297,7 +297,7 @@ struct Extensions_Api_CastChannel_AuthResponse: SwiftProtobuf.Message {
     }
 
     /// Returns true if `clientAuthCertificate` has been explicitly set.
-    var hasClientAuthCertificate: Bool { self._clientAuthCertificate != nil }
+    var hasClientAuthCertificate: Bool { _clientAuthCertificate != nil }
     /// Clears the value of `clientAuthCertificate`. Subsequent reads from it will return its default value.
     mutating func clearClientAuthCertificate() { _clientAuthCertificate = nil }
 
@@ -308,10 +308,10 @@ struct Extensions_Api_CastChannel_AuthResponse: SwiftProtobuf.Message {
     init() {}
 
     public var isInitialized: Bool {
-        if self._signature == nil {
+        if _signature == nil {
             return false
         }
-        if self._clientAuthCertificate == nil {
+        if _clientAuthCertificate == nil {
             return false
         }
         return true
@@ -364,7 +364,7 @@ struct Extensions_Api_CastChannel_AuthError: SwiftProtobuf.Message {
     }
 
     /// Returns true if `errorType` has been explicitly set.
-    var hasErrorType: Bool { self._errorType != nil }
+    var hasErrorType: Bool { _errorType != nil }
     /// Clears the value of `errorType`. Subsequent reads from it will return its default value.
     mutating func clearErrorType() { _errorType = nil }
 
@@ -400,7 +400,7 @@ struct Extensions_Api_CastChannel_AuthError: SwiftProtobuf.Message {
     init() {}
 
     public var isInitialized: Bool {
-        if self._errorType == nil {
+        if _errorType == nil {
             return false
         }
         return true

@@ -24,6 +24,11 @@ public struct SettingsView: View {
 
     let store: StoreOf<SettingsReducer>
 
+    @State
+    var hostnameExists = true
+    @State
+    var hostnameLoading = false
+
     public init(store: StoreOf<SettingsReducer>) {
         self.store = store
         self.viewStore = .init(store) { $0 }
@@ -138,8 +143,80 @@ public struct SettingsView: View {
 // MARK: - SettingsView + General
 
 extension SettingsView {
+    func checkURL(hostname: String) {
+        if let url = URL(string: hostname) {
+            var request = URLRequest(url: url)
+            request.httpMethod = "HEAD"
+
+            URLSession(configuration: .default)
+                .dataTask(with: request) { _, response, error in
+                    guard error == nil else {
+                        self.hostnameLoading = false
+                        self.hostnameExists = false
+                        return
+                    }
+                    guard (response as? HTTPURLResponse)?
+                        .statusCode == 200
+                    else {
+                        self.hostnameLoading = false
+                        self.hostnameExists = false
+                        return
+                    }
+
+                    self.hostnameLoading = false
+                    self.hostnameExists = true
+                }
+                .resume()
+        } else {
+            hostnameLoading = false
+            hostnameExists = true
+        }
+    }
+
     @ViewBuilder
     var general: some View {
+        SettingsGroupView {
+            HStack {
+                GroupLabel(title: "Hostname")
+                Link(destination: URL(string: "https://github.com/consumet/api.consumet.org#installation").unsafelyUnwrapped) {
+                    Label("Learn more", systemImage: "link")
+                }
+                .font(.system(size: 13))
+            }
+        } items: {
+            HStack {
+                if self.hostnameLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                } else {
+                    if self.hostnameExists {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(.green)
+                    } else {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.red)
+                    }
+                }
+                Spacer(minLength: 14.5)
+                TextField(
+                    "Using default hostname",
+                    text: viewStore.binding(get: { $0.userSettings.hostname }, send: {
+                        self.hostnameLoading.toggle()
+                        checkURL(hostname: $0)
+                        return .set(\.$userSettings.hostname, $0)
+                    })
+                )
+                .foregroundColor(.white)
+                .padding(12)
+                .background(Color.white.opacity(0.1))
+                .clipShape(Capsule())
+            }
+            .padding(.horizontal, 14.5)
+            .frame(minHeight: 58.0)
+            .font(.callout)
+            .background(Color(white: 0.2))
+            .contentShape(Rectangle())
+        }
         SettingsGroupView(title: "General") {
             SettingsRowView(name: "Provider") {
                 ContextButton(

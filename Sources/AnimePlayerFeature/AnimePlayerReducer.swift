@@ -226,7 +226,7 @@ public struct AnimePlayerReducer: ReducerProtocol {
             let common: (inout State) -> EffectTask<Action> = { state in
                 let copy = state
                 state.playerProgress = .zero
-                return self.saveEpisodeState(state: copy)
+                return saveEpisodeState(state: copy)
             }
 
             switch action {
@@ -264,7 +264,7 @@ public struct AnimePlayerReducer: ReducerProtocol {
             AnimeStreamLogic()
         }
         BindingReducer()
-        Reduce(self.core)
+        Reduce(core)
     }
 }
 

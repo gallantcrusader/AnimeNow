@@ -26,7 +26,7 @@ public struct SettingsRowView<Accessory: View>: View {
             Text(name)
                 .font(.system(size: 13, weight: .bold))
 
-            Spacer()
+            Spacer(minLength: height / 4)
 
             if loading {
                 ProgressView()

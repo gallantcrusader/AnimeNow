@@ -80,7 +80,7 @@ public struct HomeReducer: ReducerProtocol {
 
     public var body: some ReducerProtocol<State, Action> {
         BindingReducer()
-        Reduce(self.core)
+        Reduce(core)
     }
 }
 
@@ -198,7 +198,8 @@ extension HomeReducer {
                 let sortedAnimeStores = animesInDb.filter { $0.lastModifiedEpisode != nil }
                     .sorted { anime1, anime2 in
                         guard let lastModifiedOne = anime1.lastModifiedEpisode,
-                              let lastModifiedTwo = anime2.lastModifiedEpisode else {
+                              let lastModifiedTwo = anime2.lastModifiedEpisode
+                        else {
                             return false
                         }
                         return lastModifiedOne.lastUpdatedProgress > lastModifiedTwo.lastUpdatedProgress
@@ -208,7 +209,8 @@ extension HomeReducer {
                     lastWatched.append(animeStore.id)
 
                     guard let episode = animeStore.lastModifiedEpisode, !episode.almostFinished,
-                          episode.progress ?? 0 > 0 else {
+                          episode.progress ?? 0 > 0
+                    else {
                         continue
                     }
                     resumeWatchingEpisodes.append(

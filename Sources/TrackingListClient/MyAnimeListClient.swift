@@ -166,8 +166,8 @@ extension MyAnimeListClient: DependencyKey {
                 return userCollection
             } else {
                 let collection = try await tokenRequired { [unowned self] token in
-                    Dictionary(
-                        grouping: try await apiClient.request(
+                    try await Dictionary(
+                        grouping: apiClient.request(
                             .mal(.getUserAnimeList(accessToken: token.token))
                         )
                         .data,

@@ -418,7 +418,8 @@ public final class CastClient: NSObject, RequestDispatchable, Channelable {
 
     public func join(app: CastApp? = nil, completion: @escaping (Result<CastApp, CastError>) -> Void) {
         guard outputStream != nil,
-              let target = app ?? currentStatus?.apps.first else {
+              let target = app ?? currentStatus?.apps.first
+        else {
             completion(.failure(.session("No Apps Running")))
             return
         }

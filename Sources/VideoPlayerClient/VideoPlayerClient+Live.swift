@@ -90,9 +90,9 @@ private class PlayerWrapper {
 
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .compactMap { $0.object as? AVPlayerItem }
-            .filter { [unowned self] item in item == self.player.currentItem }
+            .filter { [unowned self] item in item == player.currentItem }
             .sink { [unowned self] _ in
-                self.updateStatus(.finished)
+                updateStatus(.finished)
             }
             .store(in: &cancellables)
 
@@ -108,10 +108,10 @@ private class PlayerWrapper {
                 if let waiting = player.reasonForWaitingToPlay {
                     switch waiting {
                     case .noItemToPlay:
-                        self.updateStatus(.idle)
+                        updateStatus(.idle)
 
                     case .toMinimizeStalls:
-                        self.updateStatus(.playback(.buffering))
+                        updateStatus(.playback(.buffering))
 
                     default:
                         break
@@ -119,10 +119,10 @@ private class PlayerWrapper {
                 }
 
             case .paused:
-                self.updateStatus(.playback(.paused))
+                updateStatus(.playback(.paused))
 
             case .playing:
-                self.updateStatus(.playback(.playing))
+                updateStatus(.playback(.playing))
 
             default:
                 break
@@ -134,7 +134,7 @@ private class PlayerWrapper {
             for: \.currentItem
         )
         .sink { [unowned self] item in
-            self.observe(playerItem: item)
+            observe(playerItem: item)
         }
         .store(in: &cancellables)
 
@@ -145,7 +145,7 @@ private class PlayerWrapper {
             ),
             queue: .main
         ) { [unowned self] _ in
-            self.updateNowPlaying()
+            updateNowPlaying()
         }
 
         let commandCenter = MPRemoteCommandCenter.shared()
@@ -250,7 +250,7 @@ private class PlayerWrapper {
         .sink { [unowned self] status in
             switch status {
             case .unknown:
-                self.updateStatus(.idle)
+                updateStatus(.idle)
 
             case .readyToPlay:
                 // TODO: Test if duration is updated
@@ -259,7 +259,7 @@ private class PlayerWrapper {
 
             case .failed:
                 Logger.log(.error, "Player error: - \(playerItem.errorLog().debugDescription)")
-                self.updateStatus(.error)
+                updateStatus(.error)
 
             default:
                 break
@@ -273,7 +273,7 @@ private class PlayerWrapper {
         .dropFirst()
         .sink { [unowned self] bufferEmpty in
             if bufferEmpty {
-                self.updateStatus(.playback(.buffering))
+                updateStatus(.playback(.buffering))
             }
         }
         .store(in: &playerItemCancellables)
@@ -283,8 +283,8 @@ private class PlayerWrapper {
         )
         .dropFirst()
         .sink { [unowned self] canKeepUp in
-            if canKeepUp, self.status == .playback(.buffering) {
-                self.updateStatus(.playback(self.player.rate > 0 ? .playing : .paused))
+            if canKeepUp, status == .playback(.buffering) {
+                updateStatus(.playback(player.rate > 0 ? .playing : .paused))
             }
         }
         .store(in: &playerItemCancellables)
@@ -293,7 +293,7 @@ private class PlayerWrapper {
             .dropFirst()
             .sink { [unowned self] duration in
                 if duration.isValid, duration.seconds > 0.0 {
-                    self.updateStatus(.loaded(duration: duration.seconds))
+                    updateStatus(.loaded(duration: duration.seconds))
                 }
             }
             .store(in: &playerItemCancellables)
@@ -304,11 +304,11 @@ private class PlayerWrapper {
             let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
             var nowPlayingInfo = nowPlayingInfoCenter.nowPlayingInfo ?? [:]
 
-            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = self.player.currentItem?.totalDuration ?? self.player
+            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = player.currentItem?.totalDuration ?? player
                 .totalDuration
-            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = self.player.currentItem?
-                .currentDuration ?? self.player.currentDuration
-            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
+            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentItem?
+                .currentDuration ?? player.currentDuration
+            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
 
             if let metadata {
                 nowPlayingInfo[MPMediaItemPropertyTitle] = metadata.videoTitle
@@ -336,7 +336,7 @@ private class PlayerWrapper {
             nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
 
             #if os(macOS)
-            switch self.status {
+            switch status {
             case .idle:
                 MPNowPlayingInfoCenter.default().playbackState = .stopped
             case .loading:

@@ -37,7 +37,7 @@ public struct NewCollectionReducer: ReducerProtocol {
 
     public var body: some ReducerProtocol<State, Action> {
         BindingReducer()
-        Reduce(self.core)
+        Reduce(core)
     }
 
     @Dependency(\.databaseClient)

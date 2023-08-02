@@ -62,7 +62,8 @@ class CastV2PlatformReader {
 
         guard buffer.count >= readPosition + payloadSize,
               buffer.count - readPosition >= payloadSize,
-              payloadSize >= 0 else {
+              payloadSize >= 0
+        else {
             // Message hasn't arrived
             readPosition -= headerSize
             return nil

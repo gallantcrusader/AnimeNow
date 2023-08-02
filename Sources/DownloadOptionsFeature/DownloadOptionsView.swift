@@ -107,6 +107,7 @@ struct DownloadOptionsView_Previews: PreviewProvider {
         DownloadOptionsView(
             store: .init(
                 initialState: .init(
+                    hostname: URL(string: "https://api.consumet.org").unsafelyUnwrapped,
                     anime: Anime.attackOnTitan,
                     episodeId: 1,
                     availableProviders: .init(
